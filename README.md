@@ -352,6 +352,48 @@ kill -9 <PID>
 
 ---
 
+## QA: Verificando se Tudo Funciona
+
+Após a instalação, execute este checklist para garantir que tudo está funcionando:
+
+### ✅ Checklist de Verificação
+
+```bash
+# 1. AIOS está instalado?
+ls .aios-core/development/agents/
+# ✓ Deve listar arquivos .md (dev.md, qa.md, architect.md, etc)
+
+# 2. Server está rodando?
+curl http://localhost:4001/health
+# ✓ Deve retornar: {"status":"ok"}
+
+# 3. Dashboard está acessível?
+curl -s http://localhost:3000 | head -5
+# ✓ Deve retornar HTML
+
+# 4. Hooks estão instalados? (opcional)
+ls ~/.claude/hooks/*.py 2>/dev/null | wc -l
+# ✓ Deve retornar número > 0
+```
+
+### 🧪 Teste Manual
+
+1. **Kanban**: Acesse http://localhost:3000 → deve mostrar board com stories
+2. **Agents**: Clique em "Agents" → deve listar agentes em standby
+3. **Squads**: Clique em "Squads" → deve mostrar organograma de squads
+4. **Monitor**: Clique em "Monitor" → deve mostrar status de conexão
+
+### ❌ Se algo não funcionar
+
+| Problema | Solução |
+|----------|---------|
+| Kanban vazio | Verifique se existe `docs/stories/` com arquivos `.md` |
+| Agents vazio | Verifique se existe `.aios-core/development/agents/` |
+| Squads vazio | Verifique se existe `squads/` com subpastas |
+| Monitor desconectado | Verifique se o server está rodando na porta 4001 |
+
+---
+
 ## Contribuindo
 
 Contribuições são muito bem-vindas! Veja as [issues abertas](https://github.com/SynkraAI/aios-dashboard/issues).
