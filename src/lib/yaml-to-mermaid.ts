@@ -25,9 +25,11 @@ function sanitizeId(raw: string): string {
 /**
  * Sanitize a label for use inside Mermaid node brackets.
  * Escapes characters that would break Mermaid syntax.
+ * Labels are wrapped in double quotes in formatNode, so " must be escaped first.
  */
 function sanitizeLabel(raw: string): string {
   return raw
+    .replace(/\\/g, '#bsol;')
     .replace(/"/g, '#quot;')
     .replace(/\[/g, '#lsqb;')
     .replace(/\]/g, '#rsqb;')
@@ -107,17 +109,21 @@ function determineShape(item: Record<string, unknown>): 'rectangle' | 'diamond' 
 
 /**
  * Format a Mermaid node definition string with the correct shape brackets.
+ * Labels are wrapped in double quotes to safely handle special characters.
+ * The <br/> line break is inserted AFTER sanitization to avoid being escaped.
  */
 function formatNode(node: MermaidNode): string {
-  const label = sanitizeLabel(`${node.label}\\n@${node.agent}`);
+  const namePart = sanitizeLabel(node.label);
+  const agentPart = sanitizeLabel(`@${node.agent}`);
+  const label = `${namePart}<br/>${agentPart}`;
   switch (node.shape) {
     case 'diamond':
-      return `  ${node.id}{${label}}`;
+      return `  ${node.id}{"${label}"}`;
     case 'hexagon':
-      return `  ${node.id}{{${label}}}`;
+      return `  ${node.id}{{"${label}"}}`;
     case 'rectangle':
     default:
-      return `  ${node.id}[${label}]`;
+      return `  ${node.id}["${label}"]`;
   }
 }
 

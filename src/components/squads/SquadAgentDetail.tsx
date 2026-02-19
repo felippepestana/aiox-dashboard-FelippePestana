@@ -48,7 +48,7 @@ export function SquadAgentDetail({ squadName, agentId, breadcrumb }: SquadAgentD
         <div
           className={cn(
             'bg-card border border-border border-l-2 p-5 mb-8',
-            'border-l-[var(--accent-gold)]'
+            'border-l-gold'
           )}
         >
           <div className="flex items-start gap-4">
@@ -93,7 +93,7 @@ export function SquadAgentDetail({ squadName, agentId, breadcrumb }: SquadAgentD
           {agent.tools.length > 0 && (
             <div className="mt-4 pt-3 border-t border-border-subtle">
               <span className="text-caption font-medium uppercase tracking-wider text-text-muted block mb-2">
-                Ferramentas
+                Tools
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {agent.tools.map((tool, i) => (
@@ -150,7 +150,7 @@ export function SquadAgentDetail({ squadName, agentId, breadcrumb }: SquadAgentD
             {/* Core Principles */}
             {agent.principles.length > 0 && (
               <div className="mb-8">
-                <SectionLabel withLine className="mb-3">Principios</SectionLabel>
+                <SectionLabel withLine className="mb-3">Principles</SectionLabel>
                 <ul className="space-y-1 ml-1">
                   {agent.principles.map((p, i) => (
                     <li key={i} className="text-label text-text-secondary leading-relaxed flex items-start gap-2">
@@ -203,7 +203,7 @@ export function SquadAgentDetail({ squadName, agentId, breadcrumb }: SquadAgentD
             {/* Commands */}
             {agent.commands.length > 0 && (
               <div className="mb-8">
-                <SectionLabel withLine className="mb-3">Comandos</SectionLabel>
+                <SectionLabel withLine className="mb-3">Commands</SectionLabel>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
                   {agent.commands.map((cmd, i) => (
                     <div

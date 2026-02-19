@@ -201,7 +201,7 @@ export function SquadsPanel() {
                 }}
                 placeholder="Filter squads..."
                 className={cn(
-                  'pl-7 pr-2 py-1 w-[160px] text-label',
+                  'pl-7 pr-2 py-1 w-40 text-label',
                   'bg-bg-secondary border border-border',
                   'text-text-primary placeholder:text-text-disabled',
                   'focus:outline-none focus:border-gold',

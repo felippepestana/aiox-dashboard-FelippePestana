@@ -96,8 +96,7 @@ export function SquadConnections({ connections, containerRef }: SquadConnections
       observer?.disconnect();
       window.removeEventListener('resize', handleResize);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connections.length]);
+  }, [connections.length, recalculate]);
 
   if (paths.length === 0) return null;
 

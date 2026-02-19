@@ -3,7 +3,7 @@
 import { memo } from 'react';
 import { cn } from '@/lib/utils';
 import { Users, FileText, GitBranch, CheckCircle2 } from 'lucide-react';
-import { getDomainColor, getDomainLabel } from '@/lib/domain-taxonomy';
+import { getDomainColor } from '@/lib/domain-taxonomy';
 import { formatSquadScore, formatSquadVersion, getScoreColor } from '@/lib/squad-metadata';
 import type { Squad } from '@/types';
 
@@ -15,19 +15,18 @@ interface SquadCardProps {
 function ScoreRing({ score }: { score: number }) {
   const color = getScoreColor(score);
   const pct = (score / 10) * 100;
-  // SVG circle: r=14, circumference ≈ 87.96
-  const circ = 2 * Math.PI * 14;
+  const circ = 2 * Math.PI * 12;
   const offset = circ - (pct / 100) * circ;
 
   return (
     <div
-      className="relative flex items-center justify-center shrink-0"
+      className="relative flex items-center justify-center shrink-0 w-8 h-8"
       title={`Score: ${formatSquadScore(score)}/10`}
     >
-      <svg width="38" height="38" viewBox="0 0 32 32" className="-rotate-90">
-        <circle cx="16" cy="16" r="14" fill="none" stroke="var(--border-subtle)" strokeWidth="2.5" />
+      <svg width="32" height="32" viewBox="0 0 32 32" className="-rotate-90">
+        <circle cx="16" cy="16" r="12" fill="none" stroke="var(--border-subtle)" strokeWidth="2.5" />
         <circle
-          cx="16" cy="16" r="14"
+          cx="16" cy="16" r="12"
           fill="none"
           stroke={color}
           strokeWidth="2.5"
@@ -38,7 +37,7 @@ function ScoreRing({ score }: { score: number }) {
         />
       </svg>
       <span
-        className="absolute text-detail font-mono font-medium"
+        className="absolute text-caption font-mono font-medium"
         style={{ color }}
       >
         {formatSquadScore(score)}
@@ -65,31 +64,18 @@ export const SquadCard = memo(function SquadCard({ squad, onClick }: SquadCardPr
       style={{ borderLeftColor: domainColor }}
     >
       <div className="p-4">
-        {/* Header: Domain tag + Name + Score ring */}
-        <div className="flex items-start gap-3">
-          <div className="flex-1 min-w-0">
-            {/* Domain label */}
-            <span
-              className="text-caption uppercase tracking-wider font-medium"
-              style={{ color: domainColor }}
-            >
-              {getDomainLabel(squad.domain)}
+        {/* Header: Name + Score ring */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1 min-w-0 flex items-center gap-2">
+            <span className="text-sm font-light text-text-primary truncate">
+              {squad.displayName}
             </span>
-
-            {/* Name + optional non-active badge */}
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-sm font-light text-text-primary truncate">
-                {squad.displayName}
+            {showBadge && (
+              <span className="text-caption uppercase tracking-wider font-medium px-1.5 py-px border border-status-warning text-status-warning shrink-0">
+                {squad.status}
               </span>
-              {showBadge && (
-                <span className="text-caption uppercase tracking-wider font-medium px-1.5 py-px border border-status-warning text-status-warning shrink-0">
-                  {squad.status}
-                </span>
-              )}
-            </div>
+            )}
           </div>
-
-          {/* Score ring - dominant element */}
           <ScoreRing score={squad.score} />
         </div>
 

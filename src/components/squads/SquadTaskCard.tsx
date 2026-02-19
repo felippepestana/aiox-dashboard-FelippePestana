@@ -17,7 +17,7 @@ export const SquadTaskCard = memo(function SquadTaskCard({ task }: SquadTaskCard
         'bg-card border border-border',
         'transition-luxury',
         'hover:border-border-medium',
-        'w-[280px] shrink-0'
+        'w-72 shrink-0'
       )}
     >
       {/* Task Header */}
@@ -26,7 +26,7 @@ export const SquadTaskCard = memo(function SquadTaskCard({ task }: SquadTaskCard
         className="w-full text-left px-4 py-3 border-b border-border-subtle"
       >
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-text-primary truncate">
+          <span className="text-label font-medium text-text-primary truncate">
             {task.name || task.id}
           </span>
           <span className="text-caption text-text-muted ml-2 shrink-0">
@@ -85,7 +85,7 @@ export const SquadTaskCard = memo(function SquadTaskCard({ task }: SquadTaskCard
           {task.responsibilities.length > 0 && (
             <div>
               <span className="text-caption font-medium uppercase tracking-wider text-status-success block mb-1">
-                O que faz
+                Responsibilities
               </span>
               <ul className="space-y-0.5">
                 {task.responsibilities.map((r, i) => (
@@ -101,7 +101,7 @@ export const SquadTaskCard = memo(function SquadTaskCard({ task }: SquadTaskCard
           {task.antiPatterns.length > 0 && (
             <div>
               <span className="text-caption font-medium uppercase tracking-wider text-status-error block mb-1">
-                Nao faz
+                Anti-patterns
               </span>
               <ul className="space-y-0.5">
                 {task.antiPatterns.map((a, i) => (
@@ -117,7 +117,7 @@ export const SquadTaskCard = memo(function SquadTaskCard({ task }: SquadTaskCard
           {task.tools.length > 0 && (
             <div>
               <span className="text-caption font-medium uppercase tracking-wider text-status-info block mb-1">
-                Ferramentas
+                Tools
               </span>
               <div className="flex flex-wrap gap-1">
                 {task.tools.map((t, i) => (
@@ -134,7 +134,7 @@ export const SquadTaskCard = memo(function SquadTaskCard({ task }: SquadTaskCard
 
           {task.estimatedDuration && (
             <div className="text-caption text-text-muted">
-              Duracao: {task.estimatedDuration}
+              Duration: {task.estimatedDuration}
             </div>
           )}
         </div>

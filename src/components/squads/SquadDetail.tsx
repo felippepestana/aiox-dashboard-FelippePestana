@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { SectionLabel } from '@/components/ui/section-label';
 import { Users, FileText, GitBranch, CheckCircle2 } from 'lucide-react';
 import { formatSquadScore, formatSquadVersion, getScoreColor } from '@/lib/squad-metadata';
-import { getDomainColor, getDomainLabel } from '@/lib/domain-taxonomy';
+import { getDomainColor, getDomainLabel, getDomainBg, getDomainBorder } from '@/lib/domain-taxonomy';
 import { SquadTierTree } from './SquadTierTree';
 import { SquadSectionGrid } from './SquadSectionGrid';
 import { SquadItemViewer } from './SquadItemViewer';
@@ -128,9 +128,6 @@ export function SquadDetail({ squadName, onAgentClick, selectedItem, onItemClick
           <h2 className="text-lg font-light text-text-primary">
             {squad.displayName}
           </h2>
-          <span className="text-detail font-mono text-text-muted">
-            {formatSquadVersion(squad.version)}
-          </span>
           <span
             className="text-caption uppercase tracking-wider font-medium px-2 py-0.5 border"
             style={{
@@ -141,45 +138,33 @@ export function SquadDetail({ squadName, onAgentClick, selectedItem, onItemClick
           >
             {getDomainLabel(squad.domain)}
           </span>
+          <span
+            className="text-caption font-mono text-text-disabled ml-auto"
+            title={`Version ${formatSquadVersion(squad.version)}`}
+          >
+            {formatSquadVersion(squad.version)}
+          </span>
         </div>
 
         {/* Description */}
         {squad.description && (
-          <p className="text-xs text-text-secondary leading-relaxed mb-6 whitespace-pre-line">
+          <p className="text-label text-text-secondary leading-relaxed mb-6 whitespace-pre-line">
             {squad.description.trim()}
           </p>
         )}
 
         {/* Stats row */}
         <div className="flex items-center gap-4 mb-6 pb-4 border-b border-border">
-          <Stat label="Agents" value={squad.agentCount} />
-          <Stat label="Tasks" value={squad.taskCount} />
-          <Stat label="Workflows" value={squad.workflowCount} />
-          <div
-            className="flex items-center gap-1.5"
-            title={`Score: ${formatSquadScore(squad.score)}/10 - baseado em agents, tasks, workflows, checklists`}
-          >
-            <span
-              className="text-base font-mono"
-              style={{ color: getScoreColor(squad.score) }}
-            >
-              {formatSquadScore(squad.score)}
-            </span>
-            <span
-              className="inline-block w-[50px] h-[3px] rounded-full bg-border-subtle overflow-hidden"
-              aria-hidden="true"
-            >
-              <span
-                className="block h-full rounded-full transition-all duration-300"
-                style={{
-                  width: `${(squad.score / 10) * 100}%`,
-                  backgroundColor: getScoreColor(squad.score),
-                }}
-              />
-            </span>
-            <span className="text-detail uppercase tracking-wider text-text-muted">
-              Score
-            </span>
+          <StatIcon icon={Users} label="Agents" value={squad.agentCount} />
+          <StatIcon icon={FileText} label="Tasks" value={squad.taskCount} />
+          {squad.workflowCount > 0 && (
+            <StatIcon icon={GitBranch} label="Workflows" value={squad.workflowCount} />
+          )}
+          {squad.checklistCount > 0 && (
+            <StatIcon icon={CheckCircle2} label="Checklists" value={squad.checklistCount} />
+          )}
+          <div className="ml-auto">
+            <ScoreRing score={squad.score} />
           </div>
         </div>
 
@@ -301,10 +286,45 @@ function OverviewContent({
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function ScoreRing({ score }: { score: number }) {
+  const color = getScoreColor(score);
+  const pct = (score / 10) * 100;
+  const circ = 2 * Math.PI * 14;
+  const offset = circ - (pct / 100) * circ;
+
   return (
-    <div className="flex items-baseline gap-1.5">
-      <span className="text-base font-mono text-text-primary">{value}</span>
+    <div
+      className="relative flex items-center justify-center shrink-0 w-9 h-9"
+      title={`Score: ${formatSquadScore(score)}/10`}
+    >
+      <svg width="36" height="36" viewBox="0 0 32 32" className="-rotate-90">
+        <circle cx="16" cy="16" r="14" fill="none" stroke="var(--border-subtle)" strokeWidth="2.5" />
+        <circle
+          cx="16" cy="16" r="14"
+          fill="none"
+          stroke={color}
+          strokeWidth="2.5"
+          strokeDasharray={circ}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          className="transition-all duration-500"
+        />
+      </svg>
+      <span
+        className="absolute text-detail font-mono font-medium"
+        style={{ color }}
+      >
+        {formatSquadScore(score)}
+      </span>
+    </div>
+  );
+}
+
+function StatIcon({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: number }) {
+  return (
+    <div className="flex items-center gap-1.5" title={label}>
+      <Icon className="h-3.5 w-3.5 text-text-muted" />
+      <span className="text-sm font-mono text-text-primary">{value}</span>
       <span className="text-detail uppercase tracking-wider text-text-muted">{label}</span>
     </div>
   );

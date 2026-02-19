@@ -24,11 +24,9 @@ phases:
 `;
       const result = yamlToMermaid(yaml);
       expect(result).toContain('flowchart TD');
-      expect(result).toContain('PHASE_1[Foundation');
-      expect(result).toContain('@claude-hopkins');
-      expect(result).toContain('PHASE_2[Strategy');
-      expect(result).toContain('@dan-kennedy');
-      expect(result).toContain('PHASE_3[Execution');
+      expect(result).toContain('PHASE_1["Foundation<br/>@claude-hopkins"]');
+      expect(result).toContain('PHASE_2["Strategy<br/>@dan-kennedy"]');
+      expect(result).toContain('PHASE_3["Execution<br/>@gary-halbert"]');
       expect(result).toContain('PHASE_1 --> PHASE_2');
       expect(result).toContain('PHASE_2 --> PHASE_3');
     });
@@ -49,8 +47,8 @@ phases:
       - "PHASE-1"
 `;
       const result = yamlToMermaid(yaml);
-      expect(result).toContain('PHASE_1[Foundation');
-      expect(result).toContain('PHASE_2[Execution');
+      expect(result).toContain('PHASE_1["Foundation<br/>@agent-a"]');
+      expect(result).toContain('PHASE_2["Execution<br/>@agent-b"]');
       expect(result).toContain('PHASE_1 --> PHASE_2');
     });
   });
@@ -95,9 +93,9 @@ steps:
 `;
       const result = yamlToMermaid(yaml);
       expect(result).toContain('flowchart TD');
-      expect(result).toContain('step_1_audit[Audit Codebase');
-      expect(result).toContain('step_2_consolidate[Consolidate Patterns');
-      expect(result).toContain('step_3_tokenize[Extract Tokens');
+      expect(result).toContain('step_1_audit["Audit Codebase<br/>@brad-frost"]');
+      expect(result).toContain('step_2_consolidate["Consolidate Patterns<br/>@brad-frost"]');
+      expect(result).toContain('step_3_tokenize["Extract Tokens<br/>@brad-frost"]');
       // Sequential fallback
       expect(result).toContain('step_1_audit --> step_2_consolidate');
       expect(result).toContain('step_2_consolidate --> step_3_tokenize');
@@ -119,8 +117,8 @@ workflow:
       agent: "brad-frost"
 `;
       const result = yamlToMermaid(yaml);
-      expect(result).toContain('step_1[Step One');
-      expect(result).toContain('step_2[Step Two');
+      expect(result).toContain('step_1["Step One<br/>@brad-frost"]');
+      expect(result).toContain('step_2["Step Two<br/>@brad-frost"]');
       expect(result).toContain('step_1 --> step_2');
     });
   });
@@ -179,9 +177,8 @@ phases:
         - "avatar_profile COMPLETE"
 `;
       const result = yamlToMermaid(yaml);
-      // Diamond shape uses { } for nodes
-      expect(result).toContain('PHASE_2{Strategy');
-      expect(result).toContain('@dan-kennedy');
+      // Diamond shape uses { } with quoted label
+      expect(result).toContain('PHASE_2{"Strategy<br/>@dan-kennedy"}');
     });
 
     it('renders rectangle for checkpoint with human_review: false', () => {
@@ -194,7 +191,7 @@ phases:
       human_review: false
 `;
       const result = yamlToMermaid(yaml);
-      expect(result).toContain('PHASE_1[Foundation');
+      expect(result).toContain('PHASE_1["Foundation<br/>@claude-hopkins"]');
     });
   });
 
@@ -213,9 +210,9 @@ steps:
     agent: "dev-agent"
 `;
       const result = yamlToMermaid(yaml);
-      // Hexagon uses {{ }} for nodes
-      expect(result).toContain('step_elicit{{Gather Input');
-      expect(result).toContain('step_process[Process');
+      // Hexagon uses {{ }} with quoted label
+      expect(result).toContain('step_elicit{{"Gather Input<br/>@pm-agent"}}');
+      expect(result).toContain('step_process["Process<br/>@dev-agent"]');
     });
 
     it('renders hexagon for steps with elicit field as object', () => {
@@ -232,7 +229,7 @@ phases:
           - version: "1.0.0"
 `;
       const result = yamlToMermaid(yaml);
-      expect(result).toContain('step_0_3{{Define structure');
+      expect(result).toContain('step_0_3{{"Define structure<br/>@squad-chief"}}');
     });
   });
 
@@ -349,7 +346,7 @@ phases:
 `;
       const result = yamlToMermaid(yaml);
       // ID should not contain hyphens or dots
-      expect(result).toContain('PHASE_1_0[Test Phase');
+      expect(result).toContain('PHASE_1_0["Test Phase<br/>@test-agent"]');
     });
 
     it('sanitizes labels with special characters', () => {
@@ -360,9 +357,9 @@ phases:
     agent: test-agent
 `;
       const result = yamlToMermaid(yaml);
-      // Should escape brackets in labels
-      expect(result).not.toContain('[with]');
+      // Should escape brackets in labels (inside quoted node)
       expect(result).toContain('#lsqb;with#rsqb;');
+      expect(result).toContain('p1["Test #lsqb;with#rsqb; brackets<br/>@test-agent"]');
     });
   });
 
@@ -382,9 +379,9 @@ phases:
         depends_on: "step_0_1"
 `;
       const result = yamlToMermaid(yaml);
-      expect(result).toContain('phase_0[Discovery');
-      expect(result).toContain('step_0_1[Validate Viability');
-      expect(result).toContain('step_0_2[Check Existing');
+      expect(result).toContain('phase_0["Discovery<br/>@squad-chief"]');
+      expect(result).toContain('step_0_1["Validate Viability<br/>@squad-chief"]');
+      expect(result).toContain('step_0_2["Check Existing<br/>@squad-chief"]');
       expect(result).toContain('step_0_1 --> step_0_2');
     });
 
@@ -399,8 +396,7 @@ phases:
         name: "Sub Step"
 `;
       const result = yamlToMermaid(yaml);
-      expect(result).toContain('step_0_1[Sub Step');
-      expect(result).toContain('@squad-chief');
+      expect(result).toContain('step_0_1["Sub Step<br/>@squad-chief"]');
     });
   });
 
@@ -446,7 +442,7 @@ phases:
       secondary: hormozi-pricing
 `;
       const result = yamlToMermaid(yaml);
-      expect(result).toContain('@hormozi-offers');
+      expect(result).toContain('<br/>@hormozi-offers');
     });
   });
 });
