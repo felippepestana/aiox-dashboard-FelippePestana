@@ -1,4 +1,4 @@
-import { promises as fs } from 'fs';
+import { promises as fs, existsSync } from 'fs';
 import path from 'path';
 
 export const VALID_SQUAD_SECTIONS = [
@@ -27,6 +27,20 @@ export function getProjectRoot(): string {
   if (process.env.AIOS_PROJECT_ROOT) {
     return process.env.AIOS_PROJECT_ROOT;
   }
+
+  // Walk up from cwd looking for a directory that contains squads/.
+  // Works for both monorepo (apps/dashboard/../../) and custom layouts.
+  let current = process.cwd();
+  for (let i = 0; i < 6; i++) {
+    if (existsSync(path.join(current, 'squads'))) {
+      return current;
+    }
+    const parent = path.dirname(current);
+    if (parent === current) break; // reached filesystem root
+    current = parent;
+  }
+
+  // Fallback: assume standard monorepo layout (apps/dashboard/ → ../../)
   return path.resolve(process.cwd(), '..', '..');
 }
 
