@@ -1,21 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AppShell } from "@/components/layout/AppShell";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
-  title: "AIOS Dashboard",
-  description: "AI-Orchestrated System Dashboard",
+  title: "Sbarzi Odontologia - Plataforma IA",
+  description: "Plataforma de gestão odontológica com inteligência artificial - Sbarzi Odontologia e Saúde",
 };
 
 export default function RootLayout({
@@ -24,12 +12,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="pt-BR" className="dark" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className="font-sans antialiased"
         suppressHydrationWarning
       >
-        <AppShell>{children}</AppShell>
+        {children}
       </body>
     </html>
   );
