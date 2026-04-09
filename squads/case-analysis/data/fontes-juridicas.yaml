@@ -1,0 +1,95 @@
+name: "Fontes Jurídicas de Referência"
+description: "Catálogo de fontes jurídicas utilizadas pelo squad de análise processual"
+
+legislacao_principal:
+  - nome: "Constituição Federal de 1988"
+    sigla: "CF/88"
+    artigos_frequentes:
+      - "Art. 5º, LIV — Devido processo legal"
+      - "Art. 5º, LV — Contraditório e ampla defesa"
+      - "Art. 5º, XI — Inviolabilidade do domicílio"
+      - "Art. 5º, XXII — Direito de propriedade"
+      - "Art. 5º, XXXV — Inafastabilidade jurisdicional"
+      - "Art. 5º, XXXVI — Direito adquirido, ato jurídico perfeito, coisa julgada"
+      - "Art. 93, IX — Fundamentação das decisões"
+
+  - nome: "Código de Processo Civil"
+    sigla: "CPC (Lei 13.105/2015)"
+    artigos_frequentes:
+      - "Art. 9º — Vedação de decisão sem manifestação prévia"
+      - "Art. 10 — Vedação de decisão surpresa"
+      - "Art. 11 — Publicidade e fundamentação"
+      - "Art. 300 — Tutela de urgência"
+      - "Art. 489, §1º — Requisitos de fundamentação"
+      - "Art. 536-538 — Cumprimento de obrigações"
+      - "Art. 806 — Prazo para ação principal"
+      - "Art. 1.015 — Agravo de instrumento"
+      - "Art. 1.019, I — Efeito suspensivo"
+      - "Art. 1.022 — Embargos de declaração"
+
+  - nome: "Decreto-Lei 911/1969"
+    sigla: "DL 911/69"
+    tema: "Alienação fiduciária"
+    artigos_frequentes:
+      - "Art. 3º — Busca e apreensão fiduciária"
+      - "Art. 3º, §2º — Liminar de busca e apreensão"
+
+  - nome: "Código de Defesa do Consumidor"
+    sigla: "CDC (Lei 8.078/1990)"
+    artigos_frequentes:
+      - "Art. 6º, VIII — Inversão do ônus da prova"
+      - "Art. 51 — Cláusulas abusivas"
+      - "Art. 52 — Informações ao consumidor"
+
+tribunais:
+  superiores:
+    - nome: "Supremo Tribunal Federal"
+      sigla: "STF"
+      tipo: "Precedentes vinculantes, repercussão geral"
+
+    - nome: "Superior Tribunal de Justiça"
+      sigla: "STJ"
+      tipo: "Recursos repetitivos, súmulas, jurisprudência"
+
+  estaduais:
+    - nome: "Tribunais de Justiça Estaduais"
+      sigla: "TJ/[UF]"
+      tipo: "Jurisprudência local, precedentes persuasivos"
+
+temas_repetitivos_relevantes:
+  - numero: "Tema 988"
+    tribunal: "STJ"
+    tese: "O rol do art. 1.015 do CPC é de taxatividade mitigada"
+    processos: "REsp 1.696.396/MT e REsp 1.704.520/MT"
+
+  - numero: "Tema 1.095"
+    tribunal: "STJ"
+    tese: "Necessidade de notificação extrajudicial prévia para busca e apreensão fiduciária"
+    processos: "REsp 1.951.662/RS"
+
+sumulas_relevantes:
+  stj:
+    - numero: 72
+      texto: "A comprovação da mora é imprescindível à busca e apreensão do bem alienado fiduciariamente."
+    - numero: 245
+      texto: "A notificação destinada a comprovar a mora nas dívidas garantidas por alienação fiduciária dispensa a indicação do valor do débito."
+
+prazos_processuais:
+  - peca: "Embargos de Declaração"
+    prazo: "5 dias"
+    base_legal: "Art. 1.023, CPC"
+    contagem: "Dias úteis"
+
+  - peca: "Agravo de Instrumento"
+    prazo: "15 dias"
+    base_legal: "Art. 1.003, §5º, CPC"
+    contagem: "Dias úteis"
+
+  - peca: "Tutela Incidental"
+    prazo: "Sem prazo — pode ser requerida a qualquer tempo"
+    base_legal: "Art. 294, parágrafo único, CPC"
+
+  - peca: "Contestação"
+    prazo: "15 dias"
+    base_legal: "Art. 335, CPC"
+    contagem: "Dias úteis"

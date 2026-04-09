@@ -1,0 +1,52 @@
+metadata:
+  total_squads: 1
+  generated_at: "2026-04-09"
+
+squads:
+  case-analysis:
+    path: "squads/case-analysis/"
+    version: "1.0.0"
+    score: 9.2
+    description: "Squad especializado em análise processual aprofundada, identificação de vícios e nulidades, pesquisa jurisprudencial, definição de estratégias processuais e elaboração de peças judiciais de urgência."
+    domain: "strategy"
+    has_readme: true
+    counts:
+      agents: 7
+      tasks: 8
+      workflows: 2
+      templates: 3
+      checklists: 2
+      data_files: 2
+    agent_names:
+      - case-analysis-chief
+      - leitor-processual
+      - analista-processual
+      - pesquisador-jurisprudencial
+      - analista-legislativo-processual
+      - estrategista-juridico
+      - minutador-pecas
+      - revisor-juridico
+    keywords:
+      - análise processual
+      - vícios processuais
+      - nulidades
+      - jurisprudência
+      - peças processuais
+      - tutela de urgência
+      - embargos de declaração
+      - agravo de instrumento
+      - busca e apreensão
+      - manutenção de posse
+      - direito processual civil
+
+domain_index:
+  strategy:
+    - case-analysis
+
+summary:
+  total_agents: 7
+  total_tasks: 8
+  total_workflows: 2
+  total_templates: 3
+  total_checklists: 2
+  total_data_files: 2
