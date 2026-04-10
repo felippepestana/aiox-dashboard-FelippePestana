@@ -1,0 +1,140 @@
+name: "Prazos Processuais de Referência"
+description: "Tabela de prazos processuais mais utilizados na advocacia privada"
+
+prazos_cpc:
+  - peca: "Contestação"
+    prazo: 15
+    unidade: "dias úteis"
+    base_legal: "Art. 335, CPC"
+    observacao: "Contados da audiência de conciliação/mediação ou citação"
+
+  - peca: "Réplica"
+    prazo: 15
+    unidade: "dias úteis"
+    base_legal: "Art. 351, CPC"
+
+  - peca: "Embargos de Declaração"
+    prazo: 5
+    unidade: "dias úteis"
+    base_legal: "Art. 1.023, CPC"
+    efeito: "Interrompe prazo para outros recursos"
+
+  - peca: "Agravo de Instrumento"
+    prazo: 15
+    unidade: "dias úteis"
+    base_legal: "Art. 1.003, §5º, CPC"
+
+  - peca: "Apelação"
+    prazo: 15
+    unidade: "dias úteis"
+    base_legal: "Art. 1.003, §5º, CPC"
+
+  - peca: "Contrarrazões de Apelação"
+    prazo: 15
+    unidade: "dias úteis"
+    base_legal: "Art. 1.010, §1º, CPC"
+
+  - peca: "Recurso Especial"
+    prazo: 15
+    unidade: "dias úteis"
+    base_legal: "Art. 1.003, §5º, CPC"
+
+  - peca: "Recurso Extraordinário"
+    prazo: 15
+    unidade: "dias úteis"
+    base_legal: "Art. 1.003, §5º, CPC"
+
+  - peca: "Recurso Ordinário"
+    prazo: 15
+    unidade: "dias úteis"
+    base_legal: "Art. 1.003, §5º, CPC"
+
+  - peca: "Agravo em Recurso Especial/Extraordinário"
+    prazo: 15
+    unidade: "dias úteis"
+    base_legal: "Art. 1.042, CPC"
+
+  - peca: "Impugnação ao Cumprimento de Sentença"
+    prazo: 15
+    unidade: "dias úteis"
+    base_legal: "Art. 525, CPC"
+    observacao: "Contados da intimação para pagar"
+
+  - peca: "Embargos à Execução"
+    prazo: 15
+    unidade: "dias úteis"
+    base_legal: "Art. 915, CPC"
+    observacao: "Contados da juntada do mandado de citação"
+
+  - peca: "Tutela de Urgência Incidental"
+    prazo: 0
+    unidade: "sem prazo"
+    base_legal: "Art. 294, parágrafo único, CPC"
+    observacao: "Pode ser requerida a qualquer tempo"
+
+  - peca: "Mandado de Segurança"
+    prazo: 120
+    unidade: "dias corridos"
+    base_legal: "Art. 23, Lei 12.016/2009"
+    observacao: "Decadencial, contado da ciência do ato"
+
+prazos_trabalhistas:
+  - peca: "Recurso Ordinário"
+    prazo: 8
+    unidade: "dias corridos"
+    base_legal: "Art. 895, CLT"
+
+  - peca: "Agravo de Petição"
+    prazo: 8
+    unidade: "dias corridos"
+    base_legal: "Art. 897, CLT"
+
+  - peca: "Recurso de Revista"
+    prazo: 8
+    unidade: "dias corridos"
+    base_legal: "Art. 896, CLT"
+
+  - peca: "Embargos de Declaração (Trabalhista)"
+    prazo: 5
+    unidade: "dias corridos"
+    base_legal: "Art. 897-A, CLT"
+
+prazos_penais:
+  - peca: "Defesa Prévia"
+    prazo: 10
+    unidade: "dias corridos"
+    base_legal: "Art. 396, CPP"
+
+  - peca: "Apelação Criminal"
+    prazo: 5
+    unidade: "dias corridos"
+    base_legal: "Art. 593, CPP"
+
+  - peca: "Razões de Apelação Criminal"
+    prazo: 8
+    unidade: "dias corridos"
+    base_legal: "Art. 600, CPP"
+
+  - peca: "Habeas Corpus"
+    prazo: 0
+    unidade: "sem prazo"
+    base_legal: "Art. 5º, LXVIII, CF"
+    observacao: "Pode ser impetrado a qualquer tempo"
+
+  - peca: "Recurso em Sentido Estrito"
+    prazo: 5
+    unidade: "dias corridos"
+    base_legal: "Art. 586, CPP"
+
+regras_contagem:
+  cpc:
+    - "Prazos em dias úteis (art. 219, CPC)"
+    - "Excluir dia do começo, incluir dia do vencimento (art. 224, CPC)"
+    - "Prorrogação para primeiro dia útil se vencer em feriado/fim de semana"
+    - "Suspensão entre 20/12 e 20/01 (recesso forense)"
+  clt:
+    - "Prazos em dias corridos (Súmula 1, TST — exceção para embargos)"
+    - "Contagem contínua"
+  cpp:
+    - "Prazos em dias corridos"
+    - "Contagem a partir da intimação"

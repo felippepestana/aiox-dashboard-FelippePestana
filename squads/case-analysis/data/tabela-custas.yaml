@@ -1,0 +1,64 @@
+name: "Tabela de Custas Judiciais - Referência"
+description: "Referência de custas judiciais por tribunal (valores aproximados, sujeitos a atualização)"
+aviso: "Valores de referência. Consultar tabela oficial do tribunal para valores atualizados."
+
+justica_federal:
+  base_legal: "Lei 9.289/1996"
+  custas_iniciais:
+    percentual: "1% sobre o valor da causa"
+    minimo: 1082  # centavos (R$ 10,82)
+    maximo: 182680  # centavos (R$ 1.826,80)
+  recurso:
+    percentual: "1% sobre o valor da causa"
+  observacoes:
+    - "Isento: União, autarquias e fundações federais"
+    - "Isento: beneficiários de justiça gratuita"
+
+justica_trabalho:
+  custas_iniciais:
+    percentual: "2% sobre o valor da causa ou condenação"
+    minimo: 1064  # centavos (R$ 10,64)
+  recurso:
+    deposito_recursal_2024:
+      recurso_ordinario: 1258959  # centavos (R$ 12.589,59)
+      recurso_revista: 2517918  # centavos (R$ 25.179,18)
+      embargos: 2517918  # centavos
+      recurso_extraordinario: 2517918  # centavos
+  observacoes:
+    - "Beneficiário de justiça gratuita isento de custas"
+    - "Depósito recursal: garantia do juízo"
+
+tribunais_estaduais:
+  nota: "Cada tribunal estadual possui tabela própria de custas e emolumentos"
+  exemplos:
+    - tribunal: "TJSP"
+      base_legal: "Lei Estadual 11.608/2003"
+      distribuicao: "1% do valor da causa (mín. 5 UFESPs, máx. 3.000 UFESPs)"
+    - tribunal: "TJRJ"
+      base_legal: "Lei Estadual 3.350/1999"
+      taxa_judiciaria: "Progressiva conforme valor da causa"
+    - tribunal: "TJMG"
+      base_legal: "Lei Estadual 14.939/2003"
+    - tribunal: "TJRO"
+      base_legal: "Lei Complementar Estadual"
+
+tipos_custas:
+  - tipo: "Taxa Judiciária"
+    descricao: "Custas iniciais para distribuição da ação"
+  - tipo: "Preparo Recursal"
+    descricao: "Custas para interposição de recurso"
+  - tipo: "Diligências"
+    descricao: "Mandados, cartas precatórias, citações"
+  - tipo: "Pericial"
+    descricao: "Honorários do perito judicial"
+  - tipo: "Emolumentos"
+    descricao: "Taxas cartoriais (registros, certidões)"
+
+isencoes:
+  - "Beneficiário de justiça gratuita (art. 98, CPC)"
+  - "União, Estados, DF, Municípios e autarquias (art. 4º, Lei 9.289/96)"
+  - "Ministério Público"
+  - "Defensoria Pública"
+  - "Habeas corpus"
+  - "Habeas data"
+  - "Ação popular"

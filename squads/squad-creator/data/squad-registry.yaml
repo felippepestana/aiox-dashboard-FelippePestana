@@ -1,22 +1,22 @@
 metadata:
   total_squads: 1
-  generated_at: "2026-04-09"
+  generated_at: "2026-04-10"
 
 squads:
   case-analysis:
     path: "squads/case-analysis/"
-    version: "1.0.0"
-    score: 9.2
-    description: "Squad especializado em análise processual aprofundada, identificação de vícios e nulidades, pesquisa jurisprudencial, definição de estratégias processuais e elaboração de peças judiciais de urgência."
-    domain: "strategy"
+    version: "1.1.0"
+    score: 9.5
+    description: "Squad especializado em análise processual aprofundada, identificação de vícios e nulidades, pesquisa jurisprudencial, definição de estratégias processuais e elaboração de peças judiciais completas."
+    domain: "legal"
     has_readme: true
     counts:
       agents: 7
       tasks: 8
       workflows: 2
-      templates: 3
+      templates: 9
       checklists: 2
-      data_files: 2
+      data_files: 4
     agent_names:
       - case-analysis-chief
       - leitor-processual
@@ -35,18 +35,24 @@ squads:
       - tutela de urgência
       - embargos de declaração
       - agravo de instrumento
-      - busca e apreensão
-      - manutenção de posse
+      - contestação
+      - mandado de segurança
+      - recurso especial
+      - recurso extraordinário
+      - habeas corpus
+      - contrarrazões
+      - prazos processuais
+      - custas judiciais
       - direito processual civil
 
 domain_index:
-  strategy:
+  legal:
     - case-analysis
 
 summary:
   total_agents: 7
   total_tasks: 8
   total_workflows: 2
-  total_templates: 3
+  total_templates: 9
   total_checklists: 2
-  total_data_files: 2
+  total_data_files: 4
