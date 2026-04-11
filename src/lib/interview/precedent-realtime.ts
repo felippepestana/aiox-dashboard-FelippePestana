@@ -6,10 +6,17 @@
 
 import type { TranscriptEntry, LegalArea } from '@/types/legal';
 import {
-  searchPrecedents,
-  type PrecedentResult,
+  PrecedentSearchEngine,
+  type Precedent,
   type PrecedentSearchParams,
 } from '@/lib/jurisprudence/precedent-search';
+
+type PrecedentResult = Precedent;
+const searchEngine = new PrecedentSearchEngine();
+async function searchPrecedents(params: PrecedentSearchParams) {
+  const result = await searchEngine.search(params);
+  return result;
+}
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -182,7 +189,7 @@ export function createRealtimePrecedentService(): RealtimePrecedentService {
     const params: PrecedentSearchParams = {
       keywords: keyword,
       area,
-      limit: config.maxResults,
+      pageSize: config.maxResults,
     };
 
     try {

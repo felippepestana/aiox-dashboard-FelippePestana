@@ -540,13 +540,13 @@ export class JudgeAnalyzer {
     pAcordo /= sum;
     pExtinto /= sum;
 
-    const distribution: { outcome: PredictedOutcome; probability: number }[] = [
-      { outcome: 'procedente', probability: pProcedente },
-      { outcome: 'improcedente', probability: pImprocedente },
-      { outcome: 'parcialmente_procedente', probability: pParcial },
-      { outcome: 'acordo', probability: pAcordo },
-      { outcome: 'extinto_sem_merito', probability: pExtinto },
-    ].sort((a, b) => b.probability - a.probability);
+    const distribution = ([
+      { outcome: 'procedente' as PredictedOutcome, probability: pProcedente },
+      { outcome: 'improcedente' as PredictedOutcome, probability: pImprocedente },
+      { outcome: 'parcialmente_procedente' as PredictedOutcome, probability: pParcial },
+      { outcome: 'acordo' as PredictedOutcome, probability: pAcordo },
+      { outcome: 'extinto_sem_merito' as PredictedOutcome, probability: pExtinto },
+    ]).sort((a, b) => b.probability - a.probability);
 
     const predicted = distribution[0];
 

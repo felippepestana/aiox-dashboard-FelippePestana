@@ -81,7 +81,7 @@ export async function GET(request: Request) {
       }
 
       // Also fetch movements for the process
-      let movements;
+      let movements: unknown[] = [];
       try {
         movements = await datajud.getMovements(cnj);
       } catch {

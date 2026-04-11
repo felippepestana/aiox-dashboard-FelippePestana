@@ -564,14 +564,14 @@ export class PrecedentSearchEngine {
    */
   private extractHoldings(text: string): string[] {
     const holdings: string[] = [];
-    const numberedPattern = /(?:^|\n)\s*(\d+)\.\s+(.+?)(?=(?:\n\s*\d+\.)|$)/gs;
+    const numberedPattern = /(?:^|\n)\s*(\d+)\.\s+(.+?)(?=(?:\n\s*\d+\.)|$)/g;
     let match;
     while ((match = numberedPattern.exec(text)) !== null) {
       holdings.push(`${match[1]}. ${match[2].trim()}`);
     }
 
     if (holdings.length === 0) {
-      const romanPattern = /(?:^|\n)\s*(I{1,3}|IV|V|VI{0,3}|IX|X)\s*[-]\s*(.+?)(?=(?:\n\s*(?:I{1,3}|IV|V|VI{0,3}|IX|X)\s*[-])|\n\n|$)/gs;
+      const romanPattern = /(?:^|\n)\s*(I{1,3}|IV|V|VI{0,3}|IX|X)\s*[-]\s*(.+?)(?=(?:\n\s*(?:I{1,3}|IV|V|VI{0,3}|IX|X)\s*[-])|\n\n|$)/g;
       while ((match = romanPattern.exec(text)) !== null) {
         holdings.push(`${match[1]} - ${match[2].trim()}`);
       }
