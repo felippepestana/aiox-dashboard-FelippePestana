@@ -1,0 +1,294 @@
+metadata:
+  title: "Roteiros de Entrevista por Área Jurídica"
+  description: "Bancos de perguntas organizados por área para o sugestor de perguntas do squad de entrevista"
+  version: "1.0.0"
+  total_areas: 11
+
+areas:
+  civil:
+    nome: "Cível"
+    abertura:
+      - "Pode me contar o que aconteceu?"
+      - "Quando os fatos ocorreram?"
+      - "Quem são as partes envolvidas?"
+    fatos:
+      - "Quando ocorreu o fato gerador do dano?"
+      - "Há provas documentais do prejuízo sofrido?"
+      - "Foi realizada notificação extrajudicial?"
+      - "Qual o valor estimado do dano material?"
+      - "Houve tentativa de resolução amigável?"
+      - "Existem testemunhas dos fatos?"
+    contrato:
+      - "O contrato possui cláusula de foro eleito?"
+      - "Há cláusula de arbitragem no contrato?"
+      - "O contrato foi assinado por ambas as partes?"
+      - "Há aditivos ao contrato original?"
+    prescricao:
+      - "Quando o senhor(a) tomou conhecimento do dano?"
+      - "Houve interrupção da prescrição por algum ato?"
+    documentos_essenciais:
+      - Contrato
+      - Nota fiscal
+      - Comprovante de pagamento
+      - Notificação extrajudicial
+      - Fotos/vídeos do dano
+
+  trabalhista:
+    nome: "Trabalhista"
+    abertura:
+      - "Pode me contar sobre sua situação no trabalho?"
+      - "Há quanto tempo trabalha(va) na empresa?"
+      - "Como foi a saída da empresa?"
+    admissao:
+      - "Qual a data de admissão?"
+      - "A CTPS foi assinada?"
+      - "Qual o cargo e função exercidos?"
+      - "Qual o salário de admissão?"
+    jornada:
+      - "Qual era a jornada de trabalho?"
+      - "Havia controle de ponto?"
+      - "Realizava horas extras? Com que frequência?"
+      - "Recebia adicional noturno?"
+      - "Tinha intervalo para almoço respeitado?"
+    rescisao:
+      - "A rescisão foi por justa causa?"
+      - "Recebeu aviso prévio? Trabalhado ou indenizado?"
+      - "Recebeu as verbas rescisórias?"
+      - "O FGTS foi depositado corretamente?"
+      - "Sacou o FGTS + multa 40%?"
+    condicoes:
+      - "O ambiente de trabalho era insalubre?"
+      - "Havia condições de periculosidade?"
+      - "Recebia EPI adequado?"
+      - "Houve assédio moral ou sexual?"
+    documentos_essenciais:
+      - CTPS
+      - Holerites / contracheques
+      - Extrato FGTS
+      - Comprovante de rescisão (TRCT)
+      - Prints de mensagens (WhatsApp, email)
+      - Atestados médicos
+
+  tributario:
+    nome: "Tributário"
+    abertura:
+      - "Qual o tributo em discussão?"
+      - "A empresa ou pessoa física é contribuinte?"
+      - "Há auto de infração lavrado?"
+    tributo:
+      - "Qual o tributo em discussão (ICMS, ISS, IR, etc.)?"
+      - "Qual a base de cálculo questionada?"
+      - "O contribuinte está inscrito em dívida ativa?"
+      - "Qual o regime tributário da empresa?"
+    autuacao:
+      - "Houve autuação fiscal? Quando?"
+      - "O auto de infração foi lavrado por qual órgão?"
+      - "Qual o valor do crédito tributário?"
+      - "Há multa aplicada? De que natureza?"
+    defesa:
+      - "Foi apresentada impugnação administrativa?"
+      - "O prazo decadencial já transcorreu?"
+      - "Há certidão de regularidade fiscal?"
+      - "Existem compensações tributárias pendentes?"
+    documentos_essenciais:
+      - Auto de infração
+      - Guias de recolhimento
+      - DCTF / SPED
+      - Certidões negativas
+      - Balanços e demonstrações contábeis
+
+  penal:
+    nome: "Penal"
+    abertura:
+      - "Pode me contar o que aconteceu?"
+      - "Quando ocorreram os fatos?"
+      - "O senhor(a) foi preso(a)?"
+    fatos:
+      - "Onde exatamente ocorreram os fatos?"
+      - "Havia outras pessoas presentes?"
+      - "Houve flagrante? Foi preso(a)?"
+      - "Já foi ouvido(a) em delegacia?"
+    procedimento:
+      - "Há inquérito policial instaurado?"
+      - "Já recebeu denúncia?"
+      - "Existem testemunhas de acusação?"
+      - "Foi oferecido acordo de não persecução penal?"
+    antecedentes:
+      - "Tem antecedentes criminais?"
+      - "Responde a outros processos?"
+      - "Há medidas cautelares em vigor?"
+    documentos_essenciais:
+      - Boletim de ocorrência
+      - Auto de prisão em flagrante
+      - Exame de corpo de delito
+      - Certidão de antecedentes
+
+  consumidor:
+    nome: "Consumidor"
+    abertura:
+      - "Qual produto ou serviço está em questão?"
+      - "Quando realizou a compra/contratação?"
+      - "Qual o problema encontrado?"
+    produto:
+      - "O produto apresentou defeito? Qual?"
+      - "O produto está na garantia?"
+      - "Há nota fiscal ou comprovante de compra?"
+      - "Houve tentativa de troca ou reparo?"
+    fornecedor:
+      - "O fornecedor foi procurado para solução?"
+      - "Qual a resposta do fornecedor?"
+      - "Foi registrada reclamação no Procon?"
+      - "Registrou reclamação no Reclame Aqui ou SAC?"
+    danos:
+      - "Houve propaganda enganosa?"
+      - "O contrato possui cláusulas abusivas?"
+      - "Sofreu danos além do problema com o produto?"
+    documentos_essenciais:
+      - Nota fiscal
+      - Contrato de prestação de serviços
+      - Prints de reclamação
+      - Protocolo Procon
+      - Fotos do defeito
+
+  familia:
+    nome: "Família"
+    abertura:
+      - "Pode me contar sua situação familiar atual?"
+      - "É casado(a) ou tem união estável?"
+      - "Há filhos menores do casal?"
+    conjugal:
+      - "Há quanto tempo durou o casamento/união?"
+      - "O regime de bens é qual?"
+      - "A separação é consensual ou litigiosa?"
+    filhos:
+      - "Quantos filhos menores existem?"
+      - "Existe acordo sobre guarda dos filhos?"
+      - "Como está a convivência com os filhos?"
+      - "Há necessidade de alimentos provisórios?"
+    patrimonio:
+      - "Há bens a serem partilhados?"
+      - "Quais são os principais bens do casal?"
+      - "Há dívidas em comum?"
+    protecao:
+      - "Há medida protetiva em vigor?"
+      - "Houve episódios de violência?"
+    documentos_essenciais:
+      - Certidão de casamento
+      - Certidão de nascimento dos filhos
+      - Relação de bens
+      - Comprovante de renda de ambos
+
+  empresarial:
+    nome: "Empresarial"
+    abertura:
+      - "Qual o tipo societário da empresa?"
+      - "Quantos sócios compõem a sociedade?"
+      - "Qual o objeto social da empresa?"
+    societario:
+      - "Existe contrato social atualizado?"
+      - "Há conflito entre sócios?"
+      - "Há cláusula de não concorrência?"
+      - "A participação de cada sócio é proporcional?"
+    financeiro:
+      - "A empresa está em recuperação judicial?"
+      - "Existem dívidas trabalhistas ou tributárias?"
+      - "Qual o faturamento médio mensal?"
+    propriedade:
+      - "Há marca registrada?"
+      - "Existem patentes ou propriedade intelectual?"
+    documentos_essenciais:
+      - Contrato social
+      - Alterações contratuais
+      - Balanços patrimoniais
+      - Comprovante de registro INPI
+
+  previdenciario:
+    nome: "Previdenciário"
+    abertura:
+      - "Qual benefício previdenciário você pretende?"
+      - "Há quanto tempo contribui para o INSS?"
+      - "O requerimento administrativo foi indeferido?"
+    beneficio:
+      - "Qual o benefício pretendido?"
+      - "O segurado manteve qualidade de segurado?"
+      - "Há períodos de contribuição a comprovar?"
+      - "O segurado possui CNIS atualizado?"
+    especial:
+      - "Há atividade especial a ser reconhecida?"
+      - "Utilizava EPI durante a atividade?"
+      - "Há laudo técnico (PPP/LTCAT)?"
+    incapacidade:
+      - "O segurado está incapacitado para o trabalho?"
+      - "Há laudo médico atualizado?"
+      - "Foi submetido à perícia do INSS?"
+    documentos_essenciais:
+      - CNIS
+      - Carteira de trabalho
+      - PPP (Perfil Profissiográfico)
+      - Laudos médicos
+      - Carta de indeferimento do INSS
+
+  administrativo:
+    nome: "Administrativo"
+    abertura:
+      - "Qual órgão administrativo está envolvido?"
+      - "Houve processo administrativo prévio?"
+      - "O ato administrativo foi publicado?"
+    ato:
+      - "Qual o prazo para recurso administrativo?"
+      - "Há vício de motivação no ato?"
+      - "O devido processo legal foi observado?"
+      - "O contraditório foi garantido?"
+    procedimento:
+      - "Houve audiência ou oitiva prévia?"
+      - "As notificações foram regulares?"
+    documentos_essenciais:
+      - Ato administrativo impugnado
+      - Notificação recebida
+      - Recurso administrativo (se interposto)
+      - Publicação em diário oficial
+
+  ambiental:
+    nome: "Ambiental"
+    abertura:
+      - "Qual o tipo de dano ambiental?"
+      - "Houve autuação por órgão ambiental?"
+      - "O empreendimento possui licença ambiental?"
+    dano:
+      - "Qual a extensão do dano?"
+      - "A área é de preservação permanente?"
+      - "Há TAC (Termo de Ajustamento de Conduta)?"
+    licenciamento:
+      - "O empreendimento possui licença prévia?"
+      - "O EIA/RIMA foi elaborado?"
+      - "As condicionantes foram cumpridas?"
+    documentos_essenciais:
+      - Licença ambiental
+      - Auto de infração
+      - EIA/RIMA
+      - Fotos da área
+
+  digital:
+    nome: "Digital"
+    abertura:
+      - "Qual plataforma digital está envolvida?"
+      - "Houve vazamento de dados pessoais?"
+      - "O fato envolve violação à LGPD?"
+    dados:
+      - "Quais dados foram afetados?"
+      - "Houve notificação aos titulares?"
+      - "A empresa possui DPO (Encarregado)?"
+    conteudo:
+      - "Houve remoção de conteúdo solicitada?"
+      - "Há evidências digitais preservadas?"
+      - "O contrato digital possui termos de uso?"
+    evidencias:
+      - "Há registro de telas (screenshots)?"
+      - "As URLs foram preservadas?"
+      - "Há ata notarial do conteúdo?"
+    documentos_essenciais:
+      - Screenshots
+      - Ata notarial
+      - Termos de uso da plataforma
+      - Logs de acesso
+      - Notificação de vazamento
