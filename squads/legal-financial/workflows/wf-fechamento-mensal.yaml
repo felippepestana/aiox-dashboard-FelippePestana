@@ -1,0 +1,79 @@
+name: "Fechamento Financeiro Mensal"
+description: "Fluxo completo de fechamento financeiro mensal do escritório de advocacia."
+version: "1.0.0"
+trigger: "Início de cada mês (fechamento do mês anterior) ou sob demanda"
+
+steps:
+  - id: iniciar_fechamento
+    name: "Iniciar Fechamento"
+    agent: legal-financial-chief
+    description: "Define período de fechamento e distribui tarefas aos agentes"
+    outputs:
+      - periodo_fechamento
+      - tarefas_distribuidas
+
+  - id: consolidar_honorarios
+    name: "Consolidar Honorários"
+    agent: controlador-honorarios
+    task: controlar-honorarios
+    depends_on: [iniciar_fechamento]
+    description: "Consolida faturamento, recebíveis e inadimplência do período"
+    outputs:
+      - relatorio_honorarios
+
+  - id: apurar_tributos
+    name: "Apurar Tributos"
+    agent: analista-tributario
+    task: apurar-tributos
+    depends_on: [consolidar_honorarios]
+    description: "Apura tributos devidos com base no faturamento consolidado"
+    outputs:
+      - apuracao_tributaria
+      - guias_recolhimento
+
+  - id: projetar_caixa
+    name: "Projetar Fluxo de Caixa"
+    agent: gestor-fluxo-caixa
+    task: projetar-fluxo-caixa
+    depends_on: [consolidar_honorarios]
+    parallel_with: [apurar_tributos]
+    description: "Elabora projeção de fluxo de caixa para próximos meses"
+    outputs:
+      - projecao_fluxo_caixa
+
+  - id: avaliar_provisoes
+    name: "Avaliar Provisões"
+    agent: planejador-provisoes
+    task: avaliar-provisoes
+    depends_on: [iniciar_fechamento]
+    parallel_with: [consolidar_honorarios]
+    description: "Atualiza avaliação de provisões e contingências"
+    outputs:
+      - avaliacao_provisoes
+
+  - id: consolidar_fechamento
+    name: "Consolidar Fechamento"
+    agent: legal-financial-chief
+    task: gerar-fechamento-mensal
+    depends_on: [apurar_tributos, projetar_caixa, avaliar_provisoes]
+    description: "Consolida todas as informações no relatório gerencial"
+    outputs:
+      - relatorio_gerencial
+      - dashboard_atualizado
+
+flow_diagram: |
+  [Iniciar Fechamento]
+          ↓
+    ┌─────┴──────────┐
+    ↓                ↓
+  [Consolid.    [Avaliar
+   Honorários]   Provisões]
+    ↓                ↓
+    ├────────┐       │
+    ↓        ↓       │
+  [Apurar  [Projetar │
+   Tribut.] Caixa]   │
+    ↓        ↓       │
+    └────────┼───────┘
+             ↓
+  [Consolidar Fechamento]

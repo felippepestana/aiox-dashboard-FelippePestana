@@ -1,0 +1,60 @@
+name: "Teses de Recursos Repetitivos do STJ"
+description: "Principais teses fixadas em julgamento de recursos repetitivos no STJ"
+
+temas:
+  - numero: 952
+    titulo: "Revisão de contratos bancários — capitalização de juros"
+    status: "tese_fixada"
+    leading_case: "REsp 1388972/SC"
+    tese: "É permitida a capitalização de juros com periodicidade inferior à anual em contratos celebrados com instituições integrantes do Sistema Financeiro Nacional a partir de 31/3/2000 (MP 1.963-17/2000, atual MP 2.170-36/2001), desde que expressamente pactuada."
+    area: "bancario"
+
+  - numero: 905
+    titulo: "Devolução em dobro de cobrança indevida"
+    status: "tese_fixada"
+    leading_case: "EAREsp 676608/RS"
+    tese: "A restituição em dobro do indébito (art. 42, parágrafo único, do CDC) independe da natureza do elemento volitivo do fornecedor que cobrou indevidamente, e é cabível quando a cobrança indevida consubstanciar conduta contrária à boa-fé objetiva."
+    area: "consumidor"
+    modulacao: "Aplica-se a partir de 30/03/2021"
+
+  - numero: 1000
+    titulo: "Busca e apreensão — purgação da mora"
+    status: "tese_fixada"
+    leading_case: "REsp 1418593/MS"
+    tese: "Em ação de busca e apreensão fundada no Decreto-Lei 911/1969, para a purgação da mora é necessário o pagamento da integralidade da dívida — Loss, parcelas vencidas e vincendas —, no prazo de 5 dias após a execução da liminar."
+    area: "bancario"
+
+  - numero: 1101
+    titulo: "Prescrição de pretensões indenizatórias contra a Fazenda Pública"
+    status: "tese_fixada"
+    leading_case: "REsp 1251993/PR"
+    tese: "É prescritível a ação de reparação de danos à Fazenda Pública decorrente de ilícito civil."
+    area: "fazenda_publica"
+
+  - numero: 1070
+    titulo: "Honorários advocatícios em execução fiscal"
+    status: "tese_fixada"
+    leading_case: "REsp 1291736/PR"
+    tese: "A Fazenda Pública está sujeita ao pagamento de honorários advocatícios sucumbenciais quando desistir de execução fiscal em virtude do cancelamento do crédito tributário."
+    area: "tributario"
+
+  - numero: 998
+    titulo: "DPVAT — indenização por invalidez permanente"
+    status: "tese_fixada"
+    leading_case: "REsp 1246432/RS"
+    tese: "A indenização do seguro DPVAT, em caso de invalidez parcial permanente do beneficiário, será proporcional ao grau de invalidez."
+    area: "seguro"
+
+  - numero: 1060
+    titulo: "Plano de saúde — reajuste por faixa etária"
+    status: "tese_fixada"
+    leading_case: "REsp 1568244/RJ"
+    tese: "O reajuste de mensalidade de plano de saúde individual ou familiar fundado na mudança de faixa etária do beneficiário é válido desde que haja previsão contratual, observadas as normas expedidas pelos órgãos governamentais reguladores e a vedação de percentuais desarrazoados ou aleatórios."
+    area: "consumidor"
+
+areas_index:
+  bancario: [952, 1000]
+  consumidor: [905, 1060]
+  fazenda_publica: [1101]
+  tributario: [1070]
+  seguro: [998]
