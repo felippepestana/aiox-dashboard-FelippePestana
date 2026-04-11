@@ -106,7 +106,7 @@ export default function UploadPage() {
           <option value="">Selecione um processo (opcional)</option>
           {processes.map((proc) => (
             <option key={proc.id} value={proc.id}>
-              {proc.number} - {proc.title}
+              {proc.cnj} - {proc.title}
             </option>
           ))}
         </select>
