@@ -1,0 +1,62 @@
+name: "Sincronização de Processos"
+description: "Fluxo de sincronização completa de dados processuais entre sistemas judiciais e base local."
+version: "1.0.0"
+trigger: "Sob demanda ou agendamento semanal"
+
+steps:
+  - id: listar_processos
+    name: "Listar Processos para Sincronização"
+    agent: court-integration-chief
+    description: "Identifica processos que necessitam de atualização de dados"
+    outputs:
+      - lista_sincronizacao
+
+  - id: consultar_pje
+    name: "Consultar PJE"
+    agent: consultor-pje
+    task: consultar-processo-pje
+    depends_on: [listar_processos]
+    description: "Consulta dados atualizados via PJE/MNI para processos aplicáveis"
+    outputs:
+      - dados_pje
+
+  - id: consultar_datajud
+    name: "Consultar DataJud"
+    agent: consultor-datajud
+    task: consultar-datajud
+    depends_on: [listar_processos]
+    parallel_with: [consultar_pje]
+    description: "Consulta dados consolidados via DataJud para complementação"
+    outputs:
+      - dados_datajud
+
+  - id: rastrear
+    name: "Rastrear Movimentações Novas"
+    agent: rastreador-movimentacao
+    task: rastrear-movimentacoes
+    depends_on: [consultar_pje, consultar_datajud]
+    description: "Identifica e classifica movimentações novas encontradas"
+    outputs:
+      - movimentacoes_classificadas
+
+  - id: consolidar
+    name: "Consolidar Dados"
+    agent: court-integration-chief
+    depends_on: [rastrear]
+    description: "Unifica dados de todas as fontes e atualiza base local"
+    outputs:
+      - base_atualizada
+      - relatorio_sincronizacao
+
+flow_diagram: |
+  [Listar Processos]
+         ↓
+    ┌────┴────┐
+    ↓         ↓
+  [PJE]  [DataJud]
+    ↓         ↓
+    └────┬────┘
+         ↓
+  [Rastrear Movim.]
+         ↓
+  [Consolidar Dados]

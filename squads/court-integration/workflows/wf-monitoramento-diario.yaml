@@ -1,0 +1,67 @@
+name: "Monitoramento Diário"
+description: "Fluxo diário de varredura de publicações, movimentações e sincronização de prazos processuais."
+version: "1.0.0"
+trigger: "Execução diária programada (07:00) ou sob demanda"
+
+steps:
+  - id: iniciar_monitoramento
+    name: "Iniciar Monitoramento Diário"
+    agent: court-integration-chief
+    description: "Carrega lista de processos e partes monitoradas, define escopo da varredura"
+    outputs:
+      - lista_processos_monitorados
+      - parametros_varredura
+
+  - id: varrer_dje
+    name: "Varrer DJE"
+    agent: monitor-publicacoes
+    task: monitorar-dje
+    depends_on: [iniciar_monitoramento]
+    description: "Varre diários de justiça eletrônicos em busca de publicações relevantes"
+    outputs:
+      - publicacoes_identificadas
+      - prazos_dje
+
+  - id: rastrear_movimentacoes
+    name: "Rastrear Movimentações"
+    agent: rastreador-movimentacao
+    task: rastrear-movimentacoes
+    depends_on: [iniciar_monitoramento]
+    parallel_with: [varrer_dje]
+    description: "Consulta APIs judiciais para identificar novas movimentações"
+    outputs:
+      - novas_movimentacoes
+      - prazos_api
+
+  - id: sincronizar_prazos
+    name: "Sincronizar Prazos"
+    agent: court-integration-chief
+    task: sincronizar-prazos
+    depends_on: [varrer_dje, rastrear_movimentacoes]
+    description: "Consolida prazos de todas as fontes e gera alertas"
+    outputs:
+      - prazos_consolidados
+      - alertas_urgentes
+
+  - id: entregar_relatorio
+    name: "Entregar Relatório Diário"
+    agent: court-integration-chief
+    depends_on: [sincronizar_prazos]
+    description: "Gera e entrega relatório consolidado do monitoramento diário"
+    outputs:
+      - relatorio_diario
+      - notificacoes_enviadas
+
+flow_diagram: |
+  [Iniciar Monitoramento]
+          ↓
+    ┌─────┴─────┐
+    ↓           ↓
+  [Varrer   [Rastrear
+   DJE]    Moviment.]
+    ↓           ↓
+    └─────┬─────┘
+          ↓
+  [Sincronizar Prazos]
+          ↓
+  [Entregar Relatório]

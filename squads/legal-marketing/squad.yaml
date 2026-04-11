@@ -1,0 +1,46 @@
+metadata:
+  display_name: "Marketing Jurídico"
+  description: "Squad de marketing jurídico com compliance OAB, gestão de leads, criação de conteúdo e automação"
+  version: "1.0.0"
+  domain: "legal"
+  status: "active"
+  score: 8.5
+
+tier_system:
+  orchestrator:
+    name: "Orquestrador"
+    purpose: "Coordena estratégias de marketing jurídico"
+    agents: [legal-marketing-chief]
+  tier_1_main:
+    name: "Especialistas de Marketing"
+    purpose: "Conteúdo, leads e compliance"
+    agents: [criador-conteudo-juridico, gestor-leads, compliance-oab]
+  tier_2_specialists:
+    name: "Operações"
+    purpose: "SDR e automação"
+    agents: [analista-sdr]
+
+agents:
+  - id: legal-marketing-chief
+    name: "Chefe de Marketing Jurídico"
+    role: "Orquestrador de Marketing"
+    tier: orchestrator
+  - id: criador-conteudo-juridico
+    name: "Criador de Conteúdo Jurídico"
+    role: "Produção de conteúdo para áreas do direito"
+    tier: tier_1_main
+  - id: gestor-leads
+    name: "Gestor de Leads"
+    role: "Pipeline e qualificação de leads"
+    tier: tier_1_main
+  - id: compliance-oab
+    name: "Compliance OAB"
+    role: "Verificação de conformidade com Provimento 205/2021"
+    tier: tier_1_main
+  - id: analista-sdr
+    name: "Analista SDR"
+    role: "Sales Development Representative jurídico"
+    tier: tier_2_specialists
+
+dependencies:
+  - aios-core
