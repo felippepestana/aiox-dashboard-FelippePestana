@@ -25,6 +25,8 @@ import {
   MapPin,
   Phone,
   Gavel,
+  Mic,
+  Search,
 } from 'lucide-react';
 
 const NAV_SECTIONS = [
@@ -62,6 +64,12 @@ const NAV_SECTIONS = [
       { id: 'marketing', label: 'Marketing Jurídico', icon: Megaphone, href: '/legal/marketing' },
       { id: 'leads', label: 'Pipeline de Leads', icon: TrendingUp, href: '/legal/leads' },
       { id: 'content-legal', label: 'Conteúdo', icon: Sparkles, href: '/legal/content' },
+    ],
+  },
+  {
+    title: 'Assistente IA',
+    items: [
+      { id: 'interview', label: 'Entrevista', icon: Mic, href: '/legal/interview' },
     ],
   },
 ];

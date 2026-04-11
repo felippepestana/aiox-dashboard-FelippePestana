@@ -190,6 +190,42 @@ squads:
       - inbound marketing
       - qualificação de leads
 
+  interview-assistant:
+    path: "squads/interview-assistant/"
+    version: "1.0.0"
+    score: 9.0
+    description: "Squad de assistência em tempo real durante entrevistas com clientes, com transcrição, sugestão de perguntas, pesquisa de precedentes e geração de estratégia."
+    domain: "legal"
+    has_readme: true
+    counts:
+      agents: 6
+      tasks: 5
+      workflows: 2
+      templates: 2
+      checklists: 1
+      data_files: 1
+    agent_names:
+      - interview-chief
+      - transcritor-entrevista
+      - sugestor-perguntas
+      - pesquisador-contexto
+      - gerador-estrategia
+      - minutador-inicial
+    keywords:
+      - assistente de entrevista
+      - transcrição em tempo real
+      - sugestão de perguntas
+      - pesquisa de precedentes
+      - geração de estratégia
+      - entrevista com cliente
+      - Web Speech API
+      - Whisper
+      - identificação de interlocutor
+      - fatos-chave
+      - teses jurídicas
+      - esboço de petição
+      - pós-entrevista
+
 domain_index:
   legal:
     - case-analysis
@@ -197,11 +233,12 @@ domain_index:
     - legal-intelligence
     - legal-financial
     - legal-marketing
+    - interview-assistant
 
 summary:
-  total_agents: 29
-  total_tasks: 30
-  total_workflows: 10
-  total_templates: 12
-  total_checklists: 7
-  total_data_files: 15
+  total_agents: 35
+  total_tasks: 35
+  total_workflows: 12
+  total_templates: 14
+  total_checklists: 8
+  total_data_files: 16
