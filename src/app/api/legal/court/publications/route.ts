@@ -1,79 +1,129 @@
 import { NextResponse } from 'next/server';
+import { createCourtAdapter } from '@/lib/court/court-factory';
+import { CourtAdapterError } from '@/lib/court/court-adapter';
+import type { CourtSystem, Publication } from '@/types/legal';
 
-// Mock DJE publications for development
-const MOCK_PUBLICATIONS = [
-  {
-    id: 'pub-1',
-    date: '2026-04-11',
-    journal: 'DJE - Caderno Judicial - 1a Instancia',
-    court: 'TJSP',
-    cnj: '1234567-89.2025.8.26.0100',
-    content: 'INTIMACAO: Fica o advogado do autor intimado para manifestar-se sobre a contestacao apresentada, no prazo de 15 dias uteis.',
-    type: 'intimacao',
-    oab: 'SP123456',
-  },
-  {
-    id: 'pub-2',
-    date: '2026-04-11',
-    journal: 'DJE - Caderno Judicial - 2a Instancia',
-    court: 'TJSP',
-    cnj: '9876543-21.2025.8.26.0100',
-    content: 'PUBLICACAO DE ACORDAO: Recurso de apelacao parcialmente provido. Voto vencedor do relator.',
-    type: 'acordao',
-    oab: 'SP123456',
-  },
-  {
-    id: 'pub-3',
-    date: '2026-04-10',
-    journal: 'DJE - Caderno Administrativo',
-    court: 'TJSP',
-    cnj: null,
-    content: 'PORTARIA: Designacao de audiencias para o mes de maio de 2026 na 2a Vara Civel da Comarca de Sao Paulo.',
-    type: 'portaria',
-    oab: null,
-  },
-  {
-    id: 'pub-4',
-    date: '2026-04-09',
-    journal: 'DJE - Caderno Judicial - 1a Instancia',
-    court: 'TJRJ',
-    cnj: '0012345-67.2025.8.19.0001',
-    content: 'SENTENCA: Julgo procedente o pedido para condenar o reu ao pagamento de indenizacao por dano moral no valor de R$ 20.000,00.',
-    type: 'sentenca',
-    oab: 'RJ654321',
-  },
-];
-
+/**
+ * GET /api/legal/court/publications
+ *
+ * Fetch DJE (Diario de Justica Eletronico) publications matching
+ * an OAB registration number.
+ *
+ * Query Parameters:
+ * - oab (required): OAB registration number (e.g., 'SP123456')
+ * - since (optional): ISO 8601 date to filter publications from
+ * - system (optional): Court system to query (pje, esaj, eproc, projudi)
+ *   If omitted, queries all systems with available credentials.
+ *
+ * Responses:
+ * - 200: Publications found (may be empty array)
+ * - 400: Missing required OAB parameter
+ * - 500: Internal server error
+ */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const oab = searchParams.get('oab');
-  const since = searchParams.get('since');
-  const court = searchParams.get('court');
-  const type = searchParams.get('type');
+  const since = searchParams.get('since') || undefined;
+  const system = searchParams.get('system') as CourtSystem | null;
 
-  let results = MOCK_PUBLICATIONS;
-
-  if (oab) {
-    results = results.filter((p) => p.oab === oab);
+  // Validate OAB parameter
+  if (!oab) {
+    return NextResponse.json(
+      {
+        error: 'Missing required parameter: oab',
+        message: 'Please provide an OAB registration number (e.g., SP123456)',
+      },
+      { status: 400 },
+    );
   }
 
-  if (since) {
-    results = results.filter((p) => p.date >= since);
+  // Validate since date if provided
+  if (since && isNaN(Date.parse(since))) {
+    return NextResponse.json(
+      {
+        error: 'Invalid date format for "since" parameter',
+        message: 'Provide an ISO 8601 date string (e.g., 2024-01-01)',
+      },
+      { status: 400 },
+    );
   }
 
-  if (court) {
-    results = results.filter((p) => p.court === court);
-  }
+  try {
+    const allPublications: Publication[] = [];
 
-  if (type) {
-    results = results.filter((p) => p.type === type);
-  }
+    // Systems that support publication monitoring
+    const publicationSystems: CourtSystem[] = system
+      ? [system]
+      : ['pje', 'esaj', 'eproc', 'projudi'];
 
-  // In production, monitors DJE across courts for OAB/CNJ matches
-  return NextResponse.json({
-    publications: results,
-    query: { oab, since, court, type },
-    total: results.length,
-    message: 'Mock publications returned for development. DJE monitoring active in Phase 2.',
-  });
+    // Query each system for publications
+    const queries = publicationSystems.map(async (sys) => {
+      try {
+        const adapter = createCourtAdapter(sys);
+        await adapter.authenticate({
+          system: sys,
+          username: process.env[`${sys.toUpperCase()}_USERNAME`] || 'api-user',
+          password: process.env[`${sys.toUpperCase()}_PASSWORD`],
+          apiKey: process.env[`${sys.toUpperCase()}_API_KEY`],
+          certificate: process.env[`${sys.toUpperCase()}_CERTIFICATE`],
+        });
+
+        const pubs = await adapter.getPublications(oab, since);
+        return { system: sys, publications: pubs, error: null };
+      } catch (error) {
+        return {
+          system: sys,
+          publications: [] as Publication[],
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
+    });
+
+    const results = await Promise.all(queries);
+
+    // Aggregate publications from all systems
+    const systemStatuses: Record<string, { count: number; error: string | null }> = {};
+
+    for (const result of results) {
+      allPublications.push(...result.publications);
+      systemStatuses[result.system] = {
+        count: result.publications.length,
+        error: result.error,
+      };
+    }
+
+    // Sort by publication date descending
+    allPublications.sort(
+      (a, b) =>
+        new Date(b.publicationDate).getTime() - new Date(a.publicationDate).getTime(),
+    );
+
+    return NextResponse.json({
+      success: true,
+      oab,
+      since: since || null,
+      publications: allPublications,
+      total: allPublications.length,
+      systemStatuses,
+    });
+  } catch (error) {
+    if (error instanceof CourtAdapterError) {
+      return NextResponse.json(
+        {
+          error: error.code,
+          message: error.message,
+          system: error.system,
+        },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'An unexpected error occurred',
+      },
+      { status: 500 },
+    );
+  }
 }

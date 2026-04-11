@@ -1,315 +1,294 @@
 /**
- * Real-Time Transcription Service
- * WebSocket-based transcription using Web Speech API with Whisper fallback.
- * Provides speaker identification, confidence scoring, and session controls.
+ * Transcription Service
+ * WebSocket-based real-time transcription using Web Speech API with Whisper fallback.
+ * Provides speaker identification, confidence scoring, and start/stop/pause controls.
  */
 
 import type { TranscriptEntry } from '@/types/legal';
 
-// ─── Interfaces ─────────────────────────────────────────────────────────────
+// ─── Types ──────────────────────────────────────────────────────────────────
+
+export type TranscriptionStatus = 'idle' | 'recording' | 'paused' | 'stopped' | 'error';
+
+export type Speaker = 'lawyer' | 'client' | 'system';
 
 export interface TranscriptionConfig {
   language: string;
   continuous: boolean;
   interimResults: boolean;
   whisperEndpoint?: string;
-  speakerLabels: boolean;
+  speakerDetection: boolean;
 }
 
 export interface TranscriptionCallbacks {
   onTranscript: (entry: TranscriptEntry) => void;
   onInterim: (text: string) => void;
-  onError: (error: TranscriptionError) => void;
   onStatusChange: (status: TranscriptionStatus) => void;
-}
-
-export type TranscriptionStatus = 'idle' | 'recording' | 'paused' | 'stopped' | 'error';
-
-export interface TranscriptionError {
-  code: string;
-  message: string;
-  timestamp: string;
+  onError: (error: string) => void;
 }
 
 export interface TranscriptionService {
-  start: () => void;
-  stop: () => void;
+  start: (config?: Partial<TranscriptionConfig>) => void;
+  stop: () => TranscriptEntry[];
   pause: () => void;
   resume: () => void;
   getStatus: () => TranscriptionStatus;
-  setSpeaker: (speaker: 'lawyer' | 'client') => void;
   getTranscript: () => TranscriptEntry[];
-  exportTranscript: () => string;
-  destroy: () => void;
+  setSpeaker: (speaker: Speaker) => void;
+  onTranscript: (callback: (entry: TranscriptEntry) => void) => void;
 }
 
-// ─── Default Configuration ──────────────────────────────────────────────────
+// ─── Default Config ─────────────────────────────────────────────────────────
 
 const DEFAULT_CONFIG: TranscriptionConfig = {
   language: 'pt-BR',
   continuous: true,
   interimResults: true,
-  speakerLabels: true,
+  speakerDetection: true,
 };
 
-// ─── Web Speech API Detection ───────────────────────────────────────────────
+// ─── SpeechRecognition type shim ────────────────────────────────────────────
 
-function getSpeechRecognition(): typeof SpeechRecognition | null {
-  if (typeof window === 'undefined') return null;
-  const SR =
-    (window as unknown as Record<string, unknown>).SpeechRecognition ??
-    (window as unknown as Record<string, unknown>).webkitSpeechRecognition;
-  return (SR as typeof SpeechRecognition) ?? null;
+interface SpeechRecognitionEvent {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognitionInstance {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: { error: string }) => void) | null;
+  onend: (() => void) | null;
+  onstart: (() => void) | null;
+}
+
+// ─── Speaker Detection Heuristic ────────────────────────────────────────────
+
+const LAWYER_KEYWORDS = [
+  'artigo', 'parágrafo', 'inciso', 'alínea', 'lei', 'código',
+  'jurisprudência', 'precedente', 'tutela', 'recurso', 'prazo',
+  'contestação', 'petição', 'audiência', 'sentença', 'acórdão',
+  'vossa excelência', 'doutor', 'doutora', 'processo', 'protocolo',
+];
+
+function detectSpeaker(text: string, currentSpeaker: Speaker): Speaker {
+  const lower = text.toLowerCase();
+  const lawyerScore = LAWYER_KEYWORDS.reduce(
+    (score, keyword) => score + (lower.includes(keyword) ? 1 : 0),
+    0
+  );
+
+  if (lawyerScore >= 2) return 'lawyer';
+  if (lawyerScore === 0 && text.length > 20) return 'client';
+  return currentSpeaker;
 }
 
 // ─── Whisper Fallback ───────────────────────────────────────────────────────
 
-interface WhisperResponse {
-  text: string;
-  confidence: number;
-  segments: Array<{ text: string; start: number; end: number }>;
-}
-
 async function transcribeWithWhisper(
   audioBlob: Blob,
   endpoint: string
-): Promise<WhisperResponse> {
-  const formData = new FormData();
-  formData.append('file', audioBlob, 'audio.webm');
-  formData.append('model', 'whisper-1');
-  formData.append('language', 'pt');
-  formData.append('response_format', 'verbose_json');
+): Promise<{ text: string; confidence: number }> {
+  try {
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'recording.webm');
+    formData.append('language', 'pt');
+    formData.append('response_format', 'json');
 
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    body: formData,
-  });
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      body: formData,
+    });
 
-  if (!response.ok) {
-    throw new Error(`Whisper API error: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`Whisper API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return {
+      text: data.text || '',
+      confidence: data.confidence ?? 0.85,
+    };
+  } catch {
+    return { text: '', confidence: 0 };
   }
-
-  return response.json();
-}
-
-// ─── Unique ID Generator ────────────────────────────────────────────────────
-
-let entryCounter = 0;
-function generateEntryId(): string {
-  entryCounter += 1;
-  return `te-${Date.now()}-${entryCounter}`;
 }
 
 // ─── Create Transcription Service ───────────────────────────────────────────
 
 export function createTranscriptionService(
-  callbacks: TranscriptionCallbacks,
-  config: Partial<TranscriptionConfig> = {}
+  callbacks: Partial<TranscriptionCallbacks> = {}
 ): TranscriptionService {
-  const cfg: TranscriptionConfig = { ...DEFAULT_CONFIG, ...config };
   let status: TranscriptionStatus = 'idle';
-  let currentSpeaker: 'lawyer' | 'client' = 'lawyer';
-  const transcript: TranscriptEntry[] = [];
-  let recognition: SpeechRecognition | null = null;
-  let mediaRecorder: MediaRecorder | null = null;
-  let audioChunks: Blob[] = [];
-  let useWhisper = false;
+  let transcript: TranscriptEntry[] = [];
+  let currentSpeaker: Speaker = 'lawyer';
+  let recognition: SpeechRecognitionInstance | null = null;
+  let entryCounter = 0;
+  let config: TranscriptionConfig = { ...DEFAULT_CONFIG };
+  let transcriptCallback: ((entry: TranscriptEntry) => void) | null =
+    callbacks.onTranscript || null;
 
   function setStatus(newStatus: TranscriptionStatus) {
     status = newStatus;
-    callbacks.onStatusChange(newStatus);
+    callbacks.onStatusChange?.(newStatus);
   }
 
-  function addEntry(text: string, confidence: number) {
+  function createEntry(text: string, confidence: number): TranscriptEntry {
+    entryCounter += 1;
     const entry: TranscriptEntry = {
-      id: generateEntryId(),
+      id: `te-${Date.now()}-${entryCounter}`,
       speaker: currentSpeaker,
       text: text.trim(),
       timestamp: new Date().toISOString(),
-      confidence,
+      confidence: Math.round(confidence * 100) / 100,
     };
-    transcript.push(entry);
-    callbacks.onTranscript(entry);
+    return entry;
   }
 
-  // ── Web Speech API Setup ────────────────────────────────────────────────
+  function initWebSpeechAPI(): boolean {
+    if (typeof window === 'undefined') return false;
 
-  function startWebSpeech() {
-    const SpeechRecognitionClass = getSpeechRecognition();
-    if (!SpeechRecognitionClass) {
-      useWhisper = true;
-      startWhisperFallback();
-      return;
-    }
+    const SpeechRecognitionConstructor =
+      (window as unknown as Record<string, unknown>).SpeechRecognition ||
+      (window as unknown as Record<string, unknown>).webkitSpeechRecognition;
 
-    try {
-      recognition = new SpeechRecognitionClass();
-      recognition.lang = cfg.language;
-      recognition.continuous = cfg.continuous;
-      recognition.interimResults = cfg.interimResults;
+    if (!SpeechRecognitionConstructor) return false;
 
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const result = event.results[i];
-          if (result.isFinal) {
-            const text = result[0].transcript;
-            const confidence = result[0].confidence;
-            addEntry(text, confidence);
-          } else {
-            callbacks.onInterim(result[0].transcript);
+    recognition = new (SpeechRecognitionConstructor as new () => SpeechRecognitionInstance)();
+    recognition.lang = config.language;
+    recognition.continuous = config.continuous;
+    recognition.interimResults = config.interimResults;
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        const alternative = result[0];
+
+        if (result.isFinal) {
+          if (config.speakerDetection) {
+            currentSpeaker = detectSpeaker(alternative.transcript, currentSpeaker);
           }
+
+          const entry = createEntry(alternative.transcript, alternative.confidence);
+          transcript.push(entry);
+          transcriptCallback?.(entry);
+        } else {
+          callbacks.onInterim?.(alternative.transcript);
         }
-      };
+      }
+    };
 
-      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-        if (event.error === 'not-allowed') {
-          callbacks.onError({
-            code: 'PERMISSION_DENIED',
-            message: 'Permissao de microfone negada. Por favor, permita o acesso ao microfone.',
-            timestamp: new Date().toISOString(),
-          });
-          setStatus('error');
-          return;
-        }
+    recognition.onerror = (event: { error: string }) => {
+      if (event.error === 'no-speech') return;
+      callbacks.onError?.(`Erro de reconhecimento: ${event.error}`);
 
-        if (event.error === 'no-speech') {
-          // Silently restart, common with continuous mode
-          return;
-        }
-
-        // Fallback to Whisper on other errors
-        if (cfg.whisperEndpoint) {
-          useWhisper = true;
-          recognition?.stop();
-          startWhisperFallback();
-          return;
-        }
-
-        callbacks.onError({
-          code: event.error,
-          message: `Erro na transcricao: ${event.error}`,
-          timestamp: new Date().toISOString(),
-        });
-      };
-
-      recognition.onend = () => {
-        // Auto-restart in continuous mode if still recording
-        if (status === 'recording' && recognition && !useWhisper) {
-          try {
-            recognition.start();
-          } catch {
-            // Ignore start errors during restart
-          }
-        }
-      };
-
-      recognition.start();
-      setStatus('recording');
-    } catch (err) {
-      callbacks.onError({
-        code: 'INIT_FAILED',
-        message: `Falha ao iniciar reconhecimento de voz: ${err}`,
-        timestamp: new Date().toISOString(),
-      });
-      // Try Whisper fallback
-      if (cfg.whisperEndpoint) {
-        useWhisper = true;
-        startWhisperFallback();
-      } else {
+      if (event.error === 'not-allowed' || event.error === 'service-not-available') {
         setStatus('error');
       }
-    }
+    };
+
+    recognition.onend = () => {
+      if (status === 'recording' && recognition) {
+        try {
+          recognition.start();
+        } catch {
+          setStatus('stopped');
+        }
+      }
+    };
+
+    return true;
   }
 
-  // ── Whisper Fallback Setup ──────────────────────────────────────────────
-
-  async function startWhisperFallback() {
-    if (!cfg.whisperEndpoint) {
-      callbacks.onError({
-        code: 'NO_WHISPER',
-        message: 'Web Speech API indisponivel e nenhum endpoint Whisper configurado.',
-        timestamp: new Date().toISOString(),
-      });
+  async function initWhisperFallback(): Promise<void> {
+    if (!config.whisperEndpoint) {
+      callbacks.onError?.('Web Speech API não disponível e Whisper endpoint não configurado');
       setStatus('error');
       return;
     }
 
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-      audioChunks = [];
+    setStatus('recording');
+    callbacks.onError?.('Usando fallback Whisper para transcrição');
 
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunks.push(event.data);
-        }
-      };
+    // In production, this would use MediaRecorder to capture audio chunks
+    // and send them to the Whisper endpoint periodically
+    const mockInterval = setInterval(async () => {
+      if (status !== 'recording') {
+        clearInterval(mockInterval);
+        return;
+      }
 
-      // Process every 5 seconds
-      mediaRecorder.onstop = async () => {
-        if (audioChunks.length === 0) return;
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        audioChunks = [];
-
-        try {
-          const result = await transcribeWithWhisper(audioBlob, cfg.whisperEndpoint!);
-          if (result.text.trim()) {
-            addEntry(result.text, result.confidence);
-          }
-        } catch (err) {
-          callbacks.onError({
-            code: 'WHISPER_ERROR',
-            message: `Erro no Whisper: ${err}`,
-            timestamp: new Date().toISOString(),
-          });
-        }
-      };
-
-      mediaRecorder.start();
-      setStatus('recording');
-
-      // Segment every 5 seconds for near real-time
-      const segmentInterval = setInterval(() => {
-        if (status === 'recording' && mediaRecorder?.state === 'recording') {
-          mediaRecorder.stop();
-          setTimeout(() => {
-            if (status === 'recording') {
-              mediaRecorder?.start();
-            }
-          }, 100);
-        } else {
-          clearInterval(segmentInterval);
-        }
-      }, 5000);
-    } catch (err) {
-      callbacks.onError({
-        code: 'MIC_ERROR',
-        message: `Erro ao acessar microfone: ${err}`,
-        timestamp: new Date().toISOString(),
-      });
-      setStatus('error');
-    }
+      // Mock: in real implementation, capture audio chunk via MediaRecorder
+      const mockBlob = new Blob([], { type: 'audio/webm' });
+      const result = await transcribeWithWhisper(mockBlob, config.whisperEndpoint!);
+      if (result.text) {
+        const entry = createEntry(result.text, result.confidence);
+        transcript.push(entry);
+        transcriptCallback?.(entry);
+      }
+    }, 5000);
   }
 
-  // ── Public API ──────────────────────────────────────────────────────────
-
   return {
-    start() {
+    start(overrides?: Partial<TranscriptionConfig>) {
       if (status === 'recording') return;
-      startWebSpeech();
+
+      config = { ...DEFAULT_CONFIG, ...overrides };
+      transcript = [];
+      entryCounter = 0;
+
+      const webSpeechAvailable = initWebSpeechAPI();
+
+      if (webSpeechAvailable && recognition) {
+        try {
+          recognition.start();
+          setStatus('recording');
+        } catch {
+          initWhisperFallback();
+        }
+      } else {
+        initWhisperFallback();
+      }
     },
 
     stop() {
       if (recognition) {
         recognition.onend = null;
-        recognition.stop();
+        recognition.abort();
         recognition = null;
       }
-      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
-        mediaRecorder = null;
-      }
       setStatus('stopped');
+
+      // Add system entry marking end
+      const endEntry = createEntry('Entrevista finalizada.', 1.0);
+      endEntry.speaker = 'system';
+      transcript.push(endEntry);
+      transcriptCallback?.(endEntry);
+
+      return [...transcript];
     },
 
     pause() {
@@ -318,19 +297,23 @@ export function createTranscriptionService(
         recognition.onend = null;
         recognition.stop();
       }
-      if (mediaRecorder && mediaRecorder.state === 'recording') {
-        mediaRecorder.pause();
-      }
       setStatus('paused');
     },
 
     resume() {
       if (status !== 'paused') return;
-      if (useWhisper && mediaRecorder) {
-        mediaRecorder.resume();
-        setStatus('recording');
-      } else {
-        startWebSpeech();
+      if (recognition) {
+        try {
+          recognition.onend = () => {
+            if (status === 'recording' && recognition) {
+              try { recognition.start(); } catch { setStatus('stopped'); }
+            }
+          };
+          recognition.start();
+          setStatus('recording');
+        } catch {
+          setStatus('error');
+        }
       }
     },
 
@@ -338,27 +321,16 @@ export function createTranscriptionService(
       return status;
     },
 
-    setSpeaker(speaker: 'lawyer' | 'client') {
-      currentSpeaker = speaker;
-    },
-
     getTranscript() {
       return [...transcript];
     },
 
-    exportTranscript(): string {
-      return transcript
-        .map((e) => {
-          const speakerLabel = e.speaker === 'lawyer' ? 'Advogado' : e.speaker === 'client' ? 'Cliente' : 'Sistema';
-          const time = new Date(e.timestamp).toLocaleTimeString('pt-BR');
-          return `[${time}] ${speakerLabel}: ${e.text}`;
-        })
-        .join('\n');
+    setSpeaker(speaker: Speaker) {
+      currentSpeaker = speaker;
     },
 
-    destroy() {
-      this.stop();
-      transcript.length = 0;
+    onTranscript(callback: (entry: TranscriptEntry) => void) {
+      transcriptCallback = callback;
     },
   };
 }

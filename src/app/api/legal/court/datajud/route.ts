@@ -1,59 +1,31 @@
 import { NextResponse } from 'next/server';
+import { DataJudAdapter } from '@/lib/court/datajud-adapter';
+import { CourtAdapterError, isValidCNJ } from '@/lib/court/court-adapter';
 
-// Mock DataJud results for development
-const MOCK_DATAJUD_RESULTS = [
-  {
-    id: 'dj-1',
-    cnj: '1234567-89.2025.8.26.0100',
-    classe: 'Procedimento Comum Civel',
-    assuntos: ['Indenizacao por Dano Moral', 'Responsabilidade Civil'],
-    tribunal: 'TJSP',
-    orgaoJulgador: '2a Vara Civel - Foro Central Civel',
-    dataAjuizamento: '2025-03-15',
-    ultimaAtualizacao: '2026-04-10',
-    grau: 'G1',
-    nivelSigilo: 0,
-    formato: { nome: 'Eletronico' },
-    movimentos: [
-      { codigo: 11009, nome: 'Conclusos para Despacho', dataHora: '2026-04-10T14:30:00' },
-      { codigo: 12112, nome: 'Juntada de Peticao', dataHora: '2026-04-05T10:15:00' },
-    ],
-  },
-  {
-    id: 'dj-2',
-    cnj: '5432109-87.2025.5.02.0012',
-    classe: 'Acao Trabalhista - Rito Ordinario',
-    assuntos: ['Rescisao Indireta', 'Horas Extras', 'Dano Moral Trabalhista'],
-    tribunal: 'TRT2',
-    orgaoJulgador: '12a Vara do Trabalho de Sao Paulo',
-    dataAjuizamento: '2025-06-20',
-    ultimaAtualizacao: '2026-04-08',
-    grau: 'G1',
-    nivelSigilo: 0,
-    formato: { nome: 'Eletronico' },
-    movimentos: [
-      { codigo: 970, nome: 'Audiencia Realizada', dataHora: '2026-04-08T14:00:00' },
-      { codigo: 11009, nome: 'Conclusos para Sentenca', dataHora: '2026-04-08T16:30:00' },
-    ],
-  },
-  {
-    id: 'dj-3',
-    cnj: '0012345-67.2025.4.03.6100',
-    classe: 'Mandado de Seguranca Civel',
-    assuntos: ['ICMS', 'Base de Calculo', 'PIS/COFINS'],
-    tribunal: 'TRF3',
-    orgaoJulgador: '1a Vara Federal Tributaria de Sao Paulo',
-    dataAjuizamento: '2025-09-10',
-    ultimaAtualizacao: '2026-03-25',
-    grau: 'G1',
-    nivelSigilo: 0,
-    formato: { nome: 'Eletronico' },
-    movimentos: [
-      { codigo: 193, nome: 'Sentenca Proferida', dataHora: '2026-03-25T11:00:00' },
-    ],
-  },
-];
-
+/**
+ * GET /api/legal/court/datajud
+ *
+ * Query the DataJud API (CNJ public API for 144M+ judicial processes).
+ *
+ * Supports two modes:
+ * 1. Direct CNJ search: provide `cnj` parameter
+ * 2. Advanced query: provide `tribunal` + optional `classe`, `assunto`, `page`
+ *
+ * Query Parameters:
+ * - cnj (optional): CNJ process number for direct lookup
+ * - tribunal (optional): Tribunal code for advanced search (e.g., 'TJSP', 'STJ')
+ * - classe (optional): Classe processual filter (e.g., 'Procedimento Comum Civel')
+ * - assunto (optional): Subject matter filter
+ * - dataInicio (optional): Start date filter (ISO 8601)
+ * - dataFim (optional): End date filter (ISO 8601)
+ * - page (optional): Page number for pagination (default: 0)
+ *
+ * Responses:
+ * - 200: Query results
+ * - 400: Invalid parameters
+ * - 404: Process not found (CNJ search mode)
+ * - 500: Internal server error
+ */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const cnj = searchParams.get('cnj');
@@ -62,43 +34,131 @@ export async function GET(request: Request) {
   const assunto = searchParams.get('assunto');
   const dataInicio = searchParams.get('dataInicio');
   const dataFim = searchParams.get('dataFim');
+  const page = parseInt(searchParams.get('page') || '0', 10);
 
-  let results = MOCK_DATAJUD_RESULTS;
-
-  if (cnj) {
-    results = results.filter((r) => r.cnj.includes(cnj));
-  }
-
-  if (tribunal) {
-    results = results.filter((r) => r.tribunal === tribunal);
-  }
-
-  if (classe) {
-    results = results.filter((r) =>
-      r.classe.toLowerCase().includes(classe.toLowerCase())
+  // Need at least cnj or tribunal
+  if (!cnj && !tribunal) {
+    return NextResponse.json(
+      {
+        error: 'Missing required parameter',
+        message: 'Provide either "cnj" for direct search or "tribunal" for advanced query.',
+      },
+      { status: 400 },
     );
   }
 
-  if (assunto) {
-    results = results.filter((r) =>
-      r.assuntos.some((a) => a.toLowerCase().includes(assunto.toLowerCase()))
+  try {
+    const datajud = new DataJudAdapter();
+    await datajud.authenticate({
+      system: 'datajud',
+      username: 'api-user',
+      apiKey: process.env.DATAJUD_API_KEY || 'public-key',
+    });
+
+    // Mode 1: Direct CNJ search
+    if (cnj) {
+      if (!isValidCNJ(cnj)) {
+        return NextResponse.json(
+          {
+            error: 'Invalid CNJ format',
+            message: `"${cnj}" does not match the expected format: NNNNNNN-DD.AAAA.J.TR.OOOO`,
+          },
+          { status: 400 },
+        );
+      }
+
+      const result = await datajud.searchProcess(cnj);
+
+      if (!result) {
+        return NextResponse.json(
+          {
+            error: 'Process not found',
+            cnj,
+            message: `No process found with CNJ ${cnj} in DataJud.`,
+          },
+          { status: 404 },
+        );
+      }
+
+      // Also fetch movements for the process
+      let movements;
+      try {
+        movements = await datajud.getMovements(cnj);
+      } catch {
+        movements = [];
+      }
+
+      return NextResponse.json({
+        success: true,
+        mode: 'cnj_search',
+        data: {
+          process: result,
+          movements,
+        },
+      });
+    }
+
+    // Mode 2: Advanced tribunal query
+    if (tribunal) {
+      // Build Elasticsearch query
+      const mustClauses: Record<string, unknown>[] = [];
+
+      if (classe) {
+        mustClauses.push({
+          match: { 'classe.nome': classe },
+        });
+      }
+
+      if (assunto) {
+        mustClauses.push({
+          match: { 'assuntos.nome': assunto },
+        });
+      }
+
+      if (dataInicio || dataFim) {
+        const range: Record<string, string> = {};
+        if (dataInicio) range.gte = dataInicio;
+        if (dataFim) range.lte = dataFim;
+        mustClauses.push({
+          range: { dataAjuizamento: range },
+        });
+      }
+
+      const esQuery: Record<string, unknown> = mustClauses.length > 0
+        ? { query: { bool: { must: mustClauses } } }
+        : { query: { match_all: {} } };
+
+      const result = await datajud.searchByQuery(tribunal, esQuery, page);
+
+      return NextResponse.json({
+        success: true,
+        mode: 'advanced_query',
+        tribunal,
+        filters: { classe, assunto, dataInicio, dataFim },
+        results: result.results,
+        total: result.total,
+        page,
+      });
+    }
+  } catch (error) {
+    if (error instanceof CourtAdapterError) {
+      const statusCode = error.statusCode || 500;
+      return NextResponse.json(
+        {
+          error: error.code,
+          message: error.message,
+          retryable: error.retryable,
+        },
+        { status: statusCode >= 400 && statusCode < 600 ? statusCode : 500 },
+      );
+    }
+
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'An unexpected error occurred',
+      },
+      { status: 500 },
     );
   }
-
-  if (dataInicio) {
-    results = results.filter((r) => r.dataAjuizamento >= dataInicio);
-  }
-
-  if (dataFim) {
-    results = results.filter((r) => r.dataAjuizamento <= dataFim);
-  }
-
-  // In production, queries DataJud REST API with APIKey auth
-  // Base URL: https://api-publica.datajud.cnj.jus.br/
-  return NextResponse.json({
-    results,
-    query: { cnj, tribunal, classe, assunto, dataInicio, dataFim },
-    total: results.length,
-    message: 'Mock DataJud results returned for development. Configure API key in settings for production.',
-  });
 }
