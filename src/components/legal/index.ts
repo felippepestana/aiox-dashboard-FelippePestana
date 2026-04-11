@@ -13,6 +13,10 @@ export { OabComplianceCheck } from './OabComplianceCheck';
 export { PrecedentCard } from './PrecedentCard';
 export { JudgeSentimentPanel } from './JudgeSentimentPanel';
 export { AttorneyUtilization } from './AttorneyUtilization';
+export { AssetSearch } from './AssetSearch';
+export { AssetReport } from './AssetReport';
+export { OpportunityGenerator } from './OpportunityGenerator';
+export { OpportunityCard } from './OpportunityCard';
 
 export type { ProcessCardProps } from './ProcessCard';
 export type { ProcessStatusBadgeProps } from './ProcessStatusBadge';
