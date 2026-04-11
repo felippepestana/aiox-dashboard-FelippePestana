@@ -206,14 +206,14 @@ export default function InterviewSessionPage() {
   }, [noteText]);
 
   const handleAcceptSuggestion = useCallback((id: string) => {
-    setSuggestions((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, accepted: !s.accepted } : s))
+    setSuggestions((prev: InterviewSuggestion[]) =>
+      prev.map((s: InterviewSuggestion) => (s.id === id ? { ...s, accepted: !s.accepted } : s))
     );
   }, []);
 
   const filteredSuggestions = useMemo(() => {
-    if (activeTab === 'precedents') return suggestions.filter((s) => s.type === 'precedent');
-    if (activeTab === 'strategy') return suggestions.filter((s) => s.type === 'strategy' || s.type === 'warning');
+    if (activeTab === 'precedents') return suggestions.filter((s: InterviewSuggestion) => s.type === 'precedent');
+    if (activeTab === 'strategy') return suggestions.filter((s: InterviewSuggestion) => s.type === 'strategy' || s.type === 'warning');
     return suggestions;
   }, [suggestions, activeTab]);
 
