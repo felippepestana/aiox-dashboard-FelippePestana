@@ -148,7 +148,7 @@ export default function InterviewSessionPage() {
   useEffect(() => {
     if (isRecording && !isPaused) {
       timerRef.current = setInterval(() => {
-        setElapsed((prev) => prev + 1);
+        setElapsed((prev: number) => prev + 1);
       }, 1000);
     }
     return () => {
@@ -183,7 +183,7 @@ export default function InterviewSessionPage() {
   }, []);
 
   const handleMarkImportant = useCallback((entryId: string) => {
-    setMarkedEntries((prev) => {
+    setMarkedEntries((prev: Set<string>) => {
       const next = new Set(prev);
       if (next.has(entryId)) next.delete(entryId);
       else next.add(entryId);
@@ -200,7 +200,7 @@ export default function InterviewSessionPage() {
       timestamp: new Date().toISOString(),
       confidence: 1.0,
     };
-    setTranscript((prev) => [...prev, entry]);
+    setTranscript((prev: TranscriptEntry[]) => [...prev, entry]);
     setNoteText('');
     setShowNoteInput(false);
   }, [noteText]);
