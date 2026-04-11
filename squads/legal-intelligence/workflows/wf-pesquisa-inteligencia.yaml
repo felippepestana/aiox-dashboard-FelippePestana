@@ -1,0 +1,76 @@
+name: "Pesquisa de Inteligência Jurídica Completa"
+description: "Fluxo completo de pesquisa de inteligência jurídica com precedentes, classificação temática e análise de similaridade."
+version: "1.0.0"
+trigger: "Demanda de pesquisa de inteligência jurídica"
+
+steps:
+  - id: receber_demanda
+    name: "Receber e Classificar Demanda"
+    agent: legal-intelligence-chief
+    description: "Recebe demanda, define escopo de pesquisa e distribui tarefas"
+    outputs:
+      - escopo_pesquisa
+      - tarefas_distribuidas
+
+  - id: pesquisar_precedentes
+    name: "Pesquisar Precedentes"
+    agent: pesquisador-precedentes
+    task: pesquisar-precedentes
+    depends_on: [receber_demanda]
+    description: "Pesquisa jurisprudência e precedentes nos tribunais"
+    outputs:
+      - relatorio_precedentes
+
+  - id: classificar_temas
+    name: "Classificar Temas"
+    agent: classificador-temas
+    task: classificar-temas-repercussao
+    depends_on: [receber_demanda]
+    parallel_with: [pesquisar_precedentes]
+    description: "Classifica temas de repercussão geral e repetitivos"
+    outputs:
+      - classificacao_tematica
+
+  - id: analisar_similaridade
+    name: "Analisar Similaridade"
+    agent: analista-similaridade
+    task: analisar-similaridade
+    depends_on: [pesquisar_precedentes]
+    description: "Calcula similaridade entre caso e precedentes identificados"
+    outputs:
+      - matriz_similaridade
+
+  - id: calcular_valores
+    name: "Calcular Valores (se necessário)"
+    agent: calculista-juridico
+    task: calcular-correcao-monetaria
+    depends_on: [receber_demanda]
+    parallel_with: [pesquisar_precedentes, classificar_temas]
+    description: "Realiza cálculos jurídicos quando necessário"
+    optional: true
+    outputs:
+      - calculos_juridicos
+
+  - id: consolidar
+    name: "Consolidar Relatório de Inteligência"
+    agent: legal-intelligence-chief
+    task: gerar-relatorio-inteligencia
+    depends_on: [classificar_temas, analisar_similaridade, calcular_valores]
+    description: "Consolida todas as análises em relatório final"
+    outputs:
+      - relatorio_inteligencia_final
+
+flow_diagram: |
+  [Receber Demanda]
+         ↓
+    ┌────┼────────┐
+    ↓    ↓        ↓
+  [Pesq.[Classif.[Calcular
+   Prec.] Temas]  Valores]
+    ↓    ↓        ↓
+  [Analisar       │
+   Similar.]      │
+    ↓             │
+    └──────┬──────┘
+           ↓
+  [Consolidar Relatório]

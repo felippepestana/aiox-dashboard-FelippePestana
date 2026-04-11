@@ -1,0 +1,49 @@
+name: "Análise de Magistrado"
+description: "Fluxo de profiling de magistrado com análise de padrões de decisão e recomendações estratégicas."
+version: "1.0.0"
+trigger: "Demanda de análise de perfil de magistrado"
+
+steps:
+  - id: receber_demanda
+    name: "Receber Demanda"
+    agent: legal-intelligence-chief
+    description: "Recebe demanda, identifica magistrado e define escopo de análise"
+    outputs:
+      - magistrado_alvo
+      - escopo_analise
+
+  - id: pesquisar_decisoes
+    name: "Pesquisar Decisões do Magistrado"
+    agent: pesquisador-precedentes
+    task: pesquisar-precedentes
+    depends_on: [receber_demanda]
+    description: "Pesquisa decisões publicadas pelo magistrado"
+    outputs:
+      - decisoes_magistrado
+
+  - id: perfilar
+    name: "Gerar Perfil do Magistrado"
+    agent: analista-magistrado
+    task: perfilar-magistrado
+    depends_on: [pesquisar_decisoes]
+    description: "Analisa padrões e gera perfil decisório completo"
+    outputs:
+      - perfil_magistrado
+
+  - id: entregar
+    name: "Entregar Perfil"
+    agent: legal-intelligence-chief
+    depends_on: [perfilar]
+    description: "Revisa e entrega perfil do magistrado com recomendações"
+    outputs:
+      - perfil_final
+      - recomendacoes_estrategicas
+
+flow_diagram: |
+  [Receber Demanda]
+         ↓
+  [Pesquisar Decisões]
+         ↓
+  [Gerar Perfil]
+         ↓
+  [Entregar Perfil]
