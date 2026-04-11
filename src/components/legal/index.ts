@@ -33,3 +33,7 @@ export type { OabComplianceCheckProps } from './OabComplianceCheck';
 export type { PrecedentCardProps, PrecedentData } from './PrecedentCard';
 export type { JudgeSentimentPanelProps, JudgeVotingData } from './JudgeSentimentPanel';
 export type { AttorneyUtilizationProps } from './AttorneyUtilization';
+export type { AssetSearchProps, AssetResult, AssetType, SearchType } from './AssetSearch';
+export type { AssetReportProps } from './AssetReport';
+export type { OpportunityGeneratorProps, Opportunity, OpportunitySource } from './OpportunityGenerator';
+export type { OpportunityCardProps, OpportunityCardData } from './OpportunityCard';
