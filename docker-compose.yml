@@ -1,0 +1,63 @@
+# ============================================================
+# AIOX Legal Dashboard - Docker Compose
+# Services: Next.js web app + Bun monitor server
+# ============================================================
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aiox-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - LEGAL_DB_PATH=/data/legal.db
+    volumes:
+      - app-data:/data
+      - app-uploads:/app/uploads
+    depends_on:
+      monitor:
+        condition: service_healthy
+    networks:
+      - aiox-network
+
+  monitor:
+    image: oven/bun:1-alpine
+    container_name: aiox-monitor
+    restart: unless-stopped
+    working_dir: /app/server
+    command: bun run server.ts
+    ports:
+      - "4001:4001"
+    env_file:
+      - .env
+    environment:
+      - MONITOR_PORT=4001
+      - MONITOR_DB_PATH=/data/events.db
+    volumes:
+      - ./server:/app/server:ro
+      - app-data:/data
+      - app-uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://localhost:4001/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 3
+    networks:
+      - aiox-network
+
+volumes:
+  app-data:
+    driver: local
+  app-uploads:
+    driver: local
+
+networks:
+  aiox-network:
+    driver: bridge

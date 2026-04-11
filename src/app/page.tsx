@@ -126,9 +126,12 @@ export default function Home() {
       {/* Main Content */}
       <main className="relative max-w-6xl mx-auto px-6 py-16">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-3">
-            Selecione um <span className="text-amber-400">Modulo</span>
+          <h2 className="text-4xl font-extrabold mb-4 tracking-tight">
+            AIOX <span className="text-amber-400">Platform</span>
           </h2>
+          <h3 className="text-xl font-semibold mb-3 text-[#8899aa]">
+            Selecione um <span className="text-amber-400">Modulo</span>
+          </h3>
           <p className="text-[#6b7a8d] max-w-md mx-auto">
             Escolha o modulo desejado para acessar as ferramentas e funcionalidades.
           </p>
@@ -141,7 +144,7 @@ export default function Home() {
               <button
                 key={mod.id}
                 onClick={() => router.push(mod.href)}
-                className="group relative rounded-2xl p-[1px] bg-gradient-to-b from-[#1a2332] to-transparent hover:from-amber-500/40 hover:to-transparent transition-all duration-300"
+                className="group relative rounded-2xl p-[1px] bg-gradient-to-b from-[#1a2332] to-transparent hover:from-amber-500/40 hover:to-transparent transition-all duration-300 hover:scale-[1.03]"
               >
                 <div className="rounded-2xl bg-[#0d1320] p-8 h-full flex flex-col items-start text-left transition-all duration-300 group-hover:bg-[#111827]">
                   <div
@@ -167,6 +170,11 @@ export default function Home() {
           })}
         </div>
       </main>
+
+      {/* Version Footer */}
+      <footer className="relative text-center py-6">
+        <p className="text-xs text-[#4a5568]">v1.0.0</p>
+      </footer>
     </div>
   );
 }

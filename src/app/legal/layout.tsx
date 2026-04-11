@@ -27,6 +27,9 @@ import {
   Gavel,
   Mic,
   Search,
+  Upload,
+  BookOpen,
+  User,
 } from 'lucide-react';
 
 const NAV_SECTIONS = [
@@ -70,6 +73,15 @@ const NAV_SECTIONS = [
     title: 'Assistente IA',
     items: [
       { id: 'interview', label: 'Entrevista', icon: Mic, href: '/legal/interview' },
+      { id: 'upload', label: 'Upload Docs', icon: Upload, href: '/legal/upload' },
+      { id: 'assets', label: 'Busca de Ativos', icon: Search, href: '/legal/assets' },
+    ],
+  },
+  {
+    title: 'Inteligência',
+    items: [
+      { id: 'precedents', label: 'Precedentes', icon: BookOpen, href: '/legal/precedents' },
+      { id: 'judges', label: 'Magistrados', icon: User, href: '/legal/judges' },
     ],
   },
 ];
