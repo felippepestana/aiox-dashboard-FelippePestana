@@ -1,0 +1,61 @@
+name: "Consulta Rápida"
+description: "Fluxo simplificado para consultas breves com transcrição e sugestões, sem geração de peça processual."
+version: "1.0.0"
+trigger: "Consulta rápida sem necessidade de peça processual"
+
+steps:
+  - id: configurar
+    name: "Configurar Consulta"
+    agent: interview-chief
+    description: "Configura sessão de consulta rápida (cliente, área)"
+    outputs:
+      - sessao_configurada
+
+  - id: transcrever
+    name: "Transcrever Consulta"
+    agent: transcritor-entrevista
+    task: transcrever-entrevista
+    depends_on: [configurar]
+    description: "Transcrição em tempo real da consulta"
+    mode: realtime
+    outputs:
+      - transcript_entries_stream
+
+  - id: sugerir
+    name: "Sugerir Perguntas"
+    agent: sugestor-perguntas
+    task: sugerir-perguntas-contextuais
+    depends_on: [transcrever]
+    description: "Sugestões de perguntas em tempo real"
+    mode: realtime
+    outputs:
+      - suggestions_stream
+
+  - id: resumir
+    name: "Gerar Resumo"
+    agent: gerador-estrategia
+    depends_on: [transcrever, sugerir]
+    trigger: session_ended
+    description: "Gera resumo da consulta com fatos-chave e recomendações iniciais (sem peça)"
+    outputs:
+      - resumo_consulta
+      - recomendacoes_iniciais
+
+  - id: entregar
+    name: "Entregar Resultado"
+    agent: interview-chief
+    depends_on: [resumir]
+    description: "Consolida e entrega resumo da consulta"
+    outputs:
+      - relatorio_consulta_rapida
+
+flow_diagram: |
+  [Configurar Consulta]
+          ↓
+  [Transcrever Consulta] ← tempo real
+          ↓
+  [Sugerir Perguntas] ← tempo real
+          ↓ (sessão finalizada)
+  [Gerar Resumo]
+          ↓
+  [Entregar Resultado]

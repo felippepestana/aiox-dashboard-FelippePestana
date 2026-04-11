@@ -1,0 +1,92 @@
+name: "Entrevista Completa"
+description: "Fluxo completo de entrevista com transcrição em tempo real, sugestões, pesquisa de precedentes e geração de estratégia + esboço de peça."
+version: "1.0.0"
+trigger: "Início de sessão de entrevista com geração completa de estratégia"
+
+steps:
+  - id: configurar
+    name: "Configurar Sessão"
+    agent: interview-chief
+    description: "Recebe configurações da entrevista (cliente, área, idioma) e prepara os agentes"
+    outputs:
+      - sessao_configurada
+      - area_juridica
+
+  - id: transcrever
+    name: "Transcrever Entrevista"
+    agent: transcritor-entrevista
+    task: transcrever-entrevista
+    depends_on: [configurar]
+    description: "Inicia transcrição em tempo real com identificação de interlocutor"
+    mode: realtime
+    outputs:
+      - transcript_entries_stream
+
+  - id: sugerir
+    name: "Sugerir Perguntas"
+    agent: sugestor-perguntas
+    task: sugerir-perguntas-contextuais
+    depends_on: [transcrever]
+    parallel_with: [pesquisar]
+    description: "Analisa transcript em tempo real e sugere perguntas e alertas"
+    mode: realtime
+    outputs:
+      - suggestions_stream
+
+  - id: pesquisar
+    name: "Pesquisar Precedentes"
+    agent: pesquisador-contexto
+    task: pesquisar-precedentes-tempo-real
+    depends_on: [transcrever]
+    parallel_with: [sugerir]
+    description: "Monitora keywords e busca precedentes automaticamente"
+    mode: realtime
+    outputs:
+      - precedent_matches_stream
+
+  - id: gerar_estrategia
+    name: "Gerar Estratégia"
+    agent: gerador-estrategia
+    task: gerar-estrategia-pos-entrevista
+    depends_on: [transcrever, sugerir, pesquisar]
+    trigger: session_ended
+    description: "Analisa transcript completo e gera estratégia processual"
+    outputs:
+      - strategy_draft
+
+  - id: minutar_peca
+    name: "Minutar Esboço de Peça"
+    agent: minutador-inicial
+    task: minutar-peca-inicial
+    depends_on: [gerar_estrategia]
+    description: "Produz esboço de petição inicial com base na estratégia"
+    outputs:
+      - petition_outline
+
+  - id: consolidar
+    name: "Consolidar Resultados"
+    agent: interview-chief
+    depends_on: [gerar_estrategia, minutar_peca]
+    description: "Consolida relatório de entrevista, estratégia e esboço de peça"
+    outputs:
+      - relatorio_entrevista_completo
+      - estrategia_final
+      - esboco_peca_final
+
+flow_diagram: |
+  [Configurar Sessão]
+          ↓
+  [Transcrever Entrevista] ← tempo real
+          ↓
+  ┌──────────────┐
+  ↓              ↓
+  [Sugerir     [Pesquisar
+   Perguntas]   Precedentes] ← tempo real (paralelo)
+  ↓              ↓
+  └──────┬───────┘
+         ↓ (sessão finalizada)
+  [Gerar Estratégia]
+         ↓
+  [Minutar Esboço de Peça]
+         ↓
+  [Consolidar Resultados]
