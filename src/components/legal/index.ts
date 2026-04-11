@@ -17,6 +17,7 @@ export { AssetSearch } from './AssetSearch';
 export { AssetReport } from './AssetReport';
 export { OpportunityGenerator } from './OpportunityGenerator';
 export { OpportunityCard } from './OpportunityCard';
+export { FileUpload } from './FileUpload';
 
 export type { ProcessCardProps } from './ProcessCard';
 export type { ProcessStatusBadgeProps } from './ProcessStatusBadge';
@@ -37,3 +38,4 @@ export type { AssetSearchProps, AssetResult, AssetType, SearchType } from './Ass
 export type { AssetReportProps } from './AssetReport';
 export type { OpportunityGeneratorProps, Opportunity, OpportunitySource } from './OpportunityGenerator';
 export type { OpportunityCardProps, OpportunityCardData } from './OpportunityCard';
+export type { FileUploadProps } from './FileUpload';
