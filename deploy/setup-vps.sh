@@ -29,18 +29,24 @@ if [ "$EUID" -ne 0 ]; then
   error "Execute como root: sudo bash setup-vps.sh"
 fi
 
-# Perguntar domínio
-read -p "Digite o domínio (ex: app.sbarzi.com.br): " DOMAIN
+# Aceitar variáveis de ambiente ou perguntar interativamente
+if [ -z "$DOMAIN" ]; then
+  read -p "Digite o domínio (ex: app.sbarzi.com.br): " DOMAIN
+fi
 if [ -z "$DOMAIN" ]; then
   error "Domínio é obrigatório!"
 fi
 
-read -p "Digite o email para SSL (ex: contato@sbarzi.com.br): " EMAIL
+if [ -z "$EMAIL" ]; then
+  read -p "Digite o email para SSL (ex: contato@sbarzi.com.br): " EMAIL
+fi
 if [ -z "$EMAIL" ]; then
   error "Email é obrigatório!"
 fi
 
-read -p "URL do repositório Git (ex: https://github.com/user/repo.git): " REPO_URL
+if [ -z "$REPO_URL" ]; then
+  read -p "URL do repositório Git (ex: https://github.com/user/repo.git): " REPO_URL
+fi
 if [ -z "$REPO_URL" ]; then
   error "URL do repositório é obrigatória!"
 fi
@@ -54,10 +60,12 @@ info "Domínio: $DOMAIN"
 info "Email: $EMAIL"
 info "Diretório: $APP_DIR"
 echo ""
-read -p "Confirma? (s/n): " CONFIRM
-if [ "$CONFIRM" != "s" ]; then
-  echo "Cancelado."
-  exit 0
+if [ -z "$AUTO_CONFIRM" ]; then
+  read -p "Confirma? (s/n): " CONFIRM
+  if [ "$CONFIRM" != "s" ]; then
+    echo "Cancelado."
+    exit 0
+  fi
 fi
 
 # ==========================================
