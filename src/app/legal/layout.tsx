@@ -35,6 +35,10 @@ import {
   FileSearch,
   LineChart,
   MessageCircle,
+  Wand2,
+  PieChart,
+  GitBranch,
+  MessageSquare,
 } from 'lucide-react';
 
 const NAV_SECTIONS = [
@@ -92,6 +96,10 @@ const NAV_SECTIONS = [
   {
     title: 'Produtividade',
     items: [
+      { id: 'generator', label: 'Gerar Petição', icon: Wand2, href: '/legal/generator' },
+      { id: 'jurimetria', label: 'Jurimetria', icon: PieChart, href: '/legal/jurimetria' },
+      { id: 'flowcharts', label: 'Fluxogramas', icon: GitBranch, href: '/legal/flowcharts' },
+      { id: 'chat', label: 'Chat Jurídico', icon: MessageSquare, href: '/legal/chat' },
       { id: 'calculator', label: 'Calculadora', icon: Calculator, href: '/legal/calculator' },
       { id: 'marketplace', label: 'Marketplace', icon: Store, href: '/legal/marketplace' },
     ],
