@@ -30,6 +30,11 @@ import {
   Upload,
   BookOpen,
   User,
+  Calculator,
+  Store,
+  FileSearch,
+  LineChart,
+  MessageCircle,
 } from 'lucide-react';
 
 const NAV_SECTIONS = [
@@ -82,6 +87,21 @@ const NAV_SECTIONS = [
     items: [
       { id: 'precedents', label: 'Precedentes', icon: BookOpen, href: '/legal/precedents' },
       { id: 'judges', label: 'Magistrados', icon: User, href: '/legal/judges' },
+    ],
+  },
+  {
+    title: 'Produtividade',
+    items: [
+      { id: 'calculator', label: 'Calculadora', icon: Calculator, href: '/legal/calculator' },
+      { id: 'marketplace', label: 'Marketplace', icon: Store, href: '/legal/marketplace' },
+    ],
+  },
+  {
+    title: 'Avançado',
+    items: [
+      { id: 'analyze', label: 'Análise de Docs', icon: FileSearch, href: '/legal/analyze' },
+      { id: 'bi', label: 'Business Intel.', icon: LineChart, href: '/legal/bi' },
+      { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, href: '/legal/whatsapp' },
     ],
   },
 ];

@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { FileSearch, Loader2, Sparkles } from 'lucide-react';
 import { FileUpload } from '@/components/legal';
-import { DocumentAnalysis, AnalysisResult } from '@/components/legal/DocumentAnalysis';
+import { DocumentAnalysis, AnalysisResult, AnalysisEntity } from '@/components/legal/DocumentAnalysis';
 
 // ─── Mock Analysis Generator ────────────────────────────────────────────────
 
@@ -12,7 +12,7 @@ function generateMockAnalysis(fileName: string): AnalysisResult {
   const isPetition = /peti[cç][aã]o|inicial|recurso|apela[cç]/i.test(fileName);
   const isSentence = /senten[cç]a|ac[oó]rd[aã]o|decis[aã]o/i.test(fileName);
 
-  const baseEntities = [
+  const baseEntities: AnalysisEntity[] = [
     { type: 'party' as const, label: 'Autor', value: 'Maria Silva Santos' },
     { type: 'party' as const, label: 'Réu', value: 'Empresa XYZ Ltda' },
     { type: 'lawyer' as const, label: 'Advogado Autor', value: 'Dr. Carlos Mendes - OAB/SP 123.456' },

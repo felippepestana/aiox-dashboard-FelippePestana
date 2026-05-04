@@ -18,6 +18,7 @@ export { AssetReport } from './AssetReport';
 export { OpportunityGenerator } from './OpportunityGenerator';
 export { OpportunityCard } from './OpportunityCard';
 export { FileUpload } from './FileUpload';
+export { DeadlineCalculator } from './DeadlineCalculator';
 
 export type { ProcessCardProps } from './ProcessCard';
 export type { ProcessStatusBadgeProps } from './ProcessStatusBadge';
@@ -39,3 +40,8 @@ export type { AssetReportProps } from './AssetReport';
 export type { OpportunityGeneratorProps, Opportunity, OpportunitySource } from './OpportunityGenerator';
 export type { OpportunityCardProps, OpportunityCardData } from './OpportunityCard';
 export type { FileUploadProps } from './FileUpload';
+export type { DeadlineCalculatorProps, DeadlineCalcResult } from './DeadlineCalculator';
+export { DocumentAnalysis } from './DocumentAnalysis';
+export { BIDashboard } from './BIDashboard';
+export type { AnalysisResult, AnalysisEntity, AnalysisClause, DocumentAnalysisProps } from './DocumentAnalysis';
+export type { BIDashboardProps, BIMetric, RevenueByArea, CaseDistribution, MonthlyRevenue, TopClient } from './BIDashboard';
