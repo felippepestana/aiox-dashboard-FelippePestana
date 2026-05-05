@@ -1,0 +1,69 @@
+name: "Códigos e Dispositivos Processuais de Referência Rápida"
+description: "Transcrição dos dispositivos processuais mais utilizados pelo squad"
+
+cpc:
+  tutela_urgencia:
+    art_300:
+      caput: "A tutela de urgência será concedida quando houver elementos que evidenciem a probabilidade do direito e o perigo de dano ou o risco ao resultado útil do processo."
+      par_1: "Para a concessão da tutela de urgência, o juiz pode, conforme o caso, exigir caução real ou fidejussória idônea para ressarcir os danos que a outra parte possa vir a sofrer, podendo a caução ser dispensada se a parte economicamente hipossuficiente não puder oferecê-la."
+      par_2: "A tutela de urgência pode ser concedida liminarmente ou após justificação prévia."
+      par_3: "A tutela de urgência de natureza antecipada não será concedida quando houver perigo de irreversibilidade dos efeitos da decisão."
+
+  contraditorio:
+    art_9:
+      caput: "Não se proferirá decisão contra uma das partes sem que ela seja previamente ouvida."
+      par_unico: "O disposto no caput não se aplica: I - à tutela provisória de urgência; II - às hipóteses de tutela da evidência previstas no art. 311, incisos II e III; III - à decisão prevista no art. 701."
+    art_10:
+      caput: "O juiz não pode decidir, em grau algum de jurisdição, com base em fundamento a respeito do qual não se tenha dado às partes oportunidade de se manifestar, ainda que se trate de matéria sobre a qual deva decidir de ofício."
+
+  fundamentacao:
+    art_489:
+      par_1: |
+        Não se considera fundamentada qualquer decisão judicial, seja ela interlocutória, sentença ou acórdão, que:
+        I - se limitar à indicação, à reprodução ou à paráfrase de ato normativo, sem explicar sua relação com a causa ou a questão decidida;
+        II - empregar conceitos jurídicos indeterminados, sem explicar o motivo concreto de sua incidência no caso;
+        III - invocar motivos que se prestariam a justificar qualquer outra decisão;
+        IV - não enfrentar todos os argumentos deduzidos no processo capazes de, em tese, infirmar a conclusão adotada pelo julgador;
+        V - se limitar a invocar precedente ou enunciado de súmula, sem identificar seus fundamentos determinantes nem demonstrar que o caso sob julgamento se ajusta àqueles fundamentos;
+        VI - deixar de seguir enunciado de súmula, jurisprudência ou precedente invocado pela parte, sem demonstrar a existência de distinção no caso em julgamento ou a superação do entendimento.
+
+  embargos_declaracao:
+    art_1022:
+      caput: |
+        Cabem embargos de declaração contra qualquer decisão judicial para:
+        I - esclarecer obscuridade ou eliminar contradição;
+        II - suprir omissão de ponto ou questão sobre o qual devia se pronunciar o juiz de ofício ou a requerimento;
+        III - corrigir erro material.
+      par_unico: "Considera-se omissa a decisão que: I - deixe de se manifestar sobre tese firmada em julgamento de casos repetitivos ou em incidente de assunção de competência aplicável ao caso sob julgamento; II - incorra em qualquer das condutas descritas no art. 489, § 1º."
+
+  agravo_instrumento:
+    art_1015:
+      caput: |
+        Cabe agravo de instrumento contra as decisões interlocutórias que versarem sobre:
+        I - tutelas provisórias;
+        II - mérito do processo;
+        III - rejeição da alegação de convenção de arbitragem;
+        IV - incidente de desconsideração da personalidade jurídica;
+        V - rejeição do pedido de gratuidade da justiça ou acolhimento do pedido de sua revogação;
+        VI - exibição ou posse de documento ou coisa;
+        VII - exclusão de litisconsorte;
+        VIII - rejeição do pedido de limitação do litisconsórcio;
+        IX - admissão ou inadmissão de intervenção de terceiros;
+        X - concessão, modificação ou revogação do efeito suspensivo aos embargos à execução;
+        XI - redistribuição do ônus da prova nos termos do art. 373, § 1º;
+        XII - (VETADO);
+        XIII - outros casos expressamente referidos em lei.
+      par_unico: "Também caberá agravo de instrumento contra decisões interlocutórias proferidas na fase de liquidação de sentença ou de cumprimento de sentença, no processo de execução e no processo de inventário."
+
+constituicao:
+  devido_processo:
+    art_5_liv: "Ninguém será privado da liberdade ou de seus bens sem o devido processo legal."
+    art_5_lv: "Aos litigantes, em processo judicial ou administrativo, e aos acusados em geral são assegurados o contraditório e ampla defesa, com os meios e recursos a ela inerentes."
+    art_93_ix: "Todos os julgamentos dos órgãos do Poder Judiciário serão públicos, e fundamentadas todas as decisões, sob pena de nulidade."
+
+dl_911_1969:
+  busca_apreensao_fiduciaria:
+    art_3:
+      caput: "O proprietário fiduciário ou credor poderá, desde que comprovada a mora, na forma estabelecida pelo § 2o do art. 2o, ou o inadimplemento, requerer contra o devedor ou terceiro a busca e apreensão do bem alienado fiduciariamente, a qual será concedida liminarmente, podendo ser apreciada em plantão judiciário."
+      par_1: "Cinco dias após executada a liminar mencionada no caput, consolidar-se-ão a propriedade e a posse plena e exclusiva do bem no patrimônio do credor fiduciário, cabendo às repartições competentes, quando for o caso, parsing expedir novo certificado de registro de propriedade em nome do credor, ou de terceiro por ele indicado, livre do ônus da propriedade fiduciária."
+      par_2: "No prazo do § 1o, o devedor fiduciante poderá pagar a integralidade da dívida pendente, segundo os valores apresentados pelo credor fiduciário na inicial, hipótese na qual o bem lhe será restituído livre do ônus."

@@ -1,0 +1,150 @@
+name: "Códigos de Movimentação CNJ"
+description: "Tabela Unificada de Movimentações Processuais do CNJ (SGT) - principais códigos utilizados pelo squad"
+
+categorias:
+  distribuicao:
+    codigo: 26
+    descricao: "Distribuição"
+    subcategorias:
+      - codigo: 26
+        descricao: "Distribuído"
+        relevancia: "media"
+      - codigo: 36
+        descricao: "Redistribuído"
+        relevancia: "baixa"
+
+  citacao_intimacao:
+    codigo: 12
+    descricao: "Expedição de documento"
+    subcategorias:
+      - codigo: 12
+        descricao: "Expedição de mandado de citação"
+        relevancia: "alta"
+        gera_prazo: true
+      - codigo: 60
+        descricao: "Expedição de carta precatória"
+        relevancia: "media"
+      - codigo: 61
+        descricao: "Expedição de carta rogatória"
+        relevancia: "media"
+      - codigo: 970
+        descricao: "Intimação eletrônica"
+        relevancia: "alta"
+        gera_prazo: true
+
+  juntada:
+    codigo: 581
+    descricao: "Juntada"
+    subcategorias:
+      - codigo: 581
+        descricao: "Juntada de petição"
+        relevancia: "baixa"
+      - codigo: 582
+        descricao: "Juntada de documento"
+        relevancia: "baixa"
+      - codigo: 583
+        descricao: "Juntada de AR (aviso de recebimento)"
+        relevancia: "media"
+
+  decisao:
+    codigo: 3
+    descricao: "Decisão"
+    subcategorias:
+      - codigo: 3
+        descricao: "Despacho"
+        relevancia: "media"
+      - codigo: 11009
+        descricao: "Decisão interlocutória"
+        relevancia: "alta"
+        gera_prazo: true
+      - codigo: 193
+        descricao: "Concessão de liminar/antecipação de tutela"
+        relevancia: "critica"
+      - codigo: 194
+        descricao: "Revogação de liminar/antecipação de tutela"
+        relevancia: "critica"
+
+  sentenca:
+    codigo: 22
+    descricao: "Sentença/Acórdão"
+    subcategorias:
+      - codigo: 22
+        descricao: "Sentença"
+        relevancia: "critica"
+        gera_prazo: true
+      - codigo: 11070
+        descricao: "Sentença com resolução de mérito"
+        relevancia: "critica"
+        gera_prazo: true
+      - codigo: 11071
+        descricao: "Sentença sem resolução de mérito"
+        relevancia: "critica"
+        gera_prazo: true
+
+  recurso:
+    codigo: 198
+    descricao: "Recurso"
+    subcategorias:
+      - codigo: 198
+        descricao: "Interposição de recurso"
+        relevancia: "alta"
+      - codigo: 11027
+        descricao: "Recurso de apelação"
+        relevancia: "alta"
+      - codigo: 11028
+        descricao: "Agravo de instrumento"
+        relevancia: "alta"
+      - codigo: 11029
+        descricao: "Embargos de declaração"
+        relevancia: "alta"
+      - codigo: 11030
+        descricao: "Recurso especial"
+        relevancia: "alta"
+      - codigo: 11031
+        descricao: "Recurso extraordinário"
+        relevancia: "alta"
+
+  audiencia:
+    codigo: 970
+    descricao: "Audiência"
+    subcategorias:
+      - codigo: 970
+        descricao: "Designação de audiência"
+        relevancia: "alta"
+        gera_prazo: true
+      - codigo: 971
+        descricao: "Audiência realizada"
+        relevancia: "media"
+      - codigo: 972
+        descricao: "Audiência cancelada"
+        relevancia: "media"
+
+  transito_julgado:
+    codigo: 848
+    descricao: "Trânsito em julgado"
+    subcategorias:
+      - codigo: 848
+        descricao: "Trânsito em julgado"
+        relevancia: "critica"
+
+  cumprimento_sentenca:
+    codigo: 11064
+    descricao: "Cumprimento de sentença"
+    subcategorias:
+      - codigo: 11064
+        descricao: "Início de cumprimento de sentença"
+        relevancia: "critica"
+      - codigo: 11065
+        descricao: "Penhora"
+        relevancia: "critica"
+
+  arquivamento:
+    codigo: 246
+    descricao: "Arquivamento"
+    subcategorias:
+      - codigo: 246
+        descricao: "Arquivamento definitivo"
+        relevancia: "alta"
+      - codigo: 11099
+        descricao: "Desarquivamento"
+        relevancia: "alta"

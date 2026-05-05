@@ -1,5 +1,5 @@
-// Taxonomia fixa de dominios — source of truth para o AIOS Dashboard
-// NUNCA adicionar domains ad-hoc; novos squads devem caber nas 6 categorias.
+// Taxonomia de dominios — source of truth para o AIOS Dashboard
+// Domínios expandidos para suportar verticais profissionais (dental, legal, etc.)
 
 export const DOMAIN_TAXONOMY = {
   strategy:   { label: 'Strategy',            color: 'var(--agent-pm)',        bg: 'var(--agent-pm-bg)',        border: 'var(--agent-pm-border)' },
@@ -8,6 +8,7 @@ export const DOMAIN_TAXONOMY = {
   operations: { label: 'Operations',          color: 'var(--agent-analyst)',   bg: 'var(--agent-analyst-bg)',   border: 'var(--agent-analyst-border)' },
   brand:      { label: 'Brand & Design',      color: 'var(--agent-devops)',    bg: 'var(--agent-devops-bg)',    border: 'var(--agent-devops-border)' },
   meta:       { label: 'Meta & Frameworks',   color: 'var(--agent-architect)', bg: 'var(--agent-architect-bg)', border: 'var(--agent-architect-border)' },
+  legal:      { label: 'Legal Tech',          color: 'var(--agent-qa)',        bg: 'var(--agent-qa-bg)',        border: 'var(--agent-qa-border)' },
 } as const;
 
 export type DomainKey = keyof typeof DOMAIN_TAXONOMY;
@@ -19,6 +20,7 @@ export const DOMAIN_ORDER: DomainKey[] = [
   'operations',
   'brand',
   'meta',
+  'legal',
 ];
 
 // Maps legacy/ad-hoc domain names to canonical domain keys
@@ -33,6 +35,9 @@ const LEGACY_DOMAIN_MAP: Record<string, DomainKey> = {
   movimento: 'marketing',
   'marketing-ideologico': 'marketing',
   'design-system': 'brand',
+  legal_tech: 'legal',
+  juridico: 'legal',
+  case_analysis: 'legal',
 };
 
 // Per-squad overrides when default domain mapping doesn't apply
@@ -42,6 +47,12 @@ const SQUAD_DOMAIN_OVERRIDES: Record<string, DomainKey> = {
   'spy': 'marketing',
   'design': 'brand',
   'deep-research': 'technical',
+  'case-analysis': 'legal',
+  'court-integration': 'legal',
+  'legal-intelligence': 'legal',
+  'legal-financial': 'legal',
+  'legal-marketing': 'legal',
+  'interview-assistant': 'legal',
 };
 
 export function resolveSquadDomain(squadName: string, rawDomain: string): DomainKey {

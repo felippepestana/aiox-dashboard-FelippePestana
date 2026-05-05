@@ -1,0 +1,60 @@
+name: "Qualificação de Lead"
+description: "Fluxo de qualificação, nurturing e conversão de leads jurídicos."
+version: "1.0.0"
+trigger: "Novo lead recebido no pipeline"
+
+steps:
+  - id: registrar_lead
+    name: "Registrar Lead"
+    agent: gestor-leads
+    description: "Registra lead no pipeline com dados de origem e primeiro contato"
+    outputs:
+      - lead_registrado
+
+  - id: qualificar
+    name: "Qualificar Lead"
+    agent: gestor-leads
+    task: qualificar-lead
+    depends_on: [registrar_lead]
+    description: "Avalia perfil, calcula scoring e classifica no funil"
+    outputs:
+      - lead_qualificado
+      - classificacao
+
+  - id: executar_cadencia
+    name: "Executar Cadência SDR"
+    agent: analista-sdr
+    task: executar-cadencia-sdr
+    depends_on: [qualificar]
+    description: "Realiza contatos, follow-ups e tenta agendar consulta"
+    conditional: "Se classificação >= MQL"
+    outputs:
+      - resultado_cadencia
+
+  - id: agendar_consulta
+    name: "Agendar Consulta"
+    agent: analista-sdr
+    depends_on: [executar_cadencia]
+    description: "Agenda consulta com advogado especialista na área"
+    conditional: "Se lead demonstrou interesse"
+    outputs:
+      - consulta_agendada
+
+  - id: atualizar_pipeline
+    name: "Atualizar Pipeline"
+    agent: gestor-leads
+    depends_on: [executar_cadencia, agendar_consulta]
+    description: "Atualiza status do lead no pipeline e gera relatório"
+    outputs:
+      - pipeline_atualizado
+
+flow_diagram: |
+  [Registrar Lead]
+         ↓
+  [Qualificar Lead]
+         ↓
+  [Executar Cadência SDR]
+         ↓
+  [Agendar Consulta]
+         ↓
+  [Atualizar Pipeline]

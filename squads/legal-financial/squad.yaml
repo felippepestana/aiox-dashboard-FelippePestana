@@ -1,0 +1,46 @@
+metadata:
+  display_name: "Gestão Financeira Jurídica"
+  description: "Squad de gestão financeira para escritórios de advocacia com controle de honorários, tributação e fluxo de caixa"
+  version: "1.0.0"
+  domain: "legal"
+  status: "active"
+  score: 8.0
+
+tier_system:
+  orchestrator:
+    name: "Orquestrador"
+    purpose: "Coordena gestão financeira do escritório"
+    agents: [legal-financial-chief]
+  tier_1_main:
+    name: "Gestores Financeiros"
+    purpose: "Controle de honorários, tributos e caixa"
+    agents: [controlador-honorarios, analista-tributario, gestor-fluxo-caixa]
+  tier_2_specialists:
+    name: "Especialistas"
+    purpose: "Provisões e planejamento"
+    agents: [planejador-provisoes]
+
+agents:
+  - id: legal-financial-chief
+    name: "Chefe Financeiro Jurídico"
+    role: "Orquestrador Financeiro"
+    tier: orchestrator
+  - id: controlador-honorarios
+    name: "Controlador de Honorários"
+    role: "Gestão de honorários e faturamento"
+    tier: tier_1_main
+  - id: analista-tributario
+    name: "Analista Tributário"
+    role: "Compliance tributário (IRPJ, CSLL, ISS)"
+    tier: tier_1_main
+  - id: gestor-fluxo-caixa
+    name: "Gestor de Fluxo de Caixa"
+    role: "Cash flow e projeções"
+    tier: tier_1_main
+  - id: planejador-provisoes
+    name: "Planejador de Provisões"
+    role: "Provisões e contingências"
+    tier: tier_2_specialists
+
+dependencies:
+  - aios-core

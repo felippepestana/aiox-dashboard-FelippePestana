@@ -1,0 +1,244 @@
+metadata:
+  total_squads: 6
+  generated_at: "2026-04-11"
+
+squads:
+  case-analysis:
+    path: "squads/case-analysis/"
+    version: "1.1.0"
+    score: 9.5
+    description: "Squad especializado em análise processual aprofundada, identificação de vícios e nulidades, pesquisa jurisprudencial, definição de estratégias processuais e elaboração de peças judiciais completas."
+    domain: "legal"
+    has_readme: true
+    counts:
+      agents: 7
+      tasks: 8
+      workflows: 2
+      templates: 9
+      checklists: 2
+      data_files: 4
+    agent_names:
+      - case-analysis-chief
+      - leitor-processual
+      - analista-processual
+      - pesquisador-jurisprudencial
+      - analista-legislativo-processual
+      - estrategista-juridico
+      - minutador-pecas
+      - revisor-juridico
+    keywords:
+      - análise processual
+      - vícios processuais
+      - nulidades
+      - jurisprudência
+      - peças processuais
+      - tutela de urgência
+      - embargos de declaração
+      - agravo de instrumento
+      - contestação
+      - mandado de segurança
+      - recurso especial
+      - recurso extraordinário
+      - habeas corpus
+      - contrarrazões
+      - prazos processuais
+      - custas judiciais
+      - direito processual civil
+
+  court-integration:
+    path: "squads/court-integration/"
+    version: "1.0.0"
+    score: 8.5
+    description: "Squad de integração com sistemas judiciais brasileiros (PJE, DataJud, e-SAJ, e-Proc, PROJUDI, DJE) para monitoramento, consulta e peticionamento eletrônico."
+    domain: "legal"
+    has_readme: true
+    counts:
+      agents: 6
+      tasks: 6
+      workflows: 3
+      templates: 1
+      checklists: 2
+      data_files: 3
+    agent_names:
+      - court-integration-chief
+      - monitor-publicacoes
+      - consultor-pje
+      - consultor-datajud
+      - protocolo-peticionamento
+      - rastreador-movimentacao
+    keywords:
+      - integração tribunais
+      - PJE
+      - DataJud
+      - e-SAJ
+      - e-Proc
+      - PROJUDI
+      - DJE
+      - publicações
+      - monitoramento processual
+      - peticionamento eletrônico
+      - movimentações processuais
+      - prazos processuais
+      - API MNI
+      - diário de justiça
+
+  legal-intelligence:
+    path: "squads/legal-intelligence/"
+    version: "1.0.0"
+    score: 9.0
+    description: "Squad de inteligência jurídica com pesquisa de precedentes, classificação de temas de repercussão geral, análise de similaridade e mapeamento de padrões de magistrados."
+    domain: "legal"
+    has_readme: true
+    counts:
+      agents: 6
+      tasks: 6
+      workflows: 2
+      templates: 2
+      checklists: 1
+      data_files: 4
+    agent_names:
+      - legal-intelligence-chief
+      - pesquisador-precedentes
+      - classificador-temas
+      - analista-similaridade
+      - analista-magistrado
+      - calculista-juridico
+    keywords:
+      - inteligência jurídica
+      - precedentes
+      - jurisprudência
+      - repercussão geral
+      - recursos repetitivos
+      - súmulas vinculantes
+      - similaridade
+      - scoring PEDRO
+      - classificação VICTOR
+      - perfil de magistrado
+      - correção monetária
+      - cálculos jurídicos
+      - STF
+      - STJ
+
+  legal-financial:
+    path: "squads/legal-financial/"
+    version: "1.0.0"
+    score: 8.0
+    description: "Squad de gestão financeira para escritórios de advocacia com controle de honorários, tributação e fluxo de caixa."
+    domain: "legal"
+    has_readme: true
+    counts:
+      agents: 5
+      tasks: 5
+      workflows: 1
+      templates: 0
+      checklists: 1
+      data_files: 2
+    agent_names:
+      - legal-financial-chief
+      - controlador-honorarios
+      - analista-tributario
+      - gestor-fluxo-caixa
+      - planejador-provisoes
+    keywords:
+      - gestão financeira
+      - honorários advocatícios
+      - faturamento
+      - tributação
+      - IRPJ
+      - CSLL
+      - ISS
+      - PIS
+      - COFINS
+      - fluxo de caixa
+      - provisões
+      - contingências
+      - fechamento mensal
+      - Simples Nacional
+      - Lucro Presumido
+
+  legal-marketing:
+    path: "squads/legal-marketing/"
+    version: "1.0.0"
+    score: 8.5
+    description: "Squad de marketing jurídico com compliance OAB (Provimento 205/2021), gestão de leads, criação de conteúdo e automação de prospecção."
+    domain: "legal"
+    has_readme: true
+    counts:
+      agents: 5
+      tasks: 5
+      workflows: 2
+      templates: 0
+      checklists: 1
+      data_files: 2
+    agent_names:
+      - legal-marketing-chief
+      - criador-conteudo-juridico
+      - gestor-leads
+      - compliance-oab
+      - analista-sdr
+    keywords:
+      - marketing jurídico
+      - compliance OAB
+      - Provimento 205/2021
+      - conteúdo jurídico
+      - leads
+      - SDR
+      - pipeline
+      - campanhas
+      - publicidade advocacia
+      - CEDOAB
+      - inbound marketing
+      - qualificação de leads
+
+  interview-assistant:
+    path: "squads/interview-assistant/"
+    version: "1.0.0"
+    score: 9.0
+    description: "Squad de assistência em tempo real durante entrevistas com clientes, com transcrição, sugestão de perguntas, pesquisa de precedentes e geração de estratégia."
+    domain: "legal"
+    has_readme: true
+    counts:
+      agents: 6
+      tasks: 5
+      workflows: 2
+      templates: 2
+      checklists: 1
+      data_files: 1
+    agent_names:
+      - interview-chief
+      - transcritor-entrevista
+      - sugestor-perguntas
+      - pesquisador-contexto
+      - gerador-estrategia
+      - minutador-inicial
+    keywords:
+      - assistente de entrevista
+      - transcrição em tempo real
+      - sugestão de perguntas
+      - pesquisa de precedentes
+      - geração de estratégia
+      - entrevista com cliente
+      - Web Speech API
+      - Whisper
+      - identificação de interlocutor
+      - fatos-chave
+      - teses jurídicas
+      - esboço de petição
+      - pós-entrevista
+
+domain_index:
+  legal:
+    - case-analysis
+    - court-integration
+    - legal-intelligence
+    - legal-financial
+    - legal-marketing
+    - interview-assistant
+
+summary:
+  total_agents: 35
+  total_tasks: 35
+  total_workflows: 12
+  total_templates: 14
+  total_checklists: 8
+  total_data_files: 16

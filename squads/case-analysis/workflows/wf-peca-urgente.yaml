@@ -1,0 +1,111 @@
+name: "Peça de Urgência"
+description: "Fluxo acelerado para elaboração de peças processuais urgentes — tutelas, suspensão de mandados, medidas liminares."
+version: "1.0.0"
+trigger: "Mandado em cumprimento, prazo em horas, risco iminente de dano"
+priority: "CRÍTICA"
+
+steps:
+  - id: triagem_urgente
+    name: "Triagem Urgente"
+    agent: case-analysis-chief
+    description: "Classifica urgência como CRÍTICA e aciona fluxo acelerado"
+    timeout: "5min"
+    outputs:
+      - classificacao_urgente
+
+  - id: leitura_rapida
+    name: "Leitura Rápida dos Autos"
+    agent: leitor-processual
+    depends_on: [triagem_urgente]
+    description: "Extração focada nos dados essenciais: decisão impugnada, mandado, partes, prazos"
+    timeout: "15min"
+    focus:
+      - decisao_impugnada
+      - mandado_expedido
+      - partes_qualificacao
+      - prazos_criticos
+    outputs:
+      - dados_essenciais
+
+  - id: analise_rapida
+    name: "Análise Rápida de Vícios + Legislação"
+    agent: analista-processual
+    depends_on: [leitura_rapida]
+    description: "Identificação rápida dos vícios mais graves e legislação violada"
+    timeout: "10min"
+    parallel_with: [juris_urgente]
+    outputs:
+      - vicios_criticos
+      - legislacao_violada
+
+  - id: juris_urgente
+    name: "Jurisprudência de Urgência"
+    agent: pesquisador-jurisprudencial
+    depends_on: [leitura_rapida]
+    description: "Seleção rápida de 3-5 precedentes mais fortes e recentes"
+    timeout: "10min"
+    parallel_with: [analise_rapida]
+    max_precedentes: 5
+    outputs:
+      - jurisprudencia_urgente
+
+  - id: estrategia_urgente
+    name: "Estratégia Urgente"
+    agent: estrategista-juridico
+    depends_on: [analise_rapida, juris_urgente]
+    description: "Definição imediata da peça mais eficaz para suspender o mandado"
+    timeout: "5min"
+    focus:
+      - suspensao_imediata_mandado
+      - manutencao_posse
+    outputs:
+      - recomendacao_urgente
+
+  - id: minutar_urgente
+    name: "Minutar Peça Urgente"
+    agent: minutador-pecas
+    depends_on: [estrategia_urgente]
+    description: "Elaboração acelerada da peça com fundamentação mínima necessária"
+    timeout: "20min"
+    outputs:
+      - minuta_urgente
+
+  - id: revisao_express
+    name: "Revisão Express"
+    agent: revisor-juridico
+    depends_on: [minutar_urgente]
+    description: "Revisão rápida focada em aspectos formais e pedidos"
+    timeout: "10min"
+    focus:
+      - aspectos_formais
+      - pedidos_completos
+      - fundamentacao_minima
+    outputs:
+      - peca_urgente_final
+
+  - id: entregar_urgente
+    name: "Entregar Peça Urgente"
+    agent: case-analysis-chief
+    depends_on: [revisao_express]
+    description: "Entrega imediata da peça para protocolo"
+    outputs:
+      - peca_pronta_protocolo
+
+total_estimated_time: "75min"
+
+flow_diagram: |
+  [TRIAGEM URGENTE] → [Leitura Rápida]
+                            ↓
+                  ┌─────────┴─────────┐
+                  ↓                   ↓
+          [Análise Rápida]    [Jurisp. Urgente]
+                  ↓                   ↓
+                  └─────────┬─────────┘
+                            ↓
+                  [Estratégia Urgente]
+                            ↓
+                   [Minutar Urgente]
+                            ↓
+                   [Revisão Express]
+                            ↓
+                  [ENTREGAR URGENTE]

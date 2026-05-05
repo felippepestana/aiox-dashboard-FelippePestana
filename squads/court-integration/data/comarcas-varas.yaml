@@ -1,0 +1,126 @@
+name: "Comarcas e Varas Judiciais"
+description: "Mapeamento de comarcas e varas judiciais dos principais estados brasileiros"
+
+estados:
+  sp:
+    nome: "São Paulo"
+    sigla: "SP"
+    tribunal: "TJSP"
+    comarcas_principais:
+      - nome: "São Paulo"
+        codigo_comarca: "0001"
+        foro_central:
+          - "1ª a 45ª Vara Cível"
+          - "1ª a 10ª Vara de Família e Sucessões"
+          - "1ª a 15ª Vara do Trabalho"
+          - "1ª a 5ª Vara da Fazenda Pública"
+          - "1ª a 5ª Vara de Falências e Recuperações Judiciais"
+        foros_regionais:
+          - "Fórum Regional I — Santana"
+          - "Fórum Regional II — Santo Amaro"
+          - "Fórum Regional III — Jabaquara"
+          - "Fórum Regional IV — Lapa"
+          - "Fórum Regional V — São Miguel Paulista"
+      - nome: "Campinas"
+        codigo_comarca: "0114"
+      - nome: "Ribeirão Preto"
+        codigo_comarca: "0415"
+      - nome: "Santos"
+        codigo_comarca: "0467"
+      - nome: "São José dos Campos"
+        codigo_comarca: "0577"
+
+  rj:
+    nome: "Rio de Janeiro"
+    sigla: "RJ"
+    tribunal: "TJRJ"
+    comarcas_principais:
+      - nome: "Rio de Janeiro"
+        codigo_comarca: "0001"
+      - nome: "Niterói"
+        codigo_comarca: "0024"
+      - nome: "Duque de Caxias"
+        codigo_comarca: "0014"
+      - nome: "Nova Iguaçu"
+        codigo_comarca: "0029"
+
+  mg:
+    nome: "Minas Gerais"
+    sigla: "MG"
+    tribunal: "TJMG"
+    comarcas_principais:
+      - nome: "Belo Horizonte"
+        codigo_comarca: "0024"
+      - nome: "Uberlândia"
+        codigo_comarca: "0702"
+      - nome: "Juiz de Fora"
+        codigo_comarca: "0145"
+      - nome: "Contagem"
+        codigo_comarca: "0079"
+
+  rs:
+    nome: "Rio Grande do Sul"
+    sigla: "RS"
+    tribunal: "TJRS"
+    comarcas_principais:
+      - nome: "Porto Alegre"
+        codigo_comarca: "0001"
+      - nome: "Caxias do Sul"
+        codigo_comarca: "0017"
+      - nome: "Pelotas"
+        codigo_comarca: "0043"
+
+  pr:
+    nome: "Paraná"
+    sigla: "PR"
+    tribunal: "TJPR"
+    comarcas_principais:
+      - nome: "Curitiba"
+        codigo_comarca: "0001"
+      - nome: "Londrina"
+        codigo_comarca: "0079"
+      - nome: "Maringá"
+        codigo_comarca: "0086"
+
+  ba:
+    nome: "Bahia"
+    sigla: "BA"
+    tribunal: "TJBA"
+    comarcas_principais:
+      - nome: "Salvador"
+        codigo_comarca: "0001"
+      - nome: "Feira de Santana"
+        codigo_comarca: "0043"
+
+justica_federal:
+  secoes_judiciarias:
+    - nome: "Seção Judiciária de São Paulo"
+      sigla: "SJSP"
+      trf: "TRF3"
+      subsecoes: ["São Paulo", "Campinas", "Santos", "Ribeirão Preto", "São José dos Campos"]
+    - nome: "Seção Judiciária do Rio de Janeiro"
+      sigla: "SJRJ"
+      trf: "TRF2"
+      subsecoes: ["Rio de Janeiro", "Niterói", "Volta Redonda"]
+    - nome: "Seção Judiciária de Minas Gerais"
+      sigla: "SJMG"
+      trf: "TRF6"
+      subsecoes: ["Belo Horizonte", "Uberlândia", "Juiz de Fora"]
+    - nome: "Seção Judiciária do Paraná"
+      sigla: "SJPR"
+      trf: "TRF4"
+      subsecoes: ["Curitiba", "Londrina", "Maringá", "Foz do Iguaçu"]
+
+tipos_vara:
+  - "Vara Cível"
+  - "Vara de Família e Sucessões"
+  - "Vara Criminal"
+  - "Vara da Fazenda Pública"
+  - "Vara de Falências e Recuperações Judiciais"
+  - "Vara do Trabalho"
+  - "Vara da Infância e Juventude"
+  - "Vara de Execuções Penais"
+  - "Juizado Especial Cível"
+  - "Juizado Especial Criminal"
+  - "Vara Federal"
+  - "Vara Federal Criminal"

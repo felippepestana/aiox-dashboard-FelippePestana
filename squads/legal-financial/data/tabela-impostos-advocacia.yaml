@@ -1,0 +1,120 @@
+name: "Tabela de Impostos para Advocacia"
+description: "Alíquotas e regras tributárias aplicáveis a escritórios de advocacia nos diferentes regimes"
+
+simples_nacional:
+  descricao: "Regime simplificado para receita bruta anual até R$ 4.800.000,00"
+  anexo: "IV"
+  observacao: "ISS não incluído no DAS (cobrado separadamente)"
+  faixas:
+    - faixa: 1
+      receita_bruta_ate: 180000.00
+      aliquota: 4.50
+      deducao: 0.00
+    - faixa: 2
+      receita_bruta_ate: 360000.00
+      aliquota: 9.00
+      deducao: 8100.00
+    - faixa: 3
+      receita_bruta_ate: 720000.00
+      aliquota: 10.20
+      deducao: 12420.00
+    - faixa: 4
+      receita_bruta_ate: 1800000.00
+      aliquota: 14.00
+      deducao: 39780.00
+    - faixa: 5
+      receita_bruta_ate: 3600000.00
+      aliquota: 22.00
+      deducao: 183780.00
+    - faixa: 6
+      receita_bruta_ate: 4800000.00
+      aliquota: 33.00
+      deducao: 828000.00
+
+lucro_presumido:
+  descricao: "Regime de presunção de lucro para apuração de IRPJ e CSLL"
+  irpj:
+    base_presuncao: 32.0
+    aliquota: 15.0
+    aliquota_efetiva: 4.80
+    adicional: "10% sobre parcela da base que exceder R$ 60.000,00/trimestre"
+  csll:
+    base_presuncao: 32.0
+    aliquota: 9.0
+    aliquota_efetiva: 2.88
+  pis:
+    regime: "cumulativo"
+    aliquota: 0.65
+  cofins:
+    regime: "cumulativo"
+    aliquota: 3.00
+  iss:
+    aliquota_minima: 2.0
+    aliquota_maxima: 5.0
+    observacao: "Varia conforme município. Verificar legislação local."
+  carga_estimada:
+    sem_iss: 11.33
+    com_iss_2: 13.33
+    com_iss_5: 16.33
+
+lucro_real:
+  descricao: "Regime de apuração sobre lucro efetivo"
+  irpj:
+    aliquota: 15.0
+    adicional: "10% sobre parcela do lucro que exceder R$ 20.000,00/mês"
+  csll:
+    aliquota: 9.0
+  pis:
+    regime: "não cumulativo"
+    aliquota: 1.65
+    creditos: true
+  cofins:
+    regime: "não cumulativo"
+    aliquota: 7.60
+    creditos: true
+  observacao: "Vantajoso quando despesas dedutíveis são elevadas"
+
+retencoes_fonte:
+  irrf:
+    aliquota: 1.5
+    base: "valor bruto da nota fiscal"
+    observacao: "Retido pelo tomador (PJ) conforme art. 647 do RIR/2018"
+  pis_cofins_csll:
+    aliquota_total: 4.65
+    pis: 0.65
+    cofins: 3.00
+    csll: 1.00
+    valor_minimo: 215.05
+    observacao: "Retido quando NF superior a R$ 215,05 (art. 30, Lei 10.833/03)"
+  iss:
+    retido_pelo_tomador: true
+    observacao: "Quando prestador e tomador em municípios diferentes"
+
+inss:
+  pro_labore:
+    aliquota_socio: 11.0
+    teto_contribuicao: 7786.02
+    contribuicao_patronal: 20.0
+    observacao: "Simples Nacional isenta a contribuição patronal de 20%"
+
+obrigacoes_acessorias:
+  - nome: "DCTF"
+    prazo: "15º dia útil do 2º mês subsequente"
+    periodicidade: "mensal"
+    aplicavel: ["lucro_presumido", "lucro_real"]
+  - nome: "EFD-Contribuições"
+    prazo: "10º dia útil do 2º mês subsequente"
+    periodicidade: "mensal"
+    aplicavel: ["lucro_presumido", "lucro_real"]
+  - nome: "ECD (Escrituração Contábil Digital)"
+    prazo: "último dia útil de maio"
+    periodicidade: "anual"
+    aplicavel: ["lucro_presumido", "lucro_real"]
+  - nome: "ECF (Escrituração Contábil Fiscal)"
+    prazo: "último dia útil de julho"
+    periodicidade: "anual"
+    aplicavel: ["lucro_presumido", "lucro_real"]
+  - nome: "DEFIS"
+    prazo: "31 de março"
+    periodicidade: "anual"
+    aplicavel: ["simples_nacional"]

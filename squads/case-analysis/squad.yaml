@@ -1,0 +1,98 @@
+metadata:
+  display_name: "Análise Processual"
+  description: "Squad especializado em análise processual aprofundada, identificação de vícios e nulidades, pesquisa jurisprudencial, definição de estratégias processuais e elaboração de peças judiciais de urgência."
+  version: "1.1.0"
+  domain: "legal"
+  status: "active"
+  score: 9.2
+
+objectives:
+  - "Analisar autos processuais de forma completa e identificar vícios, nulidades e oportunidades de defesa"
+  - "Pesquisar jurisprudência e legislação aplicável ao caso concreto"
+  - "Definir a estratégia processual mais eficaz considerando urgência e mérito"
+  - "Minutar peças processuais tecnicamente precisas e juridicamente fundamentadas"
+  - "Garantir revisão de qualidade e conformidade com normas processuais"
+
+key_capabilities:
+  - "Leitura e extração estruturada de dados processuais de PDFs e documentos"
+  - "Análise de vícios processuais e nulidades absolutas e relativas"
+  - "Pesquisa jurisprudencial em tribunais superiores e estaduais"
+  - "Elaboração de embargos de declaração, tutelas de urgência e agravos de instrumento"
+  - "Análise de cabimento de recursos e medidas processuais"
+  - "Definição de estratégia processual com priorização por urgência"
+
+tier_system:
+  orchestrator:
+    name: "Orquestrador"
+    purpose: "Coordena toda a análise processual, distribui tarefas e consolida resultados"
+    agents:
+      - case-analysis-chief
+
+  tier_1_main:
+    name: "Analistas Principais"
+    purpose: "Agentes de análise direta dos autos e fundamentação jurídica"
+    agents:
+      - leitor-processual
+      - analista-processual
+      - pesquisador-jurisprudencial
+      - analista-legislativo-processual
+
+  tier_2_specialists:
+    name: "Especialistas em Produção"
+    purpose: "Agentes de estratégia, minutagem e revisão de peças"
+    agents:
+      - estrategista-juridico
+      - minutador-pecas
+      - revisor-juridico
+
+agents:
+  - id: case-analysis-chief
+    name: "Chefe de Análise Processual"
+    role: "Orquestrador do Squad de Análise Processual"
+    tier: orchestrator
+    description: "Coordena o fluxo de análise processual, distribui tarefas aos agentes especializados, consolida pareceres e garante a entrega de peças processuais de qualidade."
+
+  - id: leitor-processual
+    name: "Leitor Processual"
+    role: "Extrator de Dados Processuais"
+    tier: tier_1_main
+    description: "Lê autos processuais (PDFs, documentos digitalizados), extrai dados estruturados como partes, pedidos, decisões, prazos, movimentações e identifica peças-chave."
+
+  - id: analista-processual
+    name: "Analista Processual"
+    role: "Especialista em Vícios e Nulidades"
+    tier: tier_1_main
+    description: "Analisa aspectos processuais formais e materiais, identifica vícios, nulidades, preclusões, incompetências e irregularidades procedimentais."
+
+  - id: pesquisador-jurisprudencial
+    name: "Pesquisador Jurisprudencial"
+    role: "Pesquisador de Jurisprudência e Precedentes"
+    tier: tier_1_main
+    description: "Pesquisa jurisprudência relevante em tribunais superiores (STF, STJ) e tribunais estaduais, identifica precedentes vinculantes e persuasivos aplicáveis ao caso."
+
+  - id: analista-legislativo-processual
+    name: "Analista Legislativo Processual"
+    role: "Especialista em Legislação Processual"
+    tier: tier_1_main
+    description: "Analisa a legislação processual e material aplicável, identifica normas do CPC, CPP, CF/88 e legislação extravagante relevantes ao caso."
+
+  - id: estrategista-juridico
+    name: "Estrategista Jurídico"
+    role: "Definidor de Estratégia Processual"
+    tier: tier_2_specialists
+    description: "Avalia as opções processuais disponíveis, define a estratégia mais eficaz considerando urgência, probabilidade de êxito e riscos, e recomenda a peça cabível."
+
+  - id: minutador-pecas
+    name: "Minutador de Peças"
+    role: "Redator de Peças Processuais"
+    tier: tier_2_specialists
+    description: "Elabora minutas de peças processuais (embargos, tutelas, agravos, petições) com fundamentação técnica, estrutura adequada e linguagem jurídica precisa."
+
+  - id: revisor-juridico
+    name: "Revisor Jurídico"
+    role: "Revisor de Qualidade Jurídica"
+    tier: tier_2_specialists
+    description: "Revisa peças processuais quanto à fundamentação, coerência argumentativa, conformidade com normas processuais, formatação e adequação ao caso concreto."
+
+dependencies:
+  - aios-core

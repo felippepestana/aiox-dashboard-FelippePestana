@@ -1,0 +1,71 @@
+name: "Campanha de Marketing Jurídico Completa"
+description: "Fluxo completo de criação, validação e execução de campanha de marketing jurídico com compliance OAB."
+version: "1.0.0"
+trigger: "Demanda de campanha de marketing jurídico"
+
+steps:
+  - id: planejar
+    name: "Planejar Campanha"
+    agent: legal-marketing-chief
+    task: planejar-campanha
+    description: "Define estratégia, canais, calendário editorial e KPIs"
+    outputs:
+      - plano_campanha
+      - briefings_conteudo
+
+  - id: criar_conteudo
+    name: "Criar Conteúdo"
+    agent: criador-conteudo-juridico
+    task: criar-conteudo
+    depends_on: [planejar]
+    description: "Produz conteúdos conforme briefings do plano"
+    outputs:
+      - conteudos_produzidos
+
+  - id: validar_compliance
+    name: "Validar Compliance OAB"
+    agent: compliance-oab
+    task: validar-compliance-oab
+    depends_on: [criar_conteudo]
+    description: "Valida todos os materiais quanto à conformidade com Provimento 205/2021"
+    outputs:
+      - pareceres_compliance
+
+  - id: ajustar_conteudo
+    name: "Ajustar Conteúdo (se necessário)"
+    agent: criador-conteudo-juridico
+    depends_on: [validar_compliance]
+    description: "Realiza ajustes solicitados pelo compliance e resubmete"
+    conditional: "Se parecer = ajustes_necessarios"
+    outputs:
+      - conteudos_ajustados
+
+  - id: publicar
+    name: "Publicar e Ativar Campanha"
+    agent: legal-marketing-chief
+    depends_on: [validar_compliance, ajustar_conteudo]
+    description: "Publica conteúdos aprovados e ativa campanha nos canais"
+    outputs:
+      - campanha_ativa
+
+  - id: monitorar
+    name: "Monitorar Resultados"
+    agent: legal-marketing-chief
+    depends_on: [publicar]
+    description: "Monitora KPIs, coleta leads e gera relatório de performance"
+    outputs:
+      - relatorio_performance
+      - leads_gerados
+
+flow_diagram: |
+  [Planejar Campanha]
+          ↓
+  [Criar Conteúdo]
+          ↓
+  [Validar Compliance OAB]
+          ↓
+  [Ajustar (se necessário)]
+          ↓
+  [Publicar e Ativar]
+          ↓
+  [Monitorar Resultados]

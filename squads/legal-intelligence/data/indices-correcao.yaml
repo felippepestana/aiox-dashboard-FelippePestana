@@ -1,0 +1,86 @@
+name: "Índices de Correção Monetária e Juros"
+description: "Índices de correção monetária e taxas de juros utilizados em cálculos jurídicos"
+
+indices_correcao:
+  ipca_e:
+    nome: "IPCA-E (Índice de Preços ao Consumidor Amplo Especial)"
+    fonte: "IBGE"
+    aplicacao: "Correção monetária de condenações contra a Fazenda Pública (Tema 810/STF)"
+    fundamentacao: "RE 870947 (Tema 810 RG/STF)"
+    periodicidade: "mensal"
+
+  inpc:
+    nome: "INPC (Índice Nacional de Preços ao Consumidor)"
+    fonte: "IBGE"
+    aplicacao: "Correção de benefícios previdenciários e trabalhistas"
+    fundamentacao: "Lei 8.213/91, art. 41-A"
+    periodicidade: "mensal"
+
+  igp_m:
+    nome: "IGP-M (Índice Geral de Preços do Mercado)"
+    fonte: "FGV"
+    aplicacao: "Contratos com previsão expressa, aluguéis"
+    fundamentacao: "Pacta sunt servanda (autonomia contratual)"
+    periodicidade: "mensal"
+
+  tr:
+    nome: "TR (Taxa Referencial)"
+    fonte: "Banco Central"
+    aplicacao: "FGTS, poupança, depósitos recursais"
+    fundamentacao: "Lei 8.177/91"
+    periodicidade: "mensal"
+    observacao: "STF declarou inconstitucional o uso da TR como índice de correção monetária em precatórios"
+
+  selic:
+    nome: "SELIC (Sistema Especial de Liquidação e de Custódia)"
+    fonte: "Banco Central"
+    aplicacao: "Débitos tributários (inclui correção + juros)"
+    fundamentacao: "Art. 161, §1º, CTN; Lei 9.250/95, art. 39, §4º"
+    periodicidade: "mensal"
+    observacao: "Quando se aplica SELIC, não se acumula com outro índice de correção ou juros"
+
+taxas_juros:
+  selic:
+    tipo: "acumulada"
+    aplicacao: "Débitos tributários"
+    fundamentacao: "Art. 161, §1º, CTN"
+    observacao: "Já engloba correção monetária + juros"
+
+  um_porcento_mes:
+    tipo: "simples"
+    taxa: "1% ao mês"
+    aplicacao: "Regra geral do Código Civil"
+    fundamentacao: "Art. 406, CC c/c art. 161, §1º, CTN"
+    observacao: "Debate jurisprudencial sobre aplicação de SELIC vs 1% a.m."
+
+  poupanca:
+    tipo: "referencial"
+    aplicacao: "Condenações contra a Fazenda Pública (não tributárias)"
+    fundamentacao: "Lei 11.960/09, art. 1º-F da Lei 9.494/97"
+    observacao: "Aplicação parcial conforme Tema 810/STF"
+
+aplicacao_por_tipo:
+  debito_tributario:
+    correcao: "selic"
+    juros: "selic (já inclui)"
+    fundamentacao: "Art. 161, §1º, CTN"
+
+  condenacao_fazenda_publica:
+    correcao: "ipca_e"
+    juros: "poupanca (não tributário) ou selic (tributário)"
+    fundamentacao: "Tema 810/STF (RE 870947)"
+
+  debito_civil:
+    correcao: "ipca_e ou igp_m"
+    juros: "1% a.m. ou selic"
+    fundamentacao: "Art. 406, CC"
+
+  debito_trabalhista:
+    correcao: "ipca_e"
+    juros: "selic (pós EC 113/2021)"
+    fundamentacao: "EC 113/2021, art. 3º; ADC 58/STF"
+
+  fgts:
+    correcao: "tr + 3% a.a."
+    juros: "inclusos na TR"
+    fundamentacao: "Lei 8.036/90"

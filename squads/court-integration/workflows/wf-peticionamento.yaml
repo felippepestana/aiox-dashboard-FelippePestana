@@ -1,0 +1,49 @@
+name: "Peticionamento Eletrônico"
+description: "Fluxo completo de protocolo de petições eletrônicas, desde validação até confirmação de recebimento."
+version: "1.0.0"
+trigger: "Demanda de protocolo de petição eletrônica"
+
+steps:
+  - id: receber_demanda
+    name: "Receber Demanda de Peticionamento"
+    agent: court-integration-chief
+    description: "Recebe petição, identifica tribunal e sistema-alvo, valida dados básicos"
+    outputs:
+      - sistema_alvo
+      - dados_processo_validados
+
+  - id: consultar_processo
+    name: "Consultar Processo"
+    agent: consultor-pje
+    task: consultar-processo-pje
+    depends_on: [receber_demanda]
+    description: "Consulta dados atuais do processo para confirmar número, vara e status"
+    outputs:
+      - dados_processo_atualizados
+
+  - id: protocolar
+    name: "Protocolar Petição"
+    agent: protocolo-peticionamento
+    task: protocolar-peticao
+    depends_on: [consultar_processo]
+    description: "Valida formato, assinatura digital e realiza o envio da petição"
+    outputs:
+      - confirmacao_protocolo
+
+  - id: confirmar_entrega
+    name: "Confirmar Entrega"
+    agent: court-integration-chief
+    depends_on: [protocolar]
+    description: "Confirma protocolo, gera comprovante e notifica solicitante"
+    outputs:
+      - comprovante_protocolo
+      - notificacao_enviada
+
+flow_diagram: |
+  [Receber Demanda]
+         ↓
+  [Consultar Processo]
+         ↓
+  [Protocolar Petição]
+         ↓
+  [Confirmar Entrega]

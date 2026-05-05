@@ -1,0 +1,95 @@
+name: "Índices de Correção Monetária"
+description: "Índices de correção monetária utilizados em cálculos financeiros jurídicos"
+
+indices:
+  ipca:
+    nome: "IPCA (Índice de Preços ao Consumidor Amplo)"
+    fonte: "IBGE"
+    periodicidade: "mensal"
+    uso: "Índice oficial de inflação do Brasil"
+    aplicacao_juridica: "Correção de contratos, indenizações cíveis"
+
+  ipca_e:
+    nome: "IPCA-E (Índice de Preços ao Consumidor Amplo Especial)"
+    fonte: "IBGE"
+    periodicidade: "mensal"
+    uso: "Variante do IPCA para correção judicial"
+    aplicacao_juridica: "Condenações contra a Fazenda Pública (Tema 810/STF)"
+
+  inpc:
+    nome: "INPC (Índice Nacional de Preços ao Consumidor)"
+    fonte: "IBGE"
+    periodicidade: "mensal"
+    uso: "Mede inflação para famílias de renda de 1 a 5 salários mínimos"
+    aplicacao_juridica: "Benefícios previdenciários, pensões alimentícias"
+
+  igp_m:
+    nome: "IGP-M (Índice Geral de Preços do Mercado)"
+    fonte: "FGV"
+    periodicidade: "mensal"
+    uso: "Índice de referência para contratos e aluguéis"
+    aplicacao_juridica: "Reajuste de aluguéis, contratos com previsão expressa"
+
+  igp_di:
+    nome: "IGP-DI (Índice Geral de Preços - Disponibilidade Interna)"
+    fonte: "FGV"
+    periodicidade: "mensal"
+    uso: "Alternativa ao IGP-M para contratos"
+    aplicacao_juridica: "Contratos com previsão expressa"
+
+  tr:
+    nome: "TR (Taxa Referencial)"
+    fonte: "Banco Central"
+    periodicidade: "mensal"
+    uso: "Referência para poupança e FGTS"
+    aplicacao_juridica: "FGTS, depósitos recursais, caderneta de poupança"
+    observacao: "Declarada inconstitucional como correção de precatórios pelo STF"
+
+  selic:
+    nome: "SELIC (Sistema Especial de Liquidação e de Custódia)"
+    fonte: "Banco Central"
+    periodicidade: "mensal (acumulada)"
+    uso: "Taxa básica de juros da economia"
+    aplicacao_juridica: "Débitos tributários (engloba correção + juros)"
+    observacao: "Não acumula com outro índice de correção quando aplicada"
+
+tabela_aplicacao:
+  debitos_tributarios:
+    indice: "selic"
+    juros: "inclusos na selic"
+    fundamentacao: "Art. 161, §1º, CTN"
+
+  fazenda_publica_nao_tributario:
+    indice: "ipca_e"
+    juros: "poupança"
+    fundamentacao: "Tema 810/STF (RE 870947)"
+
+  fazenda_publica_tributario:
+    indice: "selic"
+    juros: "inclusos"
+    fundamentacao: "Tema 810/STF"
+
+  trabalhista:
+    indice: "ipca_e (até EC 113/2021)"
+    juros: "selic (pós EC 113/2021)"
+    fundamentacao: "ADC 58/STF; EC 113/2021"
+
+  civil_geral:
+    indice: "ipca ou igp_m"
+    juros: "1% a.m. (art. 406, CC)"
+    fundamentacao: "Art. 389 e 406, Código Civil"
+
+  aluguel:
+    indice: "igp_m (mais comum)"
+    juros: "conforme contrato"
+    fundamentacao: "Lei 8.245/91, art. 18"
+
+  pensao_alimenticia:
+    indice: "inpc"
+    juros: "não aplicável"
+    fundamentacao: "Decisão judicial (índice mais usual)"
+
+  precatorios:
+    indice: "ipca_e"
+    juros: "selic (pós EC 113/2021)"
+    fundamentacao: "EC 113/2021, art. 3º"

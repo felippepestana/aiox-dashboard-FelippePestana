@@ -1,0 +1,53 @@
+name: "Temas de Repercussão Geral do STF"
+description: "Principais temas de repercussão geral com status e teses fixadas"
+
+temas:
+  - numero: 810
+    titulo: "Correção monetária e juros de mora nas condenações contra a Fazenda Pública"
+    status: "tese_fixada"
+    leading_case: "RE 870947"
+    tese: "O art. 1º-F da Lei nº 9.494/97, com a redação dada pela Lei nº 11.960/09, na parte em que disciplina os juros moratórios aplicáveis a condenações da Fazenda Pública, é inconstitucional ao incidir sobre débitos oriundos de relação jurídico-tributária, sendo legítima a incidência da taxa Selic."
+    indice_correcao: "IPCA-E"
+    juros: "SELIC (tributário) ou poupança (demais)"
+
+  - numero: 709
+    titulo: "Responsabilidade civil do Estado por morte de detento"
+    status: "tese_fixada"
+    leading_case: "RE 841526"
+    tese: "Em caso de inobservância de seu dever específico de proteção previsto no artigo 5º, inciso XLIX, da Constituição Federal, o Estado é responsável pela morte de detento."
+
+  - numero: 937
+    titulo: "Foro por prerrogativa de função"
+    status: "tese_fixada"
+    leading_case: "AP 937 QO"
+    tese: "O foro por prerrogativa de função aplica-se apenas aos crimes cometidos durante o exercício do cargo e relacionados às funções desempenhadas."
+
+  - numero: 786
+    titulo: "Limites da coisa julgada em matéria tributária"
+    status: "tese_fixada"
+    leading_case: "RE 949297"
+    tese: "As decisões do STF em controle incidental de constitucionalidade, realizadas sob a sistemática da repercussão geral, não atingem automaticamente a coisa julgada que tenha beneficiado a parte de relação jurídica tributária."
+
+  - numero: 1046
+    titulo: "Prevalência de acordo coletivo sobre legislação trabalhista"
+    status: "tese_fixada"
+    leading_case: "ARE 1121633"
+    tese: "São constitucionais os acordos e as convenções coletivos que, ao considerarem a adequação setorial negociada, pactuam limitações ou afastamentos de direitos trabalhistas, independentemente da explicitação especificada de vantagens compensatórias."
+
+  - numero: 1170
+    titulo: "Constitucionalidade da reforma trabalhista"
+    status: "pendente"
+    leading_case: "ADI 5766"
+    tese: ""
+
+  - numero: 725
+    titulo: "Aplicação da Lei Maria da Penha"
+    status: "tese_fixada"
+    leading_case: "ADC 19"
+    tese: "A Lei 11.340/2006 (Lei Maria da Penha) é constitucional."
+
+  - numero: 660
+    titulo: "Dano moral por inscrição indevida em cadastro de inadimplentes"
+    status: "tese_fixada"
+    leading_case: "RE 631762"
+    tese: "A inscrição indevida em cadastro de inadimplentes gera dano moral presumido (in re ipsa)."

@@ -1,0 +1,85 @@
+name: "Regras OAB de Marketing Jurídico"
+description: "Regras do Provimento 205/2021 do CFOAB e CEDOAB sobre publicidade na advocacia"
+
+provimento_205_2021:
+  ementa: "Dispõe sobre a publicidade e a propaganda na advocacia"
+  vigencia: "2021-06-01"
+  orgao: "Conselho Federal da OAB"
+
+  principios:
+    - "Informação é direito do consumidor e da sociedade"
+    - "Publicidade deve ser informativa e discreta"
+    - "Vedada a captação direta de clientela (aliciamento)"
+    - "Vedada a mercantilização da profissão"
+
+  permitido:
+    publicidade_informativa:
+      - "Informar áreas de atuação e especializações"
+      - "Publicar artigos e conteúdo informativo/educativo"
+      - "Divulgar participação em eventos, congressos e publicações"
+      - "Informar dados de contato e endereço"
+      - "Publicar currículo e formação acadêmica"
+
+    marketing_digital:
+      - "Manter website institucional"
+      - "Usar redes sociais com conteúdo informativo"
+      - "Praticar marketing de conteúdo e inbound marketing"
+      - "Utilizar SEO (Search Engine Optimization)"
+      - "Enviar e-mail marketing informativo (com opt-in)"
+      - "Impulsionar posts informativos em redes sociais"
+      - "Utilizar Google Ads com termos informativos"
+
+    eventos:
+      - "Patrocinar eventos jurídicos e acadêmicos"
+      - "Ministrar palestras e cursos"
+      - "Participar de podcasts e programas informativos"
+      - "Organizar webinars e eventos online"
+
+    identidade_visual:
+      - "Usar logotipo e identidade visual do escritório"
+      - "Utilizar cartões de visita e material de papelaria"
+      - "Manter sinalização externa discreta do escritório"
+
+  proibido:
+    captacao:
+      - "Fazer captação direta de clientela (aliciamento)"
+      - "Abordar pessoas em hospitais, delegacias, fóruns"
+      - "Oferecer serviços diretamente a vítimas de acidentes"
+
+    promessas:
+      - "Prometer resultados ou garantir êxito"
+      - "Divulgar valores de causa ou honorários publicamente"
+      - "Divulgar resultados financeiros de processos"
+
+    linguagem:
+      - "Usar linguagem mercantilista ou sensacionalista"
+      - "Usar termos superlativos (o melhor, o maior, o único)"
+      - "Fazer propaganda comparativa com outros escritórios"
+      - "Utilizar depoimentos sem autorização expressa"
+
+    visual:
+      - "Publicar fotos em trajes incompatíveis com a profissão"
+      - "Usar elementos que banalizem a advocacia"
+
+    digital:
+      - "Comprar avaliações ou depoimentos falsos"
+      - "Usar bots para gerar engajamento artificial"
+      - "Fazer spam ou comunicação não solicitada"
+
+cedoab:
+  artigos_relevantes:
+    art_28: "O advogado pode anunciar os seus serviços profissionais, individual ou coletivamente, com discrição e moderação, para finalidade exclusivamente informativa."
+    art_29: "O anúncio deve mencionar o nome completo do advogado e o número da inscrição na OAB."
+    art_30: "São formas de publicidade permitidas: a utilização de cartões de visita e de apresentação do escritório, contendo o nome completo do advogado e o número da OAB."
+    art_31: "O anúncio não deve conter fotografias, ilustrações, cores, figuras, desenhos, logotipos, marcas ou símbolos incompatíveis com a sobriedade da advocacia."
+    art_34: "A publicidade veiculada pela internet ou por processo semelhante submete-se às normas deste Código."
+
+sancoes:
+  - tipo: "Censura"
+    descricao: "Advertência por infração leve"
+  - tipo: "Suspensão"
+    descricao: "Suspensão do exercício profissional por até 12 meses"
+    casos: "Reincidência em infrações de publicidade"
+  - tipo: "Exclusão"
+    descricao: "Exclusão do quadro da OAB"
+    casos: "Infrações graves e reiteradas"

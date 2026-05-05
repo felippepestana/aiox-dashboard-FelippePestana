@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Sbarzi Odontologia - Plataforma IA",
-  description: "Plataforma de gestão odontológica com inteligência artificial - Sbarzi Odontologia e Saúde",
+  title: "AIOX Legal - Plataforma Jurídica Full-Service",
+  description: "Plataforma de gestão jurídica full-service com IA: processos, peças, prazos, tribunais, precedentes, marketing e estratégia.",
 };
 
 export default function RootLayout({

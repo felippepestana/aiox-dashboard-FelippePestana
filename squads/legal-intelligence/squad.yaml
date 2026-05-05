@@ -1,0 +1,51 @@
+metadata:
+  display_name: "Inteligência Jurídica"
+  description: "Squad de inteligência jurídica com pesquisa de precedentes, classificação de temas, análise de similaridade e mapeamento de padrões de magistrados"
+  version: "1.0.0"
+  domain: "legal"
+  status: "active"
+  score: 9.0
+
+tier_system:
+  orchestrator:
+    name: "Orquestrador"
+    purpose: "Coordena pesquisas de inteligência jurídica"
+    agents: [legal-intelligence-chief]
+  tier_1_main:
+    name: "Analistas de Inteligência"
+    purpose: "Pesquisa e classificação de precedentes"
+    agents: [pesquisador-precedentes, classificador-temas, analista-similaridade]
+  tier_2_specialists:
+    name: "Especialistas"
+    purpose: "Análise avançada de magistrados e cálculos"
+    agents: [analista-magistrado, calculista-juridico]
+
+agents:
+  - id: legal-intelligence-chief
+    name: "Chefe de Inteligência Jurídica"
+    role: "Orquestrador de Inteligência"
+    tier: orchestrator
+  - id: pesquisador-precedentes
+    name: "Pesquisador de Precedentes"
+    role: "Pesquisa STF/STJ e tribunais estaduais"
+    tier: tier_1_main
+  - id: classificador-temas
+    name: "Classificador de Temas"
+    role: "Classificação VICTOR de repercussão geral"
+    tier: tier_1_main
+  - id: analista-similaridade
+    name: "Analista de Similaridade"
+    role: "Scoring PEDRO de similaridade"
+    tier: tier_1_main
+  - id: analista-magistrado
+    name: "Analista de Magistrados"
+    role: "Análise de padrão de voto"
+    tier: tier_2_specialists
+  - id: calculista-juridico
+    name: "Calculista Jurídico"
+    role: "Cálculos jurídicos especializados"
+    tier: tier_2_specialists
+
+dependencies:
+  - aios-core
+  - case-analysis

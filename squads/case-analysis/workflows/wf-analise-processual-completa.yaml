@@ -1,0 +1,108 @@
+name: "Análise Processual Completa"
+description: "Fluxo completo de análise processual, desde a leitura dos autos até a entrega da peça final revisada."
+version: "1.0.0"
+trigger: "Demanda de análise processual com urgência média ou baixa"
+
+steps:
+  - id: classificar
+    name: "Classificar Demanda"
+    agent: case-analysis-chief
+    task: classificar-demanda-processual
+    description: "Recebe os autos, classifica tipo, urgência e define workflow"
+    outputs:
+      - classificacao_demanda
+      - workflow_selecionado
+
+  - id: extrair
+    name: "Extrair Dados dos Autos"
+    agent: leitor-processual
+    task: extrair-dados-processuais
+    depends_on: [classificar]
+    description: "Lê integralmente os autos e extrai dados estruturados"
+    outputs:
+      - dados_processuais_estruturados
+
+  - id: analisar_vicios
+    name: "Analisar Vícios Processuais"
+    agent: analista-processual
+    task: analisar-vicios-processuais
+    depends_on: [extrair]
+    description: "Identifica vícios, nulidades e irregularidades"
+    outputs:
+      - parecer_vicios
+
+  - id: pesquisar_juris
+    name: "Pesquisar Jurisprudência"
+    agent: pesquisador-jurisprudencial
+    task: pesquisar-jurisprudencia
+    depends_on: [extrair]
+    parallel_with: [analisar_vicios, levantar_leg]
+    description: "Pesquisa jurisprudência relevante ao caso"
+    outputs:
+      - relatorio_jurisprudencia
+
+  - id: levantar_leg
+    name: "Levantar Legislação"
+    agent: analista-legislativo-processual
+    task: levantar-legislacao-aplicavel
+    depends_on: [extrair]
+    parallel_with: [analisar_vicios, pesquisar_juris]
+    description: "Mapeia legislação processual e material aplicável"
+    outputs:
+      - mapeamento_legislativo
+
+  - id: estrategia
+    name: "Definir Estratégia"
+    agent: estrategista-juridico
+    task: definir-estrategia-processual
+    depends_on: [analisar_vicios, pesquisar_juris, levantar_leg]
+    description: "Consolida análises e define estratégia processual"
+    outputs:
+      - parecer_estrategico
+      - peca_recomendada
+
+  - id: minutar
+    name: "Minutar Peça"
+    agent: minutador-pecas
+    task: minutar-peca-processual
+    depends_on: [estrategia]
+    description: "Elabora a minuta da peça processual recomendada"
+    outputs:
+      - minuta_peca
+
+  - id: revisar
+    name: "Revisar Peça"
+    agent: revisor-juridico
+    task: revisar-peca-processual
+    depends_on: [minutar]
+    description: "Revisa qualidade e conformidade da peça"
+    outputs:
+      - peca_final_revisada
+      - parecer_revisao
+
+  - id: entregar
+    name: "Entregar Resultado"
+    agent: case-analysis-chief
+    depends_on: [revisar]
+    description: "Consolida e entrega peça final + parecer ao usuário"
+    outputs:
+      - peca_processual_final
+      - relatorio_analise_completo
+
+flow_diagram: |
+  [Classificar] → [Extrair Dados]
+                        ↓
+         ┌──────────────┼──────────────┐
+         ↓              ↓              ↓
+  [Analisar Vícios] [Pesquisar    [Levantar
+                     Jurispr.]    Legislação]
+         ↓              ↓              ↓
+         └──────────────┼──────────────┘
+                        ↓
+              [Definir Estratégia]
+                        ↓
+                [Minutar Peça]
+                        ↓
+                [Revisar Peça]
+                        ↓
+              [Entregar Resultado]

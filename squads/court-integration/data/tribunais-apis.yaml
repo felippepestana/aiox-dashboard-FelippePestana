@@ -1,0 +1,125 @@
+name: "Tribunais e APIs Judiciais"
+description: "Mapeamento de tribunais brasileiros, sistemas processuais e endpoints de API"
+
+sistemas_processuais:
+  pje:
+    nome: "Processo Judicial Eletrônico"
+    protocolo: "SOAP/XML (MNI 2.2.2)"
+    autenticacao: "Certificado digital ICP-Brasil"
+    documentacao: "https://www.cnj.jus.br/programas-e-acoes/pje/"
+
+  esaj:
+    nome: "e-SAJ (Sistema de Automação da Justiça)"
+    protocolo: "REST/JSON"
+    autenticacao: "Certificado digital + token"
+    documentacao: "https://esaj.tjsp.jus.br"
+
+  eproc:
+    nome: "e-Proc"
+    protocolo: "REST/JSON"
+    autenticacao: "Certificado digital"
+    documentacao: "https://eproc.jfpr.jus.br"
+
+  projudi:
+    nome: "PROJUDI"
+    protocolo: "SOAP/XML"
+    autenticacao: "Certificado digital"
+    documentacao: "https://projudi.tjpr.jus.br"
+
+  datajud:
+    nome: "DataJud (CNJ)"
+    protocolo: "REST/JSON"
+    autenticacao: "API Key"
+    base_url: "https://datajud-wiki.cnj.jus.br"
+    rate_limit: "100 requisições/minuto"
+
+tribunais_estaduais:
+  tjsp:
+    nome: "Tribunal de Justiça de São Paulo"
+    sigla: "TJSP"
+    sistema: "esaj"
+    dje: "https://dje.tjsp.jus.br"
+  tjrj:
+    nome: "Tribunal de Justiça do Rio de Janeiro"
+    sigla: "TJRJ"
+    sistema: "pje"
+    dje: "https://www3.tjrj.jus.br/consultadje"
+  tjmg:
+    nome: "Tribunal de Justiça de Minas Gerais"
+    sigla: "TJMG"
+    sistema: "pje"
+    dje: "https://www.tjmg.jus.br/portal-tjmg/dje/"
+  tjrs:
+    nome: "Tribunal de Justiça do Rio Grande do Sul"
+    sigla: "TJRS"
+    sistema: "eproc"
+    dje: "https://www.tjrs.jus.br/dje"
+  tjpr:
+    nome: "Tribunal de Justiça do Paraná"
+    sigla: "TJPR"
+    sistema: "projudi"
+    dje: "https://portal.tjpr.jus.br/dje"
+  tjba:
+    nome: "Tribunal de Justiça da Bahia"
+    sigla: "TJBA"
+    sistema: "pje"
+    dje: "https://www.tjba.jus.br/dje"
+  tjpe:
+    nome: "Tribunal de Justiça de Pernambuco"
+    sigla: "TJPE"
+    sistema: "pje"
+    dje: "https://www.tjpe.jus.br/dje"
+  tjsc:
+    nome: "Tribunal de Justiça de Santa Catarina"
+    sigla: "TJSC"
+    sistema: "eproc"
+    dje: "https://www.tjsc.jus.br/dje"
+
+tribunais_federais:
+  trf1:
+    nome: "Tribunal Regional Federal da 1ª Região"
+    sigla: "TRF1"
+    sistema: "pje"
+    abrangencia: "AC, AM, AP, BA, DF, GO, MA, MG, MT, PA, PI, RO, RR, TO"
+  trf2:
+    nome: "Tribunal Regional Federal da 2ª Região"
+    sigla: "TRF2"
+    sistema: "pje"
+    abrangencia: "RJ, ES"
+  trf3:
+    nome: "Tribunal Regional Federal da 3ª Região"
+    sigla: "TRF3"
+    sistema: "pje"
+    abrangencia: "SP, MS"
+  trf4:
+    nome: "Tribunal Regional Federal da 4ª Região"
+    sigla: "TRF4"
+    sistema: "eproc"
+    abrangencia: "PR, SC, RS"
+  trf5:
+    nome: "Tribunal Regional Federal da 5ª Região"
+    sigla: "TRF5"
+    sistema: "pje"
+    abrangencia: "AL, CE, PB, PE, RN, SE"
+  trf6:
+    nome: "Tribunal Regional Federal da 6ª Região"
+    sigla: "TRF6"
+    sistema: "pje"
+    abrangencia: "MG"
+
+tribunais_superiores:
+  stf:
+    nome: "Supremo Tribunal Federal"
+    sigla: "STF"
+    sistema: "pje"
+    api_consulta: "https://portal.stf.jus.br/servicos"
+  stj:
+    nome: "Superior Tribunal de Justiça"
+    sigla: "STJ"
+    sistema: "pje"
+    api_consulta: "https://scon.stj.jus.br"
+  tst:
+    nome: "Tribunal Superior do Trabalho"
+    sigla: "TST"
+    sistema: "pje"
+    api_consulta: "https://www.tst.jus.br"

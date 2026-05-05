@@ -1,0 +1,146 @@
+name: "Áreas do Direito para Conteúdo"
+description: "Mapeamento de áreas do direito com temas para produção de conteúdo jurídico"
+
+areas:
+  direito_civil:
+    nome: "Direito Civil"
+    descricao: "Relações jurídicas entre particulares"
+    temas_conteudo:
+      - "Contratos: tipos, cláusulas e rescisão"
+      - "Responsabilidade civil e indenizações"
+      - "Direito de propriedade e posse"
+      - "Direito de família: divórcio, guarda, pensão"
+      - "Direito das sucessões: testamento, inventário, herança"
+      - "Dano moral e dano material"
+      - "Prescrição e decadência"
+      - "Obrigações e pagamento"
+    publico_alvo: ["pessoa_fisica", "empresa"]
+
+  direito_consumidor:
+    nome: "Direito do Consumidor"
+    descricao: "Proteção nas relações de consumo"
+    temas_conteudo:
+      - "Direitos básicos do consumidor (CDC)"
+      - "Recall e produtos defeituosos"
+      - "Práticas abusivas e cláusulas leoninas"
+      - "Direito de arrependimento (compras online)"
+      - "Superendividamento e renegociação"
+      - "Planos de saúde e reajustes"
+      - "Bancos e tarifas abusivas"
+      - "Negativação indevida (SPC/Serasa)"
+    publico_alvo: ["pessoa_fisica"]
+
+  direito_trabalhista:
+    nome: "Direito Trabalhista"
+    descricao: "Relações de trabalho e emprego"
+    temas_conteudo:
+      - "Direitos do trabalhador CLT"
+      - "Rescisão contratual e verbas devidas"
+      - "Horas extras e banco de horas"
+      - "Assédio moral e sexual no trabalho"
+      - "Acidente de trabalho e estabilidade"
+      - "Reforma trabalhista: mudanças na CLT"
+      - "Trabalho remoto e teletrabalho"
+      - "MEI e pejotização"
+    publico_alvo: ["pessoa_fisica", "empresa"]
+
+  direito_tributario:
+    nome: "Direito Tributário"
+    descricao: "Tributos, obrigações fiscais e planejamento"
+    temas_conteudo:
+      - "Planejamento tributário para empresas"
+      - "Simples Nacional vs Lucro Presumido vs Lucro Real"
+      - "Recuperação de créditos tributários"
+      - "Execução fiscal e defesa do contribuinte"
+      - "ITCMD e planejamento sucessório"
+      - "ICMS, ISS, IPI: principais questões"
+      - "Reforma tributária: impactos"
+      - "Parcelamento de dívidas fiscais (REFIS)"
+    publico_alvo: ["empresa"]
+
+  direito_empresarial:
+    nome: "Direito Empresarial"
+    descricao: "Sociedades, contratos empresariais e recuperação"
+    temas_conteudo:
+      - "Tipos societários: LTDA, S.A., SLU"
+      - "Contratos empresariais e cláusulas essenciais"
+      - "Recuperação judicial e falência"
+      - "Propriedade intelectual e marcas"
+      - "Startups: aspectos jurídicos"
+      - "Due diligence e M&A"
+      - "Compliance empresarial"
+      - "LGPD e proteção de dados"
+    publico_alvo: ["empresa"]
+
+  direito_imobiliario:
+    nome: "Direito Imobiliário"
+    descricao: "Transações e questões imobiliárias"
+    temas_conteudo:
+      - "Compra e venda de imóveis: cuidados"
+      - "Contratos de locação (Lei 8.245/91)"
+      - "Distrato imobiliário (Lei 13.786/18)"
+      - "Condomínio: regras e conflitos"
+      - "Usucapião: requisitos e tipos"
+      - "Regularização de imóveis"
+      - "Incorporação imobiliária"
+      - "Financiamento imobiliário e alienação fiduciária"
+    publico_alvo: ["pessoa_fisica", "empresa"]
+
+  direito_previdenciario:
+    nome: "Direito Previdenciário"
+    descricao: "Benefícios do INSS e previdência"
+    temas_conteudo:
+      - "Aposentadoria: regras após reforma"
+      - "BPC/LOAS: quem tem direito"
+      - "Auxílio-doença e aposentadoria por invalidez"
+      - "Pensão por morte: requisitos"
+      - "Revisão de benefícios"
+      - "Planejamento previdenciário"
+      - "Tempo especial e conversão"
+      - "INSS: como contribuir corretamente"
+    publico_alvo: ["pessoa_fisica"]
+
+  direito_digital:
+    nome: "Direito Digital"
+    descricao: "Tecnologia, internet e proteção de dados"
+    temas_conteudo:
+      - "LGPD na prática: adequação para empresas"
+      - "Crimes cibernéticos: como se proteger"
+      - "Remoção de conteúdo da internet"
+      - "Contratos digitais e assinatura eletrônica"
+      - "E-commerce: aspectos jurídicos"
+      - "Inteligência artificial e regulação"
+      - "Marco Civil da Internet"
+      - "Proteção de dados pessoais de crianças"
+    publico_alvo: ["pessoa_fisica", "empresa"]
+
+formatos_por_plataforma:
+  blog:
+    formato: "artigo_longo"
+    palavras: "1500-3000"
+    frequencia: "2-4 posts/semana"
+    foco: "SEO, profundidade, autoridade"
+
+  linkedin:
+    formato: "artigo_curto ou post"
+    palavras: "200-1300"
+    frequencia: "3-5 posts/semana"
+    foco: "Networking, autoridade, B2B"
+
+  instagram:
+    formato: "carrossel ou reels"
+    palavras: "50-200 (legenda)"
+    frequencia: "3-5 posts/semana"
+    foco: "Visual, acessibilidade, engajamento"
+
+  newsletter:
+    formato: "curadoria + artigo"
+    palavras: "500-1000"
+    frequencia: "1-2/semana"
+    foco: "Fidelização, nurturing"
+
+  youtube:
+    formato: "video_educativo"
+    duracao: "5-15 minutos"
+    frequencia: "1-2 videos/semana"
+    foco: "Autoridade, alcance, SEO"

@@ -1,0 +1,51 @@
+metadata:
+  display_name: "Integração Tribunais"
+  description: "Squad de integração com sistemas judiciais brasileiros (PJE, DataJud, e-SAJ, e-Proc, PROJUDI, DJE)"
+  version: "1.0.0"
+  domain: "legal"
+  status: "active"
+  score: 8.5
+
+tier_system:
+  orchestrator:
+    name: "Orquestrador"
+    purpose: "Coordena integrações com tribunais e monitoramento"
+    agents: [court-integration-chief]
+  tier_1_main:
+    name: "Consultores de Tribunal"
+    purpose: "Agentes especializados em APIs judiciais"
+    agents: [monitor-publicacoes, consultor-pje, consultor-datajud]
+  tier_2_specialists:
+    name: "Especialistas em Operações"
+    purpose: "Peticionamento e rastreamento"
+    agents: [protocolo-peticionamento, rastreador-movimentacao]
+
+agents:
+  - id: court-integration-chief
+    name: "Chefe de Integração"
+    role: "Orquestrador de Integração com Tribunais"
+    tier: orchestrator
+  - id: monitor-publicacoes
+    name: "Monitor de Publicações"
+    role: "Monitoramento de DJE e Publicações"
+    tier: tier_1_main
+  - id: consultor-pje
+    name: "Consultor PJE"
+    role: "Especialista em API PJE/MNI"
+    tier: tier_1_main
+  - id: consultor-datajud
+    name: "Consultor DataJud"
+    role: "Especialista em API DataJud"
+    tier: tier_1_main
+  - id: protocolo-peticionamento
+    name: "Protocolo de Peticionamento"
+    role: "Filing de petições eletrônicas"
+    tier: tier_2_specialists
+  - id: rastreador-movimentacao
+    name: "Rastreador de Movimentações"
+    role: "Tracking de movimentações processuais"
+    tier: tier_2_specialists
+
+dependencies:
+  - aios-core
+  - case-analysis

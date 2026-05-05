@@ -1,0 +1,86 @@
+metadata:
+  display_name: "Assistente de Entrevista"
+  description: "Squad de assistência em tempo real durante entrevistas com clientes, com transcrição, sugestão de perguntas, pesquisa de precedentes e geração de estratégia"
+  version: "1.0.0"
+  domain: "legal"
+  status: "active"
+  score: 9.0
+
+objectives:
+  - "Transcrever entrevistas em tempo real com identificação de interlocutor"
+  - "Sugerir perguntas contextuais relevantes à área jurídica"
+  - "Pesquisar precedentes automaticamente durante a entrevista"
+  - "Gerar estratégia jurídica a partir da entrevista concluída"
+  - "Produzir rascunho inicial de peça processual baseado nos fatos coletados"
+
+key_capabilities:
+  - "Transcrição em tempo real com Web Speech API e fallback Whisper"
+  - "Identificação automática de interlocutores (advogado vs. cliente)"
+  - "Sugestão de perguntas por área jurídica com scoring de relevância"
+  - "Pesquisa de precedentes acionada por palavras-chave no transcript"
+  - "Análise de fatos-chave, teses, provas e estratégia pós-entrevista"
+  - "Geração de esboço de petição inicial a partir dos dados coletados"
+
+tier_system:
+  orchestrator:
+    name: "Orquestrador"
+    purpose: "Coordena o fluxo da entrevista, distribui tarefas em tempo real e consolida resultados"
+    agents:
+      - interview-chief
+
+  tier_1_main:
+    name: "Assistentes em Tempo Real"
+    purpose: "Agentes que operam durante a entrevista para transcrição, sugestão e pesquisa"
+    agents:
+      - transcritor-entrevista
+      - sugestor-perguntas
+      - pesquisador-contexto
+
+  tier_2_specialists:
+    name: "Pós-Entrevista"
+    purpose: "Agentes que operam após a entrevista para gerar estratégia e rascunho de peça"
+    agents:
+      - gerador-estrategia
+      - minutador-inicial
+
+agents:
+  - id: interview-chief
+    name: "Chefe de Entrevista"
+    role: "Orquestrador"
+    tier: orchestrator
+    description: "Coordena o fluxo completo da entrevista, ativa agentes em tempo real, monitora qualidade da transcrição e consolida resultados pós-entrevista."
+
+  - id: transcritor-entrevista
+    name: "Transcritor"
+    role: "Transcrição em tempo real"
+    tier: tier_1_main
+    description: "Responsável pela transcrição em tempo real da entrevista, identificação de interlocutores (advogado/cliente) e scoring de confiança por trecho."
+
+  - id: sugestor-perguntas
+    name: "Sugestor de Perguntas"
+    role: "Sugestão de perguntas contextuais"
+    tier: tier_1_main
+    description: "Analisa o transcript em tempo real e sugere perguntas relevantes com base na área jurídica, identifica lacunas de informação e alerta sobre dados faltantes."
+
+  - id: pesquisador-contexto
+    name: "Pesquisador de Contexto"
+    role: "Pesquisa de precedentes em tempo real"
+    tier: tier_1_main
+    description: "Monitora o transcript para palavras-chave jurídicas e busca automaticamente precedentes relevantes em bases de jurisprudência."
+
+  - id: gerador-estrategia
+    name: "Gerador de Estratégia"
+    role: "Elaboração de estratégia pós-entrevista"
+    tier: tier_2_specialists
+    description: "Após a entrevista, analisa o transcript completo para identificar fatos-chave, teses jurídicas, provas disponíveis e gerar recomendação de estratégia processual."
+
+  - id: minutador-inicial
+    name: "Minutador Inicial"
+    role: "Rascunho de peça a partir da entrevista"
+    tier: tier_2_specialists
+    description: "Com base na estratégia gerada, produz um esboço estruturado da petição inicial com seções, fundamentos e pedidos identificados na entrevista."
+
+dependencies:
+  - aios-core
+  - case-analysis
+  - legal-intelligence
