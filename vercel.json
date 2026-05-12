@@ -1,0 +1,10 @@
+{
+  "git": {
+    "deploymentEnabled": {
+      "claude/analyze-case-files-enZip": true
+    }
+  },
+  "env": {
+    "AUTH_SECRET": "@auth-secret"
+  }
+}
