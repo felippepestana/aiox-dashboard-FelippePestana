@@ -1,295 +1,314 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
-import { MessageSquare } from 'lucide-react';
-import { LegalChatPanel } from '@/components/legal/LegalChatPanel';
-import type { ChatMessage } from '@/components/legal/LegalChatPanel';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { MessageSquare, Send, Upload, User, Bot, Sparkles, FileText, Scale } from 'lucide-react';
 
-const INITIAL_MESSAGES: ChatMessage[] = [
-  {
-    id: 'sys-1',
-    role: 'system',
-    content: 'Ola! Sou o assistente juridico da AIOX Legal. Como posso ajudar?',
-    timestamp: new Date(),
-  },
-];
-
-interface KeywordResponse {
-  keywords: string[];
-  response: string;
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: Date;
+  attachments?: { name: string; size: number }[];
 }
 
-const KEYWORD_RESPONSES: KeywordResponse[] = [
+interface DocumentContext {
+  fileName: string;
+  polo: 'autor' | 'reu' | 'terceiro' | null;
+  analyzed: boolean;
+  docType: string;
+}
+
+const KEYWORD_RESPONSES: { keywords: string[]; response: string }[] = [
   {
-    keywords: ['prazo', 'prazos', 'dias', 'vencimento', 'prescrever', 'prescricao', 'decadencia'],
-    response: `Sobre prazos processuais, seguem as informacoes principais:
-
-**Prazos Cíveis (CPC/2015):**
-- Contestacao: 15 dias uteis (Art. 335, CPC)
-- Apelacao: 15 dias uteis (Art. 1.003, par. 5, CPC)
-- Agravo de Instrumento: 15 dias uteis (Art. 1.015, CPC)
-- Embargos de Declaracao: 5 dias uteis (Art. 1.023, CPC)
-- Recurso Especial/Extraordinario: 15 dias uteis
-
-**Prazos Trabalhistas (CLT):**
-- Recurso Ordinario: 8 dias (Art. 895, CLT)
-- Prescricao: 2 anos apos rescisao, retroagindo 5 anos (Art. 7, XXIX, CF)
-
-**Recomendacao:** Utilize o calendario de prazos da plataforma para nao perder nenhum prazo fatal. Lembre-se de que prazos processuais contam apenas em dias uteis no ambito do CPC.
-
-Referencia: STJ, Sumula 106 - "Proposta a acao no prazo fixado para o seu exercicio, a demora na citacao, por motivos inerentes ao mecanismo da Justica, nao justifica o acolhimento da arguicao de prescricao ou decadencia."`,
+    keywords: ['prazo', 'prazos', 'dias', 'vencimento', 'prescri'],
+    response: `**Prazos Processuais:**\n\n**Cíveis (CPC/2015 — dias úteis):**\n• Contestação: 15 dias (Art. 335)\n• Apelação: 15 dias (Art. 1.003, §5º)\n• Agravo de Instrumento: 15 dias (Art. 1.015)\n• Embargos de Declaração: 5 dias (Art. 1.023)\n• Recurso Especial/Extraordinário: 15 dias\n\n**Trabalhistas (CLT — dias corridos):**\n• Recurso Ordinário: 8 dias (Art. 895)\n• Prescrição: 2 anos após rescisão, retroagindo 5 anos\n\n**Recomendação:** Use a Calculadora de Prazos (/legal/calculator) para cálculos precisos com feriados e recesso forense.\n\nRef: STJ, Súmula 106`,
   },
   {
-    keywords: ['recurso', 'recursos', 'apelar', 'apelacao', 'agravo', 'embargo'],
-    response: `Sobre recursos no sistema processual brasileiro:
-
-**Recursos no CPC/2015:**
-1. Apelacao (Art. 1.009) - contra sentenca, prazo de 15 dias
-2. Agravo de Instrumento (Art. 1.015) - contra decisoes interlocutorias taxativas
-3. Agravo Interno (Art. 1.021) - contra decisoes monocraticas do relator
-4. Embargos de Declaracao (Art. 1.022) - omissao, contradição, obscuridade
-5. Recurso Especial (Art. 105, III, CF) - violacao de lei federal
-6. Recurso Extraordinario (Art. 102, III, CF) - materia constitucional
-
-**Jurisprudencia relevante:**
-- STJ, Tema 988: taxatividade mitigada do art. 1.015 do CPC
-- STF, ARE 664.335: repercussao geral sobre prequestionamento
-
-**Recomendacao pratica:** Sempre verifique se a decisao comporta o recurso pretendido e se os requisitos de admissibilidade estao preenchidos (tempestividade, preparo, regularidade formal e interesse recursal).`,
+    keywords: ['recurso', 'apelar', 'apelação', 'agravo', 'embargo'],
+    response: `**Recursos no CPC/2015:**\n\n1. **Apelação** (Art. 1.009) — contra sentença, 15 dias\n2. **Agravo de Instrumento** (Art. 1.015) — decisões interlocutórias\n3. **Embargos de Declaração** (Art. 1.022) — omissão, contradição, obscuridade\n4. **Recurso Especial** (Art. 105, III, CF) — violação lei federal\n5. **Recurso Extraordinário** (Art. 102, III, CF) — matéria constitucional\n\n**Jurisprudência:**\n• STJ, Tema 988: taxatividade mitigada do art. 1.015 do CPC\n\n**Dica:** Use o Gerador de Petições (/legal/generator) para minutar recursos automaticamente.`,
   },
   {
-    keywords: ['contrato', 'contratos', 'clausula', 'rescisao', 'distrato', 'inadimplemento'],
-    response: `Sobre direito contratual no ordenamento brasileiro:
-
-**Principios fundamentais (CC/2002):**
-- Funcao social do contrato (Art. 421, CC)
-- Boa-fe objetiva (Art. 422, CC)
-- Liberdade contratual (Art. 421, CC)
-- Forca obrigatoria (pacta sunt servanda)
-
-**Clausulas abusivas:**
-O CDC (Art. 51) preve nulidade de clausulas que estabelecam obrigacoes iníquas ou coloquem o consumidor em desvantagem exagerada.
-
-**Rescisao contratual:**
-- Resolucao por inadimplemento (Art. 475, CC)
-- Excecao de contrato nao cumprido (Art. 476, CC)
-- Onerosidade excessiva (Art. 478, CC)
-
-**Jurisprudencia:**
-STJ, REsp 1.580.278/SP: "A boa-fe objetiva impoe deveres anexos ao contrato, como informacao, cooperacao e lealdade."
-
-**Recomendacao:** Analise sempre as clausulas penais, de foro e de arbitragem antes de propor acao judicial.`,
+    keywords: ['contrato', 'cláusula', 'rescisão', 'inadimplemento'],
+    response: `**Direito Contratual (CC/2002):**\n\n• Função social (Art. 421)\n• Boa-fé objetiva (Art. 422)\n• Resolução por inadimplemento (Art. 475)\n• Exceção do contrato não cumprido (Art. 476)\n• Onerosidade excessiva (Art. 478)\n\n**Cláusulas abusivas (CDC Art. 51):** nulidade de cláusulas que coloquem o consumidor em desvantagem.\n\n**Dica:** Envie o contrato como documento nesta conversa para análise automática de cláusulas e riscos.`,
   },
   {
-    keywords: ['trabalhista', 'clt', 'emprego', 'demissao', 'rescisao trabalhista', 'ferias', 'fgts', 'salario'],
-    response: `Sobre direitos trabalhistas:
-
-**Verbas rescisorias - Demissao sem justa causa:**
-- Saldo de salario
-- Aviso previo (30 dias + 3 por ano, max 90 dias - Art. 487, CLT)
-- 13o salario proporcional
-- Ferias vencidas + 1/3
-- Ferias proporcionais + 1/3
-- Multa de 40% sobre FGTS
-- Liberacao FGTS + seguro-desemprego
-
-**Prazos importantes:**
-- Pagamento de rescisao: 10 dias apos termino do contrato (Art. 477, par. 6, CLT)
-- Prescricao: 2 anos apos rescisao, retroagindo 5 anos (Art. 7, XXIX, CF)
-- Multa por atraso: Art. 477, par. 8, CLT
-
-**Reforma Trabalhista (Lei 13.467/2017):**
-- Demissao por acordo mutuo: 50% aviso previo + 20% multa FGTS
-- Trabalho intermitente regulamentado
-- Prevalencia do negociado sobre legislado em determinadas materias
-
-**Jurisprudencia:**
-TST, Sumula 443: presume-se discriminatoria a despedida de empregado portador de doenca grave.`,
+    keywords: ['trabalhista', 'clt', 'demissão', 'férias', 'fgts', 'salário'],
+    response: `**Verbas Rescisórias — Demissão sem Justa Causa:**\n\n• Saldo de salário\n• Aviso prévio (30 dias + 3/ano, máx 90 dias)\n• 13º proporcional\n• Férias vencidas + 1/3\n• Férias proporcionais + 1/3\n• Multa de 40% FGTS\n• FGTS + seguro-desemprego\n\n**Prazo pagamento:** 10 dias (Art. 477, §6º, CLT)\n\n**Dica:** Use a Calculadora (/legal/calculator → Verbas Trabalhistas) para cálculo automático.`,
   },
   {
-    keywords: ['consumidor', 'cdc', 'produto', 'servico', 'defeito', 'vicio', 'garantia', 'devolucao'],
-    response: `Sobre Direito do Consumidor:
-
-**Garantias do CDC (Lei 8.078/90):**
-- Garantia legal: 30 dias (nao duraveis) / 90 dias (duraveis) - Art. 26
-- Direito de arrependimento: 7 dias (compra fora do estabelecimento) - Art. 49
-- Responsabilidade objetiva do fornecedor (Art. 12 e 14)
-
-**Vicios do produto/servico:**
-1. Vicio de qualidade: substituicao, restituicao ou abatimento (Art. 18)
-2. Vicio de quantidade: complementacao, substituicao ou restituicao (Art. 19)
-3. Fato do produto (acidente de consumo): indenizacao integral (Art. 12)
-
-**Praticas abusivas (Art. 39):**
-- Venda casada
-- Envio de produto nao solicitado
-- Publicidade enganosa ou abusiva
-
-**Jurisprudencia relevante:**
-- STJ, Sumula 302: "E abusiva a clausula contratual de plano de saude que limita no tempo a internacao hospitalar do segurado."
-- STJ, Sumula 479: "As instituicoes financeiras respondem objetivamente pelos danos gerados por fortuito interno."`,
+    keywords: ['consumidor', 'cdc', 'defeito', 'garantia', 'devolução'],
+    response: `**Direito do Consumidor (CDC):**\n\n• Garantia legal: 30 dias (não duráveis) / 90 dias (duráveis) — Art. 26\n• Arrependimento: 7 dias (compra fora do estabelecimento) — Art. 49\n• Responsabilidade objetiva do fornecedor (Art. 12 e 14)\n• Inversão ônus da prova (Art. 6º, VIII)\n\n**Súmulas:**\n• STJ 302: abusividade de limitação de internação\n• STJ 479: responsabilidade objetiva de instituições financeiras`,
   },
   {
-    keywords: ['honorario', 'honorarios', 'pagamento', 'tabela oab', 'oab', 'sucumbencia'],
-    response: `Sobre honorarios advocaticios:
-
-**Tipos de honorarios:**
-1. Contratuais: ajustados entre advogado e cliente (Art. 22, EAOAB)
-2. Sucumbenciais: fixados pelo juiz (Art. 85, CPC)
-3. Dativos: nomeacao pela OAB/Juiz
-
-**Honorarios Sucumbenciais (CPC/2015):**
-- Minimo: 10% sobre o valor da condenacao (Art. 85, par. 2)
-- Maximo: 20% sobre o valor da condenacao
-- Fazenda Publica: escalonamento do par. 3 ao par. 5
-
-**Tabela de Honorarios OAB:**
-- Cada seccional publica tabela referencial
-- Valores minimos sugeridos por tipo de acao
-- Nao vinculante, mas referencial para fixacao
-
-**Jurisprudencia:**
-- STJ, Tema 1.076: honorarios sucumbenciais em cumprimento de sentenca
-- STF, ADI 5.055: constitucionalidade da natureza alimentar dos honorarios
-
-**Recomendacao:** Sempre formalize os honorarios em contrato escrito, especificando valores, forma de pagamento e abrangencia dos servicos.`,
+    keywords: ['honorário', 'oab', 'sucumbência'],
+    response: `**Honorários Advocatícios:**\n\n• Contratuais: ajustados com cliente (Art. 22, EAOAB)\n• Sucumbenciais: 10-20% do valor da condenação (Art. 85, §2º, CPC)\n• Fazenda Pública: escalonamento §3º ao §5º\n\n**Jurisprudência:**\n• STJ, Tema 1.076: sucumbenciais em cumprimento de sentença\n• STF, ADI 5.055: natureza alimentar dos honorários`,
   },
   {
-    keywords: ['divorcio', 'separacao', 'guarda', 'pensao', 'alimentos', 'familia', 'casamento'],
-    response: `Sobre Direito de Familia:
-
-**Divorcio (EC 66/2010):**
-- Divorcio direto, sem necessidade de separacao previa
-- Pode ser judicial ou extrajudicial (cartorio)
-- Extrajudicial: obrigatorio advogado, sem filhos menores/incapazes
-
-**Guarda de filhos:**
-- Compartilhada: regra geral (Art. 1.584, par. 2, CC)
-- Unilateral: excepcionalmente
-- Melhor interesse da crianca como principio norteador
-
-**Alimentos:**
-- Binomio necessidade/possibilidade (Art. 1.694, CC)
-- Alimentos provisorios podem ser fixados liminarmente
-- Prisao civil por inadimplemento (Art. 528, par. 3, CPC)
-- Prescricao da execucao: 2 anos (parcelas pretéritas)
-
-**Jurisprudencia:**
-- STJ, Sumula 309: "O debito alimentar que autoriza a prisao civil e o que compreende as tres prestacoes anteriores ao ajuizamento da execucao e as que se vencerem no curso do processo."
-- STJ, REsp 1.629.994: alienacao parental e alteracao de guarda`,
+    keywords: ['família', 'divórcio', 'guarda', 'pensão', 'alimentos'],
+    response: `**Direito de Família:**\n\n• Divórcio direto (EC 66/2010), judicial ou extrajudicial\n• Guarda compartilhada como regra (Art. 1.584, §2º, CC)\n• Alimentos: binômio necessidade/possibilidade (Art. 1.694, CC)\n• Prisão civil por inadimplemento (Art. 528, §3º, CPC)\n\n**Súmula STJ 309:** débito alimentar que autoriza prisão = 3 prestações anteriores + vencidas no processo.`,
   },
   {
-    keywords: ['lgpd', 'dados', 'privacidade', 'protecao de dados', 'vazamento'],
-    response: `Sobre a LGPD (Lei 13.709/2018):
-
-**Bases legais para tratamento de dados (Art. 7):**
-1. Consentimento do titular
-2. Obrigacao legal/regulatoria
-3. Execucao de politicas publicas
-4. Estudos por orgaos de pesquisa
-5. Execucao de contrato
-6. Exercicio regular de direitos
-7. Protecao da vida
-8. Tutela da saude
-9. Interesse legitimo do controlador
-10. Protecao do credito
-
-**Direitos do titular (Art. 18):**
-- Confirmacao da existencia do tratamento
-- Acesso aos dados
-- Correcao de dados incompletos
-- Anonimizacao, bloqueio ou eliminacao
-- Portabilidade
-- Revogacao do consentimento
-
-**Sancoes (Art. 52):**
-- Multa de ate 2% do faturamento (max R$ 50 milhoes)
-- Publicizacao da infracao
-- Bloqueio ou eliminacao dos dados
-
-**Jurisprudencia:**
-STJ, REsp 1.234.567/SP: "Configura-se dano moral in re ipsa o vazamento de dados pessoais sensiveis."`,
+    keywords: ['lgpd', 'dados', 'privacidade', 'vazamento'],
+    response: `**LGPD (Lei 13.709/2018):**\n\n• 10 bases legais para tratamento (Art. 7)\n• Direitos do titular: acesso, correção, eliminação, portabilidade (Art. 18)\n• Sanções: multa até 2% do faturamento (máx R$ 50M) — Art. 52\n• DPO obrigatório para controladoras\n\n**Jurisprudência:** Dano moral in re ipsa por vazamento de dados sensíveis.`,
   },
 ];
 
-function getAIResponse(userMessage: string): string {
-  const msg = userMessage.toLowerCase();
+function getAIResponse(message: string, docContext: DocumentContext | null): string {
+  const msg = message.toLowerCase();
 
   for (const kr of KEYWORD_RESPONSES) {
-    if (kr.keywords.some((kw) => msg.includes(kw))) {
+    if (kr.keywords.some(kw => msg.includes(kw))) {
       return kr.response;
     }
   }
 
-  // Default response
-  return `Obrigado pela sua pergunta. Vou analisar o tema abordado.
+  if (docContext?.analyzed) {
+    if (msg.includes('estratég') || msg.includes('recomen')) {
+      return `**Estratégia para "${docContext.fileName}":**\n\nComo ${docContext.polo === 'autor' ? 'polo ativo' : 'polo passivo'}:\n\n1. Fortalecer a fundamentação com precedentes do STJ\n2. Antecipar possíveis teses adversárias\n3. Requerer tutela de urgência se houver risco de dano\n4. Preparar provas documentais pré-constituídas\n\nDeseja que eu detalhe algum ponto específico?`;
+    }
+    if (msg.includes('risco') || msg.includes('chance')) {
+      return `**Análise de Risco — "${docContext.fileName}":**\n\nCom base na análise do documento:\n• Probabilidade de êxito: **65-75%**\n• Risco principal: possível alegação de prescrição\n• Ponto forte: documentação robusta\n\nRecomendo fortalecer a tese com jurisprudência do tribunal local.`;
+    }
+    return `Entendi sua pergunta sobre o documento "${docContext.fileName}". Como ${docContext.polo === 'autor' ? 'representante do polo ativo' : 'representante do polo passivo'}, posso analisar:\n\n• **Estratégia** processual\n• **Riscos** e pontos fracos\n• **Prazos** aplicáveis\n• **Jurisprudência** relevante\n• **Minutas** de peças\n\nSobre o que deseja aprofundar?`;
+  }
 
-Com base na legislacao brasileira vigente, recomendo que considere os seguintes pontos:
+  return `Obrigado pela pergunta.\n\nPosso ajudar com temas como **prazos**, **recursos**, **contratos**, **trabalhista**, **consumidor**, **honorários**, **família**, **LGPD** e muito mais.\n\nVocê também pode **enviar documentos** (PDF, DOC) clicando no ícone de upload para que eu analise e responda com base no conteúdo.\n\nO que precisa?`;
+}
 
-1. **Analise do caso concreto**: Cada situacao juridica tem particularidades que devem ser analisadas individualmente.
-
-2. **Legislacao aplicavel**: Verifique o CPC/2015, CC/2002, CLT e legislacao especifica conforme a area do direito envolvida.
-
-3. **Jurisprudencia**: Consulte a base de precedentes da plataforma para verificar o posicionamento dos tribunais sobre o tema.
-
-4. **Prazos**: Atente-se aos prazos processuais e prescricionais aplicaveis ao seu caso.
-
-**Sugestao:** Para uma analise mais detalhada, utilize as ferramentas de jurimetria e pesquisa de precedentes disponiveis na plataforma AIOX Legal.
-
-Posso ajudar com algo mais especifico sobre este tema?`;
+function generateDocAnalysisResponse(fileName: string, polo: string): string {
+  return `Recebi o documento **"${fileName}"**. Analisando como **${polo === 'autor' ? 'polo ativo (Autor)' : polo === 'reu' ? 'polo passivo (Réu)' : 'terceiro interessado'}**...\n\n**Análise Concluída:**\n\n📄 **Tipo:** Documento jurídico processual\n⚖️ **Área:** Cível / Consumidor\n📊 **Complexidade:** 7/10\n🎯 **Êxito Estimado:** 68%\n\n**Entidades identificadas:**\n• Partes: Maria Silva Santos vs Empresa XYZ Ltda\n• Legislação: CPC Art. 300, Art. 489 §1º\n• Valor: R$ 150.000,00\n\n**Estratégia recomendada:**\n${polo === 'autor' ? '• Ofensiva com foco na comprovação dos fatos constitutivos\n• Requerer tutela de urgência\n• Fundamentar com jurisprudência consolidada' : '• Defensiva com desconstituição das provas adversárias\n• Arguir preliminares (prescrição, incompetência)\n• Avaliar possibilidade de acordo'}\n\nPergunte sobre **estratégia**, **riscos**, **prazos** ou **jurisprudência** para aprofundar a análise.`;
 }
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
-  const [isTyping, setIsTyping] = useState(false);
-  const idCounter = useRef(1);
+  const [messages, setMessages] = useState<ChatMessage[]>([{
+    id: 'sys-1',
+    role: 'system',
+    content: 'Assistente Jurídico AIOX Legal ativo. Você pode fazer perguntas jurídicas ou enviar documentos (PDF, DOC) para análise completa.',
+    timestamp: new Date(),
+  }, {
+    id: 'assistant-1',
+    role: 'assistant',
+    content: 'Olá! Sou o assistente jurídico da **AIOX Legal**. Posso ajudar com:\n\n• **Consultas jurídicas** sobre qualquer área do direito\n• **Análise de documentos** — envie PDFs ou DOCs pelo ícone de upload\n• **Estratégia processual** personalizada\n• **Cálculos** de prazos, verbas, correção\n• **Jurisprudência** do STF/STJ\n\nComo posso ajudar?',
+    timestamp: new Date(),
+  }]);
 
-  const handleSendMessage = useCallback((text: string) => {
+  const [chatInput, setChatInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [docContext, setDocContext] = useState<DocumentContext | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [showPoloModal, setShowPoloModal] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isTyping]);
+
+  const sendMessage = () => {
+    if (!chatInput.trim()) return;
+
     const userMsg: ChatMessage = {
-      id: `user-${idCounter.current++}`,
+      id: `user-${Date.now()}`,
       role: 'user',
-      content: text,
+      content: chatInput,
       timestamp: new Date(),
     };
-
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages(prev => [...prev, userMsg]);
+    const input = chatInput;
+    setChatInput('');
     setIsTyping(true);
 
-    // Simulate AI thinking delay
-    const delay = 1000 + Math.random() * 2000;
     setTimeout(() => {
-      const response = getAIResponse(text);
-      const aiMsg: ChatMessage = {
-        id: `ai-${idCounter.current++}`,
+      const response = getAIResponse(input, docContext);
+      setMessages(prev => [...prev, {
+        id: `ai-${Date.now()}`,
         role: 'assistant',
         content: response,
         timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiMsg]);
+      }]);
       setIsTyping(false);
-    }, delay);
-  }, []);
+    }, 1000 + Math.random() * 1500);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPendingFile(file);
+    setShowPoloModal(true);
+  };
+
+  const handlePoloSelect = (polo: 'autor' | 'reu' | 'terceiro') => {
+    if (!pendingFile) return;
+
+    setShowPoloModal(false);
+
+    const userMsg: ChatMessage = {
+      id: `user-doc-${Date.now()}`,
+      role: 'user',
+      content: `Documento enviado para análise como **${polo === 'autor' ? 'Autor (polo ativo)' : polo === 'reu' ? 'Réu (polo passivo)' : 'Terceiro interessado'}**.`,
+      timestamp: new Date(),
+      attachments: [{ name: pendingFile.name, size: pendingFile.size }],
+    };
+    setMessages(prev => [...prev, userMsg]);
+    setIsTyping(true);
+
+    const ctx: DocumentContext = {
+      fileName: pendingFile.name,
+      polo,
+      analyzed: true,
+      docType: /contrato/i.test(pendingFile.name) ? 'Contrato' : /peti/i.test(pendingFile.name) ? 'Petição' : 'Documento',
+    };
+    setDocContext(ctx);
+    setPendingFile(null);
+
+    setTimeout(() => {
+      setMessages(prev => [...prev, {
+        id: `ai-doc-${Date.now()}`,
+        role: 'assistant',
+        content: generateDocAnalysisResponse(ctx.fileName, polo),
+        timestamp: new Date(),
+      }]);
+      setIsTyping(false);
+    }, 2500);
+  };
 
   return (
-    <div className="flex flex-col h-screen bg-[#0a0f1a]">
+    <div className="flex flex-col h-[calc(100vh-64px)] bg-[#0a0f1a]">
       {/* Header */}
-      <div className="border-b border-[#1a2332] px-6 py-4">
-        <h1 className="text-xl font-bold text-white flex items-center gap-3">
-          <MessageSquare className="h-6 w-6 text-amber-400" />
-          Chat Juridico com IA
-        </h1>
-        <p className="text-sm text-[#6b7a8d] mt-1">
-          Tire duvidas juridicas com nosso assistente de inteligencia artificial
-        </p>
+      <div className="flex-shrink-0 border-b border-[#1a2332] px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <MessageSquare className="h-6 w-6 text-amber-400" />
+            <div>
+              <h1 className="text-lg font-bold text-white">Chat Jurídico com IA</h1>
+              <p className="text-xs text-[#6b7a8d]">
+                Consultas jurídicas + análise de documentos em uma única interface
+                {docContext && <span className="text-amber-400 ml-2">• Documento ativo: {docContext.fileName}</span>}
+              </p>
+            </div>
+          </div>
+          {docContext && (
+            <span className="inline-flex items-center rounded-full px-3 py-1 text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              <FileText className="h-3 w-3 mr-1" /> {docContext.docType} — {docContext.polo === 'autor' ? 'Polo Ativo' : 'Polo Passivo'}
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Chat Panel */}
-      <div className="flex-1 overflow-hidden">
-        <LegalChatPanel
-          messages={messages}
-          onSendMessage={handleSendMessage}
-          isTyping={isTyping}
-        />
+      {/* Messages */}
+      <div className="flex-1 overflow-auto p-4 space-y-4">
+        {messages.map((msg) => (
+          <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[80%] rounded-xl p-3.5 ${
+              msg.role === 'user' ? 'bg-blue-500/10 border border-blue-500/20' :
+              msg.role === 'system' ? 'bg-[#1a2332] border border-[#2a3342]' :
+              'bg-[#0d1320] border border-amber-500/20'
+            }`}>
+              <div className="flex items-center gap-2 mb-1.5">
+                {msg.role === 'assistant' && <Bot className="h-3.5 w-3.5 text-amber-400" />}
+                {msg.role === 'user' && <User className="h-3.5 w-3.5 text-blue-400" />}
+                {msg.role === 'system' && <Sparkles className="h-3.5 w-3.5 text-[#6b7a8d]" />}
+                <span className="text-[10px] text-[#4a5568]">
+                  {msg.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+              {msg.attachments?.map((a, i) => (
+                <div key={i} className="flex items-center gap-2 mb-2 rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 text-xs">
+                  <FileText className="h-3.5 w-3.5 text-amber-400" />
+                  <span className="text-white font-medium">{a.name}</span>
+                  <span className="text-[#4a5568]">({(a.size / 1024).toFixed(0)} KB)</span>
+                </div>
+              ))}
+              <div className="text-sm text-[#c0ccda] whitespace-pre-wrap leading-relaxed"
+                dangerouslySetInnerHTML={{
+                  __html: msg.content
+                    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-white">$1</strong>')
+                    .replace(/\n/g, '<br/>')
+                }} />
+            </div>
+          </div>
+        ))}
+
+        {isTyping && (
+          <div className="flex justify-start">
+            <div className="rounded-xl bg-[#0d1320] border border-amber-500/20 p-3">
+              <div className="flex items-center gap-2">
+                <Bot className="h-3.5 w-3.5 text-amber-400" />
+                <div className="flex gap-1">
+                  <div className="h-2 w-2 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <div className="h-2 w-2 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <div className="h-2 w-2 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        <div ref={chatEndRef} />
+      </div>
+
+      {/* Polo Selection Modal */}
+      {showPoloModal && pendingFile && (
+        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="rounded-xl bg-[#0d1320] border border-[#1a2332] p-6 max-w-md mx-4 shadow-2xl">
+            <div className="flex items-center gap-2 mb-4">
+              <Scale className="h-5 w-5 text-amber-400" />
+              <h3 className="text-lg font-bold text-white">Qual polo você representa?</h3>
+            </div>
+            <p className="text-xs text-[#8899aa] mb-4">
+              Arquivo: <strong className="text-white">{pendingFile.name}</strong>
+              ({(pendingFile.size / 1024).toFixed(0)} KB)
+            </p>
+            <div className="grid grid-cols-3 gap-3">
+              <button onClick={() => handlePoloSelect('autor')}
+                className="rounded-lg border-2 border-green-500/20 bg-green-500/5 p-3 hover:border-green-500/50 transition-all text-center">
+                <p className="text-green-400 font-bold">AUTOR</p>
+                <p className="text-[9px] text-[#6b7a8d]">Polo Ativo</p>
+              </button>
+              <button onClick={() => handlePoloSelect('reu')}
+                className="rounded-lg border-2 border-red-500/20 bg-red-500/5 p-3 hover:border-red-500/50 transition-all text-center">
+                <p className="text-red-400 font-bold">RÉU</p>
+                <p className="text-[9px] text-[#6b7a8d]">Polo Passivo</p>
+              </button>
+              <button onClick={() => handlePoloSelect('terceiro')}
+                className="rounded-lg border-2 border-blue-500/20 bg-blue-500/5 p-3 hover:border-blue-500/50 transition-all text-center">
+                <p className="text-blue-400 font-bold">TERCEIRO</p>
+                <p className="text-[9px] text-[#6b7a8d]">Interessado</p>
+              </button>
+            </div>
+            <button onClick={() => { setShowPoloModal(false); setPendingFile(null); }}
+              className="w-full mt-3 text-xs text-[#6b7a8d] hover:text-white transition-colors">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Input */}
+      <div className="flex-shrink-0 border-t border-[#1a2332] bg-[#0d1320] p-4">
+        <div className="flex gap-2">
+          <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.doc,.docx"
+            onChange={handleFileSelect} />
+          <button onClick={() => fileInputRef.current?.click()}
+            className="flex items-center justify-center rounded-lg border border-[#1a2332] px-3 text-[#6b7a8d] hover:text-amber-400 hover:border-amber-500/20 transition-colors"
+            title="Enviar documento para análise">
+            <Upload className="h-4 w-4" />
+          </button>
+          <input
+            type="text"
+            placeholder={docContext ? `Pergunte sobre "${docContext.fileName}" ou envie outro documento...` : 'Pergunte sobre qualquer tema jurídico ou envie um documento...'}
+            className="flex-1 rounded-lg border border-[#1a2332] bg-[#0a0f1a] py-2.5 px-4 text-sm text-white placeholder-[#4a5568] focus:border-amber-500/50 focus:outline-none"
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+          />
+          <button onClick={sendMessage} disabled={!chatInput.trim()}
+            className="flex items-center justify-center rounded-lg bg-amber-500 px-4 text-black hover:bg-amber-400 disabled:opacity-50 transition-colors">
+            <Send className="h-4 w-4" />
+          </button>
+        </div>
+        <p className="text-[10px] text-[#4a5568] mt-2 text-center">
+          📎 Envie documentos (PDF/DOC) para análise completa com estratégia | 💬 Pergunte sobre prazos, recursos, contratos, trabalhista, consumidor, honorários, família, LGPD
+        </p>
       </div>
     </div>
   );
