@@ -80,7 +80,7 @@ const MOCK_AUTOMATIONS: Automation[] = [
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
   active: { label: 'Ativa', color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20' },
   paused: { label: 'Pausada', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
-  draft: { label: 'Rascunho', color: 'text-[#6b7a8d]', bg: 'bg-[#1e293b]/50 border-[#2d3748]' },
+  draft: { label: 'Rascunho', color: 'text-[#86868B]', bg: 'bg-[#E5E5EA]/50 border-[#D1D1D6]' },
 };
 
 export default function AutomationPage() {
@@ -91,16 +91,16 @@ export default function AutomationPage() {
   const activeCount = MOCK_AUTOMATIONS.filter((a) => a.status === 'active').length;
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] p-6">
+    <div className="min-h-screen bg-[#F5F5F7] p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-indigo-700">
               <Zap className="h-5 w-5 text-white" />
             </div>
             Automação de Marketing
           </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">Workflows automáticos para engajamento de pacientes</p>
+          <p className="text-sm text-[#86868B] mt-1">Workflows automáticos para engajamento de pacientes</p>
         </div>
       </div>
 
@@ -116,15 +116,15 @@ export default function AutomationPage() {
           const colorMap: Record<string, string> = {
             green: 'from-green-500/20 to-green-500/5 border-green-500/20',
             blue: 'from-blue-500/20 to-blue-500/5 border-blue-500/20',
-            teal: 'from-teal-500/20 to-teal-500/5 border-teal-500/20',
+            teal: 'from-[#C4956A]/20 to-[#C4956A]/5 border-[#C4956A]/20',
             amber: 'from-amber-500/20 to-amber-500/5 border-amber-500/20',
           };
-          const iconColor: Record<string, string> = { green: 'text-green-400', blue: 'text-blue-400', teal: 'text-teal-400', amber: 'text-amber-400' };
+          const iconColor: Record<string, string> = { green: 'text-green-400', blue: 'text-blue-400', teal: 'text-[#C4956A]', amber: 'text-amber-400' };
           return (
             <div key={stat.label} className={`rounded-2xl bg-gradient-to-br ${colorMap[stat.color]} border p-5`}>
               <Icon className={`h-5 w-5 ${iconColor[stat.color]} mb-2`} />
-              <p className="text-2xl font-bold text-white">{stat.value}</p>
-              <p className="text-xs text-[#6b7a8d]">{stat.label}</p>
+              <p className="text-2xl font-bold text-[#1D1D1F]">{stat.value}</p>
+              <p className="text-xs text-[#86868B]">{stat.label}</p>
             </div>
           );
         })}
@@ -137,7 +137,7 @@ export default function AutomationPage() {
             const conf = STATUS_MAP[auto.status];
             const Icon = auto.icon;
             const colorMap: Record<string, string> = {
-              teal: 'bg-teal-500/10 text-teal-400',
+              teal: 'bg-[#C4956A]/10 text-[#C4956A]',
               blue: 'bg-blue-500/10 text-blue-400',
               pink: 'bg-pink-500/10 text-pink-400',
               purple: 'bg-purple-500/10 text-purple-400',
@@ -147,8 +147,8 @@ export default function AutomationPage() {
               <div
                 key={auto.id}
                 onClick={() => setSelectedAutomation(auto)}
-                className={`rounded-2xl bg-[#111827] border p-6 cursor-pointer transition-all hover:scale-[1.01] ${
-                  selectedAutomation?.id === auto.id ? 'border-teal-500/40' : 'border-[#1e293b] hover:border-[#2d3748]'
+                className={`rounded-2xl bg-white border p-6 cursor-pointer transition-all hover:scale-[1.01] ${
+                  selectedAutomation?.id === auto.id ? 'border-[#C4956A]/40' : 'border-[#E5E5EA] hover:border-[#D1D1D6]'
                 }`}
               >
                 <div className="flex items-start justify-between mb-3">
@@ -158,10 +158,10 @@ export default function AutomationPage() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-semibold text-white">{auto.name}</p>
+                        <p className="text-sm font-semibold text-[#1D1D1F]">{auto.name}</p>
                         <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${conf.bg} ${conf.color}`}>{conf.label}</span>
                       </div>
-                      <p className="text-xs text-[#6b7a8d] mt-0.5">{auto.description}</p>
+                      <p className="text-xs text-[#86868B] mt-0.5">{auto.description}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -181,28 +181,28 @@ export default function AutomationPage() {
                 <div className="flex items-center gap-1 mb-3 overflow-x-auto">
                   {auto.steps.map((step, i) => (
                     <div key={i} className="flex items-center gap-1">
-                      <div className="rounded-lg bg-[#0d1320] border border-[#1a2332] px-2 py-1 whitespace-nowrap">
-                        <p className="text-[9px] text-[#8899aa]">{step.action.split(':')[0]}</p>
-                        <p className="text-[8px] text-[#4a5568]">{step.delay}</p>
+                      <div className="rounded-lg bg-[#FAFAFA] border border-[#E8E8ED] px-2 py-1 whitespace-nowrap">
+                        <p className="text-[9px] text-[#6E6E73]">{step.action.split(':')[0]}</p>
+                        <p className="text-[8px] text-[#AEAEB2]">{step.delay}</p>
                       </div>
-                      {i < auto.steps.length - 1 && <ArrowRight className="h-3 w-3 text-[#2d3748] flex-shrink-0" />}
+                      {i < auto.steps.length - 1 && <ArrowRight className="h-3 w-3 text-[#D1D1D6] flex-shrink-0" />}
                     </div>
                   ))}
                 </div>
 
                 {/* Metrics */}
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="rounded-xl bg-[#0d1320] border border-[#1a2332] p-2 text-center">
-                    <p className="text-xs font-bold text-white">{auto.sent}</p>
-                    <p className="text-[9px] text-[#4a5568]">Enviadas</p>
+                  <div className="rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] p-2 text-center">
+                    <p className="text-xs font-bold text-[#1D1D1F]">{auto.sent}</p>
+                    <p className="text-[9px] text-[#AEAEB2]">Enviadas</p>
                   </div>
-                  <div className="rounded-xl bg-[#0d1320] border border-[#1a2332] p-2 text-center">
-                    <p className="text-xs font-bold text-white">{auto.opened}</p>
-                    <p className="text-[9px] text-[#4a5568]">Abertas</p>
+                  <div className="rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] p-2 text-center">
+                    <p className="text-xs font-bold text-[#1D1D1F]">{auto.opened}</p>
+                    <p className="text-[9px] text-[#AEAEB2]">Abertas</p>
                   </div>
-                  <div className="rounded-xl bg-[#0d1320] border border-[#1a2332] p-2 text-center">
-                    <p className="text-xs font-bold text-teal-400">{auto.converted}</p>
-                    <p className="text-[9px] text-[#4a5568]">Convertidas</p>
+                  <div className="rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] p-2 text-center">
+                    <p className="text-xs font-bold text-[#C4956A]">{auto.converted}</p>
+                    <p className="text-[9px] text-[#AEAEB2]">Convertidas</p>
                   </div>
                 </div>
               </div>
@@ -213,25 +213,25 @@ export default function AutomationPage() {
         {/* Sidebar - Detail / Templates */}
         <div className="space-y-6">
           {selectedAutomation ? (
-            <div className="rounded-2xl bg-[#111827] border border-[#1e293b] p-6 sticky top-6">
-              <h3 className="text-sm font-semibold text-white mb-4">Fluxo do Workflow</h3>
+            <div className="rounded-2xl bg-white border border-[#E5E5EA] p-6 sticky top-6">
+              <h3 className="text-sm font-semibold text-[#1D1D1F] mb-4">Fluxo do Workflow</h3>
               <div className="space-y-0">
                 {selectedAutomation.steps.map((step, i) => (
                   <div key={i} className="relative">
                     <div className="flex items-start gap-3">
                       <div className="flex flex-col items-center">
                         <div className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                          i === 0 ? 'bg-teal-500/20 text-teal-400' : 'bg-[#1e293b] text-[#6b7a8d]'
+                          i === 0 ? 'bg-[#C4956A]/20 text-[#C4956A]' : 'bg-[#E5E5EA] text-[#86868B]'
                         } text-[10px] font-bold`}>
                           {i + 1}
                         </div>
                         {i < selectedAutomation.steps.length - 1 && (
-                          <div className="w-px h-8 bg-[#1e293b]" />
+                          <div className="w-px h-8 bg-[#E5E5EA]" />
                         )}
                       </div>
                       <div className="flex-1 pb-4">
-                        <p className="text-xs font-medium text-white">{step.action}</p>
-                        <p className="text-[10px] text-[#4a5568] flex items-center gap-1 mt-0.5">
+                        <p className="text-xs font-medium text-[#1D1D1F]">{step.action}</p>
+                        <p className="text-[10px] text-[#AEAEB2] flex items-center gap-1 mt-0.5">
                           <Clock className="h-3 w-3" /> {step.delay}
                         </p>
                       </div>
@@ -240,32 +240,32 @@ export default function AutomationPage() {
                 ))}
               </div>
 
-              <div className="mt-4 rounded-xl bg-[#0d1320] border border-[#1a2332] p-3">
-                <p className="text-[10px] text-[#4a5568] mb-1">Gatilho</p>
-                <p className="text-xs text-white flex items-center gap-2">
+              <div className="mt-4 rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] p-3">
+                <p className="text-[10px] text-[#AEAEB2] mb-1">Gatilho</p>
+                <p className="text-xs text-[#1D1D1F] flex items-center gap-2">
                   <Zap className="h-3 w-3 text-amber-400" />
                   {selectedAutomation.trigger}
                 </p>
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-2">
-                <div className="rounded-xl bg-[#0d1320] border border-[#1a2332] p-3 text-center">
-                  <p className="text-lg font-bold text-teal-400">
+                <div className="rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] p-3 text-center">
+                  <p className="text-lg font-bold text-[#C4956A]">
                     {selectedAutomation.sent > 0 ? ((selectedAutomation.opened / selectedAutomation.sent) * 100).toFixed(0) : 0}%
                   </p>
-                  <p className="text-[9px] text-[#4a5568]">Taxa Abertura</p>
+                  <p className="text-[9px] text-[#AEAEB2]">Taxa Abertura</p>
                 </div>
-                <div className="rounded-xl bg-[#0d1320] border border-[#1a2332] p-3 text-center">
+                <div className="rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] p-3 text-center">
                   <p className="text-lg font-bold text-green-400">
                     {selectedAutomation.sent > 0 ? ((selectedAutomation.converted / selectedAutomation.sent) * 100).toFixed(0) : 0}%
                   </p>
-                  <p className="text-[9px] text-[#4a5568]">Taxa Conversão</p>
+                  <p className="text-[9px] text-[#AEAEB2]">Taxa Conversão</p>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="rounded-2xl bg-[#111827] border border-[#1e293b] p-6">
-              <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-4">
+            <div className="rounded-2xl bg-white border border-[#E5E5EA] p-6">
+              <h3 className="text-sm font-semibold text-[#1D1D1F] flex items-center gap-2 mb-4">
                 <Sparkles className="h-4 w-4 text-[#D4A76A]" />
                 Templates Prontos
               </h3>
@@ -279,9 +279,9 @@ export default function AutomationPage() {
                   'Pesquisa NPS',
                   'Indicação Premiada',
                 ].map((tpl) => (
-                  <button key={tpl} className="w-full flex items-center justify-between rounded-xl bg-[#0d1320] border border-[#1a2332] p-3 hover:border-teal-500/20 transition-all text-left">
-                    <span className="text-xs text-[#8899aa]">{tpl}</span>
-                    <ChevronRight className="h-3 w-3 text-[#4a5568]" />
+                  <button key={tpl} className="w-full flex items-center justify-between rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] p-3 hover:border-[#C4956A]/20 transition-all text-left">
+                    <span className="text-xs text-[#6E6E73]">{tpl}</span>
+                    <ChevronRight className="h-3 w-3 text-[#AEAEB2]" />
                   </button>
                 ))}
               </div>
@@ -290,11 +290,11 @@ export default function AutomationPage() {
 
           {/* AI Suggestion */}
           <div className="rounded-2xl bg-gradient-to-br from-[#D4A76A]/10 to-[#D4A76A]/5 border border-[#D4A76A]/20 p-5">
-            <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-3">
+            <h3 className="text-sm font-semibold text-[#1D1D1F] flex items-center gap-2 mb-3">
               <Sparkles className="h-4 w-4 text-[#D4A76A]" />
               Insight IA
             </h3>
-            <p className="text-xs text-[#c0c8d4] leading-relaxed">
+            <p className="text-xs text-[#48484A] leading-relaxed">
               A automação de "Lembrete de Consulta" tem taxa de comparecimento de 87%.
               Adicione um lembrete via SMS 30 minutos antes para aumentar para ~93%.
             </p>

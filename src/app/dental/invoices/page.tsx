@@ -33,7 +33,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
   pending: { label: 'Pendente', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
   paid: { label: 'Pago', color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20' },
   overdue: { label: 'Vencido', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' },
-  cancelled: { label: 'Cancelado', color: 'text-[#4a5568]', bg: 'bg-[#1e293b]/50 border-[#2d3748]' },
+  cancelled: { label: 'Cancelado', color: 'text-[#AEAEB2]', bg: 'bg-[#E5E5EA]/50 border-[#D1D1D6]' },
 };
 
 export default function InvoicesPage() {
@@ -54,18 +54,18 @@ export default function InvoicesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] p-6">
+    <div className="min-h-screen bg-[#F5F5F7] p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700">
               <FileText className="h-5 w-5 text-white" />
             </div>
             Faturamento
           </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">Gerenciamento de faturas e cobranças</p>
+          <p className="text-sm text-[#86868B] mt-1">Gerenciamento de faturas e cobranças</p>
         </div>
-        <button className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-teal-500 to-teal-700 px-5 py-2.5 text-sm font-medium text-white hover:shadow-lg hover:shadow-teal-500/20 transition-all">
+        <button className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#C4956A] to-[#A0784C] px-5 py-2.5 text-sm font-medium text-white hover:shadow-lg hover:shadow-[#C4956A]/20 transition-all">
           <Plus className="h-4 w-4" /> Nova Fatura
         </button>
       </div>
@@ -74,32 +74,32 @@ export default function InvoicesPage() {
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="rounded-2xl bg-gradient-to-br from-amber-500/15 to-amber-500/5 border border-amber-500/20 p-5">
           <Clock className="h-5 w-5 text-amber-400 mb-2" />
-          <p className="text-xl font-bold text-white">{totals.pending.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-          <p className="text-xs text-[#6b7a8d]">Pendentes</p>
+          <p className="text-xl font-bold text-[#1D1D1F]">{totals.pending.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+          <p className="text-xs text-[#86868B]">Pendentes</p>
         </div>
         <div className="rounded-2xl bg-gradient-to-br from-green-500/15 to-green-500/5 border border-green-500/20 p-5">
           <CheckCircle2 className="h-5 w-5 text-green-400 mb-2" />
-          <p className="text-xl font-bold text-white">{totals.paid.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-          <p className="text-xs text-[#6b7a8d]">Recebidos este mês</p>
+          <p className="text-xl font-bold text-[#1D1D1F]">{totals.paid.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+          <p className="text-xs text-[#86868B]">Recebidos este mês</p>
         </div>
         <div className="rounded-2xl bg-gradient-to-br from-red-500/15 to-red-500/5 border border-red-500/20 p-5">
           <AlertCircle className="h-5 w-5 text-red-400 mb-2" />
-          <p className="text-xl font-bold text-white">{totals.overdue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-          <p className="text-xs text-[#6b7a8d]">Vencidos</p>
+          <p className="text-xl font-bold text-[#1D1D1F]">{totals.overdue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+          <p className="text-xs text-[#86868B]">Vencidos</p>
         </div>
       </div>
 
       {/* Filters */}
       <div className="flex items-center gap-4 mb-6">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#4a5568]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#AEAEB2]" />
           <input type="text" placeholder="Buscar fatura..." value={search} onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl bg-[#111827] border border-[#1e293b] pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#4a5568] focus:border-teal-500/50 focus:outline-none transition-all" />
+            className="w-full rounded-xl bg-white border border-[#E5E5EA] pl-10 pr-4 py-2.5 text-sm text-[#1D1D1F] placeholder-[#AEAEB2] focus:border-[#C4956A]/50 focus:outline-none transition-all" />
         </div>
-        <div className="flex rounded-xl bg-[#111827] border border-[#1e293b] overflow-hidden">
+        <div className="flex rounded-xl bg-white border border-[#E5E5EA] overflow-hidden">
           {['all', 'pending', 'paid', 'overdue'].map((s) => (
             <button key={s} onClick={() => setFilterStatus(s)}
-              className={`px-4 py-2.5 text-xs font-medium transition-all ${filterStatus === s ? 'bg-teal-500/20 text-teal-400' : 'text-[#6b7a8d] hover:text-white'}`}>
+              className={`px-4 py-2.5 text-xs font-medium transition-all ${filterStatus === s ? 'bg-[#C4956A]/20 text-[#C4956A]' : 'text-[#86868B] hover:text-[#1D1D1F]'}`}>
               {s === 'all' ? 'Todas' : STATUS_CONFIG[s]?.label}
             </button>
           ))}
@@ -112,7 +112,7 @@ export default function InvoicesPage() {
           const conf = STATUS_CONFIG[inv.status];
           return (
             <div key={inv.id} onClick={() => setSelectedInvoice(inv)}
-              className="rounded-2xl bg-[#111827] border border-[#1e293b] p-5 hover:border-teal-500/10 transition-all cursor-pointer">
+              className="rounded-2xl bg-white border border-[#E5E5EA] p-5 hover:border-[#C4956A]/10 transition-all cursor-pointer">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10">
@@ -120,19 +120,19 @@ export default function InvoicesPage() {
                   </div>
                   <div>
                     <div className="flex items-center gap-3">
-                      <p className="text-sm font-semibold text-white">{inv.number}</p>
+                      <p className="text-sm font-semibold text-[#1D1D1F]">{inv.number}</p>
                       <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-medium ${conf.bg} ${conf.color}`}>
                         {conf.label}
                       </span>
                     </div>
-                    <p className="text-xs text-[#6b7a8d] mt-0.5">{inv.patientName} - {inv.items.length} item(s)</p>
+                    <p className="text-xs text-[#86868B] mt-0.5">{inv.patientName} - {inv.items.length} item(s)</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold text-white">
+                  <p className="text-lg font-bold text-[#1D1D1F]">
                     {inv.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </p>
-                  <p className="text-[10px] text-[#4a5568]">
+                  <p className="text-[10px] text-[#AEAEB2]">
                     Venc: {new Date(inv.dueDate).toLocaleDateString('pt-BR')}
                   </p>
                 </div>
@@ -144,44 +144,44 @@ export default function InvoicesPage() {
 
       {/* Invoice Detail Modal */}
       {selectedInvoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-2xl rounded-2xl bg-[#111827] border border-[#1e293b] p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="w-full max-w-2xl rounded-2xl bg-white border border-[#E5E5EA] p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold text-white">Fatura {selectedInvoice.number}</h2>
-              <button onClick={() => setSelectedInvoice(null)} className="text-[#4a5568] hover:text-white"><X className="h-5 w-5" /></button>
+              <h2 className="text-lg font-bold text-[#1D1D1F]">Fatura {selectedInvoice.number}</h2>
+              <button onClick={() => setSelectedInvoice(null)} className="text-[#AEAEB2] hover:text-[#1D1D1F]"><X className="h-5 w-5" /></button>
             </div>
 
             {/* Print Header */}
-            <div className="rounded-xl bg-gradient-to-r from-teal-500/10 to-[#D4A76A]/10 border border-teal-500/20 p-4 mb-6">
+            <div className="rounded-xl bg-gradient-to-r from-[#C4956A]/10 to-[#D4A76A]/10 border border-[#C4956A]/20 p-4 mb-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-bold text-white">SBARZI ODONTOLOGIA E SAÚDE</p>
-                  <p className="text-[10px] text-[#6b7a8d]">Rua João Goulart, 2914 - São João Bosco</p>
-                  <p className="text-[10px] text-[#6b7a8d]">Porto Velho - RO | (69) 99324-8325</p>
+                  <p className="text-sm font-bold text-[#1D1D1F]">SBARZI ODONTOLOGIA E SAÚDE</p>
+                  <p className="text-[10px] text-[#86868B]">Rua João Goulart, 2914 - São João Bosco</p>
+                  <p className="text-[10px] text-[#86868B]">Porto Velho - RO | (69) 99324-8325</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-[#8899aa]">Fatura: {selectedInvoice.number}</p>
-                  <p className="text-xs text-[#8899aa]">Emissão: {new Date(selectedInvoice.issuedAt).toLocaleDateString('pt-BR')}</p>
-                  <p className="text-xs text-[#8899aa]">Vencimento: {new Date(selectedInvoice.dueDate).toLocaleDateString('pt-BR')}</p>
+                  <p className="text-xs text-[#6E6E73]">Fatura: {selectedInvoice.number}</p>
+                  <p className="text-xs text-[#6E6E73]">Emissão: {new Date(selectedInvoice.issuedAt).toLocaleDateString('pt-BR')}</p>
+                  <p className="text-xs text-[#6E6E73]">Vencimento: {new Date(selectedInvoice.dueDate).toLocaleDateString('pt-BR')}</p>
                 </div>
               </div>
             </div>
 
-            <p className="text-xs text-[#6b7a8d] mb-1">Paciente</p>
-            <p className="text-sm font-medium text-white mb-4">{selectedInvoice.patientName}</p>
+            <p className="text-xs text-[#86868B] mb-1">Paciente</p>
+            <p className="text-sm font-medium text-[#1D1D1F] mb-4">{selectedInvoice.patientName}</p>
 
             {/* Items */}
-            <div className="rounded-xl bg-[#0d1320] border border-[#1a2332] overflow-hidden mb-4">
-              <div className="grid grid-cols-4 gap-4 px-4 py-2 text-[10px] font-semibold text-[#4a5568] uppercase tracking-wider border-b border-[#1a2332]">
+            <div className="rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] overflow-hidden mb-4">
+              <div className="grid grid-cols-4 gap-4 px-4 py-2 text-[10px] font-semibold text-[#AEAEB2] uppercase tracking-wider border-b border-[#E8E8ED]">
                 <span className="col-span-2">Procedimento</span>
                 <span className="text-right">Qtd</span>
                 <span className="text-right">Valor</span>
               </div>
               {selectedInvoice.items.map((item, i) => (
-                <div key={i} className="grid grid-cols-4 gap-4 px-4 py-3 border-b border-[#0d1320] last:border-0">
-                  <span className="col-span-2 text-xs text-white">{item.procedure}</span>
-                  <span className="text-xs text-[#8899aa] text-right">{item.qty}</span>
-                  <span className="text-xs text-white text-right font-medium">
+                <div key={i} className="grid grid-cols-4 gap-4 px-4 py-3 border-b border-[#ECECEE] last:border-0">
+                  <span className="col-span-2 text-xs text-[#1D1D1F]">{item.procedure}</span>
+                  <span className="text-xs text-[#6E6E73] text-right">{item.qty}</span>
+                  <span className="text-xs text-[#1D1D1F] text-right font-medium">
                     {(item.qty * item.unitPrice).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </span>
                 </div>
@@ -190,8 +190,8 @@ export default function InvoicesPage() {
 
             <div className="space-y-1 text-right mb-6">
               <div className="flex justify-end gap-8">
-                <span className="text-xs text-[#6b7a8d]">Subtotal:</span>
-                <span className="text-xs text-white w-24">{selectedInvoice.subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                <span className="text-xs text-[#86868B]">Subtotal:</span>
+                <span className="text-xs text-[#1D1D1F] w-24">{selectedInvoice.subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
               </div>
               {selectedInvoice.discount > 0 && (
                 <div className="flex justify-end gap-8">
@@ -199,17 +199,17 @@ export default function InvoicesPage() {
                   <span className="text-xs text-green-400 w-24">-{selectedInvoice.discount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                 </div>
               )}
-              <div className="flex justify-end gap-8 pt-2 border-t border-[#1a2332]">
-                <span className="text-sm font-semibold text-white">Total:</span>
-                <span className="text-lg font-bold text-teal-400 w-24">{selectedInvoice.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+              <div className="flex justify-end gap-8 pt-2 border-t border-[#E8E8ED]">
+                <span className="text-sm font-semibold text-[#1D1D1F]">Total:</span>
+                <span className="text-lg font-bold text-[#C4956A] w-24">{selectedInvoice.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
               </div>
             </div>
 
             <div className="flex gap-3">
-              <button className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#1e293b] px-4 py-2.5 text-xs text-[#8899aa] hover:text-white transition-all">
+              <button className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#E5E5EA] px-4 py-2.5 text-xs text-[#6E6E73] hover:text-[#1D1D1F] transition-all">
                 <Printer className="h-3.5 w-3.5" /> Imprimir
               </button>
-              <button className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#1e293b] px-4 py-2.5 text-xs text-[#8899aa] hover:text-white transition-all">
+              <button className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#E5E5EA] px-4 py-2.5 text-xs text-[#6E6E73] hover:text-[#1D1D1F] transition-all">
                 <Send className="h-3.5 w-3.5" /> Enviar por WhatsApp
               </button>
               {selectedInvoice.status === 'pending' && (

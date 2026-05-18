@@ -45,7 +45,7 @@ const HOURS = Array.from({ length: 21 }, (_, i) => {
 
 const PROCEDURE_COLORS: Record<string, { bg: string; border: string; text: string }> = {
   'Consulta': { bg: 'bg-blue-50', border: 'border-blue-300', text: 'text-blue-800' },
-  'Restauração': { bg: 'bg-teal-50', border: 'border-teal-300', text: 'text-teal-800' },
+  'Restauração': { bg: 'bg-[#C4956A]/10', border: 'border-[#D4A76A]', text: 'text-[#8B6914]' },
   'Limpeza': { bg: 'bg-green-50', border: 'border-green-300', text: 'text-green-800' },
   'Canal': { bg: 'bg-red-50', border: 'border-red-300', text: 'text-red-800' },
   'Extração': { bg: 'bg-amber-50', border: 'border-amber-300', text: 'text-amber-800' },
@@ -330,8 +330,8 @@ export function AppointmentCalendar({
       {/* Header */}
       <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between shrink-0 flex-wrap gap-2">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center">
-            <CalendarIcon className="w-5 h-5 text-teal-600" />
+          <div className="w-9 h-9 rounded-lg bg-[#C4956A]/10 flex items-center justify-center">
+            <CalendarIcon className="w-5 h-5 text-[#A0784C]" />
           </div>
           <div>
             <h3 className="text-sm font-semibold text-gray-900">Agenda</h3>
@@ -351,7 +351,7 @@ export function AppointmentCalendar({
           )}
           <button
             onClick={() => setShowForm(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[#1D1D1F] transition-colors"
             style={{ backgroundColor: '#0D9488' }}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#0F766E')}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#0D9488')}
@@ -420,14 +420,14 @@ export function AppointmentCalendar({
                   key={key}
                   className={cn(
                     'flex-1 text-center py-2 border-l border-gray-100',
-                    isToday && 'bg-teal-50/50'
+                    isToday && 'bg-[#C4956A]/10'
                   )}
                 >
                   <p className="text-[10px] text-gray-500 uppercase">{getDayName(day)}</p>
                   <p
                     className={cn(
                       'text-sm font-semibold',
-                      isToday ? 'text-white w-7 h-7 rounded-full flex items-center justify-center mx-auto' : 'text-gray-900'
+                      isToday ? 'text-[#1D1D1F] w-7 h-7 rounded-full flex items-center justify-center mx-auto' : 'text-gray-900'
                     )}
                     style={isToday ? { backgroundColor: '#0D9488' } : undefined}
                   >
@@ -474,7 +474,7 @@ export function AppointmentCalendar({
                       key={dateKey}
                       className={cn(
                         'flex-1 border-l border-gray-100 relative cursor-pointer hover:bg-gray-50/50 transition-colors',
-                        isToday && 'bg-teal-50/20',
+                        isToday && 'bg-[#C4956A]/10/20',
                         time.endsWith(':00') && 'border-t border-gray-100'
                       )}
                       onClick={() => handleCellClick(dateKey, time)}
@@ -605,7 +605,7 @@ export function AppointmentCalendar({
                   type="text"
                   value={formData.patientName}
                   onChange={(e) => setFormData((f) => ({ ...f, patientName: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A]"
                   placeholder="Nome do paciente"
                 />
               </div>
@@ -614,7 +614,7 @@ export function AppointmentCalendar({
                 <select
                   value={formData.procedureType}
                   onChange={(e) => setFormData((f) => ({ ...f, procedureType: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A]"
                 >
                   {PROCEDURE_TYPES.map((t) => (
                     <option key={t} value={t}>{t}</option>
@@ -627,7 +627,7 @@ export function AppointmentCalendar({
                   type="date"
                   value={formData.date}
                   onChange={(e) => setFormData((f) => ({ ...f, date: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A]"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -636,7 +636,7 @@ export function AppointmentCalendar({
                   <select
                     value={formData.startTime}
                     onChange={(e) => setFormData((f) => ({ ...f, startTime: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A]"
                   >
                     {HOURS.map((h) => (
                       <option key={h} value={h}>{h}</option>
@@ -648,7 +648,7 @@ export function AppointmentCalendar({
                   <select
                     value={formData.endTime}
                     onChange={(e) => setFormData((f) => ({ ...f, endTime: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A]"
                   >
                     {HOURS.map((h) => (
                       <option key={h} value={h}>{h}</option>
@@ -662,7 +662,7 @@ export function AppointmentCalendar({
                   type="text"
                   value={formData.professional}
                   onChange={(e) => setFormData((f) => ({ ...f, professional: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A]"
                 />
               </div>
               <div>
@@ -670,7 +670,7 @@ export function AppointmentCalendar({
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData((f) => ({ ...f, notes: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400 resize-none"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A] resize-none"
                   rows={2}
                 />
               </div>
@@ -685,7 +685,7 @@ export function AppointmentCalendar({
               <button
                 onClick={handleSubmitForm}
                 disabled={!formData.patientName}
-                className="px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg text-sm font-medium text-[#1D1D1F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: '#0D9488' }}
               >
                 Agendar

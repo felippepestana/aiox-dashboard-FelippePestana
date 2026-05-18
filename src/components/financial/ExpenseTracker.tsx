@@ -147,7 +147,7 @@ export default function ExpenseTracker() {
         </div>
         <button
           onClick={() => setViewMode(viewMode === 'add' ? 'list' : 'add')}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0D9488] text-white rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors shadow-sm"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0D9488] text-[#1D1D1F] rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors shadow-sm"
         >
           {viewMode === 'add' ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
           {viewMode === 'add' ? 'Cancelar' : 'Nova Despesa'}
@@ -227,7 +227,7 @@ export default function ExpenseTracker() {
           <div className="flex justify-end mt-4 pt-4 border-t border-gray-100">
             <button
               onClick={handleSubmit}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0D9488] text-white rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0D9488] text-[#1D1D1F] rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors"
             >
               <Plus className="w-4 h-4" /> Salvar Despesa
             </button>

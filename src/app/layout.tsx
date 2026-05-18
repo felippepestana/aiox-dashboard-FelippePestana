@@ -12,7 +12,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className="dark" suppressHydrationWarning>
+    <html lang="pt-BR" className="light" suppressHydrationWarning>
       <body
         className="font-sans antialiased"
         suppressHydrationWarning

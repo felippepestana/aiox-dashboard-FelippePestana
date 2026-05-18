@@ -153,7 +153,7 @@ export function TreatmentPresentation({
   const renderIntroSlide = () => (
     <div className="flex flex-col items-center justify-center h-full text-center px-8 py-12">
       <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6" style={{ backgroundColor: '#0D9488' }}>
-        <Heart className="w-8 h-8 text-white" />
+        <Heart className="w-8 h-8 text-[#1D1D1F]" />
       </div>
       <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
         {plan.title}
@@ -176,7 +176,7 @@ export function TreatmentPresentation({
       </p>
       <button
         onClick={goNext}
-        className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-medium transition-colors"
+        className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-xl text-[#1D1D1F] font-medium transition-colors"
         style={{ backgroundColor: '#0D9488' }}
         onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#0F766E')}
         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#0D9488')}
@@ -192,7 +192,7 @@ export function TreatmentPresentation({
       {/* Slide header */}
       <div className="flex items-center gap-3 mb-6">
         <div
-          className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0"
+          className="w-10 h-10 rounded-full flex items-center justify-center text-[#1D1D1F] font-bold text-lg shrink-0"
           style={{ backgroundColor: '#0D9488' }}
         >
           {index + 1}
@@ -217,8 +217,8 @@ export function TreatmentPresentation({
       </div>
 
       {/* Patient-friendly explanation */}
-      <div className="bg-teal-50/50 rounded-xl p-5 mb-6 border border-teal-100">
-        <h4 className="text-sm font-semibold text-teal-800 mb-2">O que vamos fazer?</h4>
+      <div className="bg-[#C4956A]/10 rounded-xl p-5 mb-6 border border-[#F0E6D8]">
+        <h4 className="text-sm font-semibold text-[#8B6914] mb-2">O que vamos fazer?</h4>
         <p className="text-sm text-gray-700 leading-relaxed">{proc.patientDescription}</p>
       </div>
 
@@ -280,7 +280,7 @@ export function TreatmentPresentation({
           >
             <div className="flex items-center gap-3">
               <span
-                className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[#1D1D1F] text-xs font-bold shrink-0"
                 style={{ backgroundColor: '#0D9488' }}
               >
                 {i + 1}
@@ -307,12 +307,12 @@ export function TreatmentPresentation({
         className="rounded-xl p-5 mb-6"
         style={{ backgroundColor: '#0D9488' }}
       >
-        <div className="flex items-center justify-between text-white">
+        <div className="flex items-center justify-between text-[#1D1D1F]">
           <span className="text-lg font-semibold">Valor Total</span>
           <span className="text-2xl font-bold">{formatBRL(totalCost)}</span>
         </div>
         {plan.validUntil && (
-          <p className="text-teal-100 text-xs mt-2">
+          <p className="text-[#C4956A] text-xs mt-2">
             Proposta válida até {new Date(plan.validUntil).toLocaleDateString('pt-BR')}
           </p>
         )}
@@ -330,7 +330,7 @@ export function TreatmentPresentation({
         <div className="flex justify-center mt-4">
           <button
             onClick={() => onApprove(plan.id)}
-            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl text-white font-semibold text-base transition-colors shadow-lg"
+            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl text-[#1D1D1F] font-semibold text-base transition-colors shadow-lg"
             style={{ backgroundColor: '#0D9488' }}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#0F766E')}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#0D9488')}
@@ -464,7 +464,7 @@ export function TreatmentPresentation({
             'inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
             currentSlide === totalSlides - 1
               ? 'text-gray-300 cursor-not-allowed'
-              : 'text-white'
+              : 'text-[#1D1D1F]'
           )}
           style={{
             backgroundColor: currentSlide === totalSlides - 1 ? undefined : '#0D9488',

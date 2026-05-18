@@ -49,42 +49,42 @@ const MOCK_RECENT_ACTIVITY = [
 ];
 
 const QUICK_ACTIONS = [
-  { label: 'Comando de Voz', icon: Mic, href: '/dental/voice', color: 'from-teal-500 to-teal-700', desc: 'Ditar procedimentos' },
-  { label: 'Novo Paciente', icon: Users, href: '/dental/patients', color: 'from-blue-500 to-blue-700', desc: 'Cadastrar paciente' },
-  { label: 'Agendar', icon: Calendar, href: '/dental/calendar', color: 'from-purple-500 to-purple-700', desc: 'Nova consulta' },
-  { label: 'Solicitar Exame', icon: FileText, href: '/dental/exams', color: 'from-amber-500 to-amber-700', desc: 'Requisição de exame' },
-  { label: 'Tratamento', icon: ClipboardList, href: '/dental/treatments', color: 'from-emerald-500 to-emerald-700', desc: 'Plano de tratamento' },
-  { label: 'Financeiro', icon: DollarSign, href: '/dental/financial', color: 'from-green-500 to-green-700', desc: 'Ver finanças' },
+  { label: 'Comando de Voz', icon: Mic, href: '/dental/voice', color: 'from-[#C4956A] to-[#A0784C]', desc: 'Ditar procedimentos' },
+  { label: 'Novo Paciente', icon: Users, href: '/dental/patients', color: 'from-[#D4848B] to-[#B06B75]', desc: 'Cadastrar paciente' },
+  { label: 'Agendar', icon: Calendar, href: '/dental/calendar', color: 'from-[#C4956A] to-[#B08050]', desc: 'Nova consulta' },
+  { label: 'Solicitar Exame', icon: FileText, href: '/dental/exams', color: 'from-[#D4A76A] to-[#C4956A]', desc: 'Requisição de exame' },
+  { label: 'Tratamento', icon: ClipboardList, href: '/dental/treatments', color: 'from-[#D4848B] to-[#C47580]', desc: 'Plano de tratamento' },
+  { label: 'Financeiro', icon: DollarSign, href: '/dental/financial', color: 'from-[#A0784C] to-[#8B6914]', desc: 'Ver finanças' },
 ];
 
 export default function DentalDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] p-6">
+    <div className="min-h-screen bg-[#F5F5F7] p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-bold text-[#1D1D1F]">
             Bom dia, Dra. Vanessa
             <Sparkles className="inline-block ml-2 h-5 w-5 text-[#D4A76A]" />
           </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">
+          <p className="text-sm text-[#86868B] mt-1">
             {new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
         </div>
         <div className="flex items-center gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#4a5568]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#AEAEB2]" />
             <input
               type="text"
               placeholder="Buscar paciente, procedimento..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-72 rounded-xl bg-[#111827] border border-[#1e293b] pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#4a5568] focus:border-teal-500/50 focus:outline-none focus:ring-1 focus:ring-teal-500/20 transition-all"
+              className="w-72 rounded-xl bg-white border border-[#E5E5EA] pl-10 pr-4 py-2.5 text-sm text-[#1D1D1F] placeholder-[#AEAEB2] focus:border-[#C4956A]/50 focus:outline-none focus:ring-1 focus:ring-[#C4956A]/20 transition-all"
             />
           </div>
-          <button className="relative p-2.5 rounded-xl bg-[#111827] border border-[#1e293b] text-[#6b7a8d] hover:text-white hover:border-[#2d3748] transition-all">
+          <button className="relative p-2.5 rounded-xl bg-white border border-[#E5E5EA] text-[#86868B] hover:text-[#1D1D1F] hover:border-[#D1D1D6] transition-all">
             <Bell className="h-5 w-5" />
             <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-[10px] font-bold flex items-center justify-center text-white">3</span>
           </button>
@@ -96,13 +96,13 @@ export default function DentalDashboard() {
         {MOCK_STATS.map((stat) => {
           const Icon = stat.icon;
           const colorMap: Record<string, string> = {
-            teal: 'from-teal-500/20 to-teal-500/5 border-teal-500/20',
+            teal: 'from-[#C4956A]/20 to-[#C4956A]/5 border-[#C4956A]/20',
             green: 'from-green-500/20 to-green-500/5 border-green-500/20',
             blue: 'from-blue-500/20 to-blue-500/5 border-blue-500/20',
             amber: 'from-amber-500/20 to-amber-500/5 border-amber-500/20',
           };
           const iconColorMap: Record<string, string> = {
-            teal: 'text-teal-400',
+            teal: 'text-[#C4956A]',
             green: 'text-green-400',
             blue: 'text-blue-400',
             amber: 'text-amber-400',
@@ -121,8 +121,8 @@ export default function DentalDashboard() {
                   {stat.change}
                 </span>
               </div>
-              <p className="text-2xl font-bold text-white">{stat.value}</p>
-              <p className="text-xs text-[#6b7a8d] mt-1">{stat.label}</p>
+              <p className="text-2xl font-bold text-[#1D1D1F]">{stat.value}</p>
+              <p className="text-xs text-[#86868B] mt-1">{stat.label}</p>
             </div>
           );
         })}
@@ -130,7 +130,7 @@ export default function DentalDashboard() {
 
       {/* Quick Actions */}
       <div className="mb-8">
-        <h2 className="text-sm font-semibold text-[#8899aa] uppercase tracking-wider mb-4">Ações Rápidas</h2>
+        <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wider mb-4">Ações Rápidas</h2>
         <div className="grid grid-cols-6 gap-3">
           {QUICK_ACTIONS.map((action) => {
             const Icon = action.icon;
@@ -138,13 +138,13 @@ export default function DentalDashboard() {
               <Link
                 key={action.label}
                 href={action.href}
-                className="group flex flex-col items-center gap-2 rounded-2xl bg-[#111827] border border-[#1e293b] p-4 hover:border-teal-500/30 hover:bg-[#111827]/80 transition-all hover:scale-[1.03]"
+                className="group flex flex-col items-center gap-2 rounded-2xl bg-white border border-[#E5E5EA] p-4 hover:border-[#C4956A]/30 hover:bg-white/80 transition-all hover:scale-[1.03]"
               >
                 <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${action.color} shadow-lg transition-transform group-hover:scale-110`}>
                   <Icon className="h-6 w-6 text-white" />
                 </div>
-                <span className="text-xs font-medium text-white text-center">{action.label}</span>
-                <span className="text-[10px] text-[#4a5568] text-center">{action.desc}</span>
+                <span className="text-xs font-medium text-[#1D1D1F] text-center">{action.label}</span>
+                <span className="text-[10px] text-[#AEAEB2] text-center">{action.desc}</span>
               </Link>
             );
           })}
@@ -153,13 +153,13 @@ export default function DentalDashboard() {
 
       <div className="grid grid-cols-3 gap-6">
         {/* Today's Appointments */}
-        <div className="col-span-2 rounded-2xl bg-[#111827] border border-[#1e293b] p-6">
+        <div className="col-span-2 rounded-2xl bg-white border border-[#E5E5EA] p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-teal-400" />
+            <h2 className="text-sm font-semibold text-[#1D1D1F] flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-[#C4956A]" />
               Agenda de Hoje
             </h2>
-            <Link href="/dental/calendar" className="text-xs text-teal-400 hover:text-teal-300 flex items-center gap-1 transition-colors">
+            <Link href="/dental/calendar" className="text-xs text-[#C4956A] hover:text-[#D4A76A] flex items-center gap-1 transition-colors">
               Ver completa <ChevronRight className="h-3 w-3" />
             </Link>
           </div>
@@ -167,15 +167,15 @@ export default function DentalDashboard() {
             {MOCK_APPOINTMENTS.map((apt, i) => (
               <div
                 key={i}
-                className="flex items-center gap-4 rounded-xl bg-[#0d1320] border border-[#1a2332] p-3 hover:border-teal-500/20 transition-all cursor-pointer group"
+                className="flex items-center gap-4 rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] p-3 hover:border-[#C4956A]/20 transition-all cursor-pointer group"
               >
                 <div className="text-center min-w-[60px]">
-                  <p className="text-sm font-bold text-white">{apt.time}</p>
+                  <p className="text-sm font-bold text-[#1D1D1F]">{apt.time}</p>
                 </div>
-                <div className="h-8 w-px bg-[#1e293b]" />
+                <div className="h-8 w-px bg-[#E5E5EA]" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-white group-hover:text-teal-300 transition-colors">{apt.patient}</p>
-                  <p className="text-xs text-[#6b7a8d]">{apt.procedure}</p>
+                  <p className="text-sm font-medium text-[#1D1D1F] group-hover:text-[#D4A76A] transition-colors">{apt.patient}</p>
+                  <p className="text-xs text-[#86868B]">{apt.procedure}</p>
                 </div>
                 <span className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${
                   apt.status === 'confirmed' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
@@ -194,25 +194,25 @@ export default function DentalDashboard() {
           {/* AI Voice Assistant */}
           <Link
             href="/dental/voice"
-            className="block rounded-2xl bg-gradient-to-br from-teal-600/20 to-teal-900/20 border border-teal-500/20 p-6 hover:border-teal-500/40 transition-all group"
+            className="block rounded-2xl bg-gradient-to-br from-[#C4956A]/8 to-[#D4A76A]/5 border border-[#C4956A]/15 p-6 hover:border-[#C4956A]/30 transition-all group"
           >
             <div className="flex items-center gap-3 mb-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-teal-700 shadow-lg shadow-teal-500/30 group-hover:scale-110 transition-transform">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#C4956A] to-[#A0784C] shadow-lg shadow-[#C4956A]/30 group-hover:scale-110 transition-transform">
                 <Mic className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-white">Assistente de Voz IA</h3>
-                <p className="text-xs text-teal-400/70">Pronto para comandos</p>
+                <h3 className="text-sm font-semibold text-[#1D1D1F]">Assistente de Voz IA</h3>
+                <p className="text-xs text-[#C4956A]/70">Pronto para comandos</p>
               </div>
             </div>
-            <p className="text-xs text-[#6b7a8d] leading-relaxed">
+            <p className="text-xs text-[#86868B] leading-relaxed">
               Dite procedimentos, solicite exames e gere apresentações de tratamento por comando de voz.
             </p>
           </Link>
 
           {/* Recent Activity */}
-          <div className="rounded-2xl bg-[#111827] border border-[#1e293b] p-5">
-            <h2 className="text-sm font-semibold text-white flex items-center gap-2 mb-4">
+          <div className="rounded-2xl bg-white border border-[#E5E5EA] p-5">
+            <h2 className="text-sm font-semibold text-[#1D1D1F] flex items-center gap-2 mb-4">
               <Activity className="h-4 w-4 text-[#D4A76A]" />
               Atividade Recente
             </h2>
@@ -224,8 +224,8 @@ export default function DentalDashboard() {
                     item.type === 'warning' ? 'bg-amber-400' : 'bg-blue-400'
                   }`} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-[#c0c8d4] leading-relaxed">{item.text}</p>
-                    <p className="text-[10px] text-[#4a5568] mt-0.5">{item.time} atrás</p>
+                    <p className="text-xs text-[#48484A] leading-relaxed">{item.text}</p>
+                    <p className="text-[10px] text-[#AEAEB2] mt-0.5">{item.time} atrás</p>
                   </div>
                 </div>
               ))}
@@ -243,7 +243,7 @@ export default function DentalDashboard() {
                 <Star key={s} className="h-4 w-4 text-[#D4A76A] fill-[#D4A76A]" />
               ))}
             </div>
-            <p className="text-[11px] text-[#8b7a5e] leading-relaxed">
+            <p className="text-[11px] text-[#86868B] leading-relaxed">
               Sbarzi Odontologia e Saúde - Excelência em atendimento odontológico em Porto Velho, RO.
             </p>
           </div>

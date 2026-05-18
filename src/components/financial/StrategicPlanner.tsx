@@ -170,7 +170,7 @@ export default function StrategicPlanner() {
             onClick={() => setActiveTab(tab.id)}
             className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
               activeTab === tab.id
-                ? 'bg-[#0D9488] text-white shadow-sm'
+                ? 'bg-[#0D9488] text-[#1D1D1F] shadow-sm'
                 : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
             }`}
           >
@@ -252,7 +252,7 @@ export default function StrategicPlanner() {
                 <div className="px-4 pb-4 space-y-2">
                   {section.items.map((item, idx) => (
                     <div key={idx} className={`flex items-start gap-3 p-3 rounded-lg ${section.lightColor}`}>
-                      <div className={`w-5 h-5 rounded-full ${section.color} text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5`}>
+                      <div className={`w-5 h-5 rounded-full ${section.color} text-[#1D1D1F] flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5`}>
                         {idx + 1}
                       </div>
                       <p className={`text-sm ${section.textColor}`}>{item}</p>
