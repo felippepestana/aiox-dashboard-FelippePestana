@@ -91,10 +91,10 @@ export default function AutomationPage() {
   const activeCount = MOCK_AUTOMATIONS.filter((a) => a.status === 'active').length;
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-[#F5F5F7] p-4 md:p-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
+          <h1 className="text-xl md:text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-indigo-700">
               <Zap className="h-5 w-5 text-white" />
             </div>
@@ -105,7 +105,7 @@ export default function AutomationPage() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-8">
         {[
           { label: 'Automações Ativas', value: activeCount.toString(), icon: Activity, color: 'green' },
           { label: 'Mensagens Enviadas', value: totalSent.toLocaleString('pt-BR'), icon: MessageCircle, color: 'blue' },
@@ -123,16 +123,16 @@ export default function AutomationPage() {
           return (
             <div key={stat.label} className={`rounded-2xl bg-gradient-to-br ${colorMap[stat.color]} border p-5`}>
               <Icon className={`h-5 w-5 ${iconColor[stat.color]} mb-2`} />
-              <p className="text-2xl font-bold text-[#1D1D1F]">{stat.value}</p>
+              <p className="text-xl md:text-2xl font-bold text-[#1D1D1F]">{stat.value}</p>
               <p className="text-xs text-[#86868B]">{stat.label}</p>
             </div>
           );
         })}
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         {/* Automation List */}
-        <div className="col-span-2 space-y-4">
+        <div className="col-span-1 lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
           {MOCK_AUTOMATIONS.map((auto) => {
             const conf = STATUS_MAP[auto.status];
             const Icon = auto.icon;
@@ -178,7 +178,7 @@ export default function AutomationPage() {
                 </div>
 
                 {/* Workflow Steps Preview */}
-                <div className="flex items-center gap-1 mb-3 overflow-x-auto">
+                <div className="flex items-center gap-1 mb-3 flex-wrap">
                   {auto.steps.map((step, i) => (
                     <div key={i} className="flex items-center gap-1">
                       <div className="rounded-lg bg-[#FAFAFA] border border-[#E8E8ED] px-2 py-1 whitespace-nowrap">

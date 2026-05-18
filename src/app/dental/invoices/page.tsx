@@ -54,10 +54,10 @@ export default function InvoicesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-[#F5F5F7] p-4 md:p-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
+          <h1 className="text-xl md:text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700">
               <FileText className="h-5 w-5 text-white" />
             </div>
@@ -71,7 +71,7 @@ export default function InvoicesPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-6">
         <div className="rounded-2xl bg-gradient-to-br from-amber-500/15 to-amber-500/5 border border-amber-500/20 p-5">
           <Clock className="h-5 w-5 text-amber-400 mb-2" />
           <p className="text-xl font-bold text-[#1D1D1F]">{totals.pending.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
@@ -90,13 +90,13 @@ export default function InvoicesPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-4 md:mb-6">
+        <div className="relative flex-1 max-w-full md:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#AEAEB2]" />
           <input type="text" placeholder="Buscar fatura..." value={search} onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-xl bg-white border border-[#E5E5EA] pl-10 pr-4 py-2.5 text-sm text-[#1D1D1F] placeholder-[#AEAEB2] focus:border-[#C4956A]/50 focus:outline-none transition-all" />
         </div>
-        <div className="flex rounded-xl bg-white border border-[#E5E5EA] overflow-hidden">
+        <div className="flex rounded-xl bg-white border border-[#E5E5EA] overflow-hidden overflow-x-auto">
           {['all', 'pending', 'paid', 'overdue'].map((s) => (
             <button key={s} onClick={() => setFilterStatus(s)}
               className={`px-4 py-2.5 text-xs font-medium transition-all ${filterStatus === s ? 'bg-[#C4956A]/20 text-[#C4956A]' : 'text-[#86868B] hover:text-[#1D1D1F]'}`}>
@@ -145,15 +145,15 @@ export default function InvoicesPage() {
       {/* Invoice Detail Modal */}
       {selectedInvoice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <div className="w-full max-w-2xl rounded-2xl bg-white border border-[#E5E5EA] p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
+          <div className="w-full max-w-2xl w-[95vw] rounded-2xl bg-white border border-[#E5E5EA] p-6 shadow-2xl">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6">
               <h2 className="text-lg font-bold text-[#1D1D1F]">Fatura {selectedInvoice.number}</h2>
               <button onClick={() => setSelectedInvoice(null)} className="text-[#AEAEB2] hover:text-[#1D1D1F]"><X className="h-5 w-5" /></button>
             </div>
 
             {/* Print Header */}
             <div className="rounded-xl bg-gradient-to-r from-[#C4956A]/10 to-[#D4A76A]/10 border border-[#C4956A]/20 p-4 mb-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-bold text-[#1D1D1F]">SBARZI ODONTOLOGIA E SAÚDE</p>
                   <p className="text-[10px] text-[#86868B]">Rua João Goulart, 2914 - São João Bosco</p>
@@ -172,14 +172,14 @@ export default function InvoicesPage() {
 
             {/* Items */}
             <div className="rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] overflow-hidden mb-4">
-              <div className="grid grid-cols-4 gap-4 px-4 py-2 text-[10px] font-semibold text-[#AEAEB2] uppercase tracking-wider border-b border-[#E8E8ED]">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 px-4 py-2 text-xs md:text-[10px] font-semibold text-[#AEAEB2] uppercase tracking-wider border-b border-[#E8E8ED]">
                 <span className="col-span-2">Procedimento</span>
                 <span className="text-right">Qtd</span>
                 <span className="text-right">Valor</span>
               </div>
               {selectedInvoice.items.map((item, i) => (
-                <div key={i} className="grid grid-cols-4 gap-4 px-4 py-3 border-b border-[#ECECEE] last:border-0">
-                  <span className="col-span-2 text-xs text-[#1D1D1F]">{item.procedure}</span>
+                <div key={i} className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 px-4 py-3 text-xs border-b border-[#ECECEE] last:border-0">
+                  <span className="col-span-1 lg:col-span-2 text-xs text-[#1D1D1F]">{item.procedure}</span>
                   <span className="text-xs text-[#6E6E73] text-right">{item.qty}</span>
                   <span className="text-xs text-[#1D1D1F] text-right font-medium">
                     {(item.qty * item.unitPrice).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}

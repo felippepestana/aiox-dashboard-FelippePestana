@@ -85,11 +85,11 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] p-6">
+    <div className="min-h-screen bg-[#F5F5F7] p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
+          <h1 className="text-xl md:text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-purple-700">
               <Calendar className="h-5 w-5 text-white" />
             </div>
@@ -97,10 +97,11 @@ export default function CalendarPage() {
           </h1>
           <p className="text-sm text-[#86868B] mt-1">Gerenciamento de consultas e horários</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           <button className="flex items-center gap-2 rounded-xl bg-white border border-[#E5E5EA] px-4 py-2.5 text-xs font-medium text-[#6E6E73] hover:text-[#1D1D1F] hover:border-[#D1D1D6] transition-all">
             <RefreshCw className="h-3.5 w-3.5" />
-            Sincronizar Google Calendar
+            <span className="hidden sm:inline">Sincronizar Google Calendar</span>
+            <span className="sm:hidden">Sync</span>
             <ExternalLink className="h-3 w-3" />
           </button>
           <button
@@ -114,7 +115,7 @@ export default function CalendarPage() {
       </div>
 
       {/* Navigation */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 md:mb-6">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="p-2 rounded-xl bg-white border border-[#E5E5EA] text-[#86868B] hover:text-[#1D1D1F] transition-all">
             <ChevronLeft className="h-4 w-4" />
@@ -143,7 +144,7 @@ export default function CalendarPage() {
       </div>
 
       {/* Calendar Grid */}
-      <div className="rounded-2xl bg-white border border-[#E5E5EA] overflow-hidden">
+      <div className="rounded-2xl bg-white border border-[#E5E5EA] overflow-x-auto overflow-hidden">
         {/* Day Headers */}
         <div className="grid border-b border-[#E8E8ED]" style={{ gridTemplateColumns: view === 'week' ? '60px repeat(6, 1fr)' : '60px 1fr' }}>
           <div className="p-3 border-r border-[#E8E8ED]" />
@@ -163,7 +164,7 @@ export default function CalendarPage() {
         </div>
 
         {/* Time Grid */}
-        <div className="relative max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-[#D1D1D6]">
+        <div className="relative max-h-[60vh] md:max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-[#D1D1D6]">
           {HOURS.map((time) => (
             <div
               key={time}
@@ -208,8 +209,8 @@ export default function CalendarPage() {
       {/* New Appointment Modal */}
       {showNewAppointment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl bg-white border border-[#E5E5EA] p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
+          <div className="w-full max-w-lg w-[95vw] rounded-2xl bg-white border border-[#E5E5EA] p-6 shadow-2xl">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6">
               <h2 className="text-lg font-bold text-[#1D1D1F]">Novo Agendamento</h2>
               <button onClick={() => setShowNewAppointment(false)} className="text-[#AEAEB2] hover:text-[#1D1D1F]">
                 <X className="h-5 w-5" />
@@ -220,7 +221,7 @@ export default function CalendarPage() {
                 <label className="text-xs font-medium text-[#6E6E73] mb-1 block">Paciente</label>
                 <input type="text" placeholder="Buscar paciente..." className="w-full rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] px-4 py-2.5 text-sm text-[#1D1D1F] placeholder-[#AEAEB2] focus:border-[#C4956A]/50 focus:outline-none transition-all" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div>
                   <label className="text-xs font-medium text-[#6E6E73] mb-1 block">Data</label>
                   <input type="date" className="w-full rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] px-4 py-2.5 text-sm text-[#1D1D1F] focus:border-[#C4956A]/50 focus:outline-none transition-all" />

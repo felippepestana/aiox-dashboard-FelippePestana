@@ -70,10 +70,10 @@ export default function ExpensesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-[#F5F5F7] p-4 md:p-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
+          <h1 className="text-xl md:text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-red-700">
               <TrendingDown className="h-5 w-5 text-white" />
             </div>
@@ -87,7 +87,7 @@ export default function ExpensesPage() {
       </div>
 
       {/* Category Breakdown */}
-      <div className="grid grid-cols-6 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 md:gap-3 mb-6">
         {catTotals.map((cat) => {
           const Icon = cat.icon;
           const c = colorMap[cat.color];
@@ -113,8 +113,8 @@ export default function ExpensesPage() {
       </div>
 
       {/* Budget vs Actual */}
-      <div className="grid grid-cols-3 gap-6 mb-6">
-        <div className="col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 mb-6">
+        <div className="col-span-1 lg:col-span-2">
           <div className="rounded-2xl bg-white border border-[#E5E5EA] p-6">
             <h3 className="text-sm font-semibold text-[#1D1D1F] flex items-center gap-2 mb-4">
               <BarChart3 className="h-4 w-4 text-red-400" />
@@ -171,7 +171,7 @@ export default function ExpensesPage() {
       </div>
 
       {/* Search */}
-      <div className="relative mb-4 max-w-md">
+      <div className="relative mb-4 max-w-full md:max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#AEAEB2]" />
         <input type="text" placeholder="Buscar despesa..." value={search} onChange={(e) => setSearch(e.target.value)}
           className="w-full rounded-xl bg-white border border-[#E5E5EA] pl-10 pr-4 py-2.5 text-sm text-[#1D1D1F] placeholder-[#AEAEB2] focus:border-[#C4956A]/50 focus:outline-none transition-all" />
@@ -184,11 +184,24 @@ export default function ExpensesPage() {
           const Icon = cat?.icon || CreditCard;
           const c = colorMap[cat?.color || 'gray'];
           return (
-            <div key={expense.id} className="flex items-center gap-4 rounded-2xl bg-white border border-[#E5E5EA] p-4 hover:border-[#D1D1D6] transition-all">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${c.bg}`}>
-                <Icon className={`h-5 w-5 ${c.icon}`} />
+            <div key={expense.id} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 rounded-2xl bg-white border border-[#E5E5EA] p-4 hover:border-[#D1D1D6] transition-all">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0 ${c.bg}`}>
+                  <Icon className={`h-5 w-5 ${c.icon}`} />
+                </div>
+                <div className="flex-1 min-w-0 sm:hidden">
+                  <p className="text-sm text-[#1D1D1F] truncate">{expense.description}</p>
+                  <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+                    <span className="text-[10px] text-[#AEAEB2]">{expense.vendor}</span>
+                    <span className="text-[10px] text-[#AEAEB2]">{new Date(expense.date).toLocaleDateString('pt-BR')}</span>
+                    {expense.recurring && <span className="text-[10px] text-blue-400">Recorrente</span>}
+                  </div>
+                </div>
+                <p className="text-sm font-semibold text-red-400 sm:hidden ml-auto">
+                  -{expense.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </p>
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 hidden sm:block">
                 <p className="text-sm text-[#1D1D1F] truncate">{expense.description}</p>
                 <div className="flex items-center gap-3 mt-0.5">
                   <span className="text-[10px] text-[#AEAEB2]">{expense.vendor}</span>
@@ -196,7 +209,7 @@ export default function ExpensesPage() {
                   {expense.recurring && <span className="text-[10px] text-blue-400">Recorrente</span>}
                 </div>
               </div>
-              <p className="text-sm font-semibold text-red-400">
+              <p className="text-sm font-semibold text-red-400 hidden sm:block">
                 -{expense.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </p>
             </div>
@@ -207,8 +220,8 @@ export default function ExpensesPage() {
       {/* New Expense Modal */}
       {showNewExpense && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl bg-white border border-[#E5E5EA] p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
+          <div className="w-[95vw] max-w-lg rounded-2xl bg-white border border-[#E5E5EA] p-4 md:p-6 shadow-2xl">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6">
               <h2 className="text-lg font-bold text-[#1D1D1F]">Nova Despesa</h2>
               <button onClick={() => setShowNewExpense(false)} className="text-[#AEAEB2] hover:text-[#1D1D1F]"><X className="h-5 w-5" /></button>
             </div>
@@ -217,7 +230,7 @@ export default function ExpensesPage() {
                 <label className="text-xs font-medium text-[#6E6E73] mb-1 block">Descrição</label>
                 <input type="text" placeholder="Descreva a despesa..." className="w-full rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] px-4 py-2.5 text-sm text-[#1D1D1F] placeholder-[#AEAEB2] focus:border-[#C4956A]/50 focus:outline-none transition-all" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div>
                   <label className="text-xs font-medium text-[#6E6E73] mb-1 block">Valor (R$)</label>
                   <input type="number" placeholder="0,00" className="w-full rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] px-4 py-2.5 text-sm text-[#1D1D1F] focus:border-[#C4956A]/50 focus:outline-none transition-all" />
@@ -229,7 +242,7 @@ export default function ExpensesPage() {
               </div>
               <div>
                 <label className="text-xs font-medium text-[#6E6E73] mb-2 block">Categoria</label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {CATEGORIES.map((cat) => {
                     const CatIcon = cat.icon;
                     return (

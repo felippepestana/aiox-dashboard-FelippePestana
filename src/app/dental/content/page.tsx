@@ -92,10 +92,10 @@ export default function ContentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-[#F5F5F7] p-4 md:p-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
+          <h1 className="text-xl md:text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-700">
               <Calendar className="h-5 w-5 text-white" />
             </div>
@@ -109,10 +109,11 @@ export default function ContentPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Calendar */}
-        <div className="col-span-3">
-          <div className="rounded-2xl bg-white border border-[#E5E5EA] overflow-hidden">
+        <div className="col-span-1 lg:col-span-3">
+          <div className="rounded-2xl bg-white border border-[#E5E5EA] overflow-hidden overflow-x-auto">
+            <div className="min-w-[640px]">
             {/* Month Navigation */}
             <div className="flex items-center justify-between p-4 border-b border-[#E8E8ED]">
               <button onClick={() => navigate(-1)} className="p-2 rounded-xl text-[#86868B] hover:text-[#1D1D1F] hover:bg-[#E5E5EA] transition-all">
@@ -169,6 +170,7 @@ export default function ContentPage() {
                 );
               })}
             </div>
+            </div>
           </div>
         </div>
 
@@ -180,7 +182,7 @@ export default function ContentPage() {
               <Sparkles className="h-4 w-4 text-[#D4A76A]" />
               Templates de Conteúdo
             </h3>
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {TEMPLATES.map((tpl) => (
                 <button key={tpl.name}
                   className="w-full flex items-center gap-3 rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] p-3 hover:border-[#C4956A]/20 transition-all text-left">
@@ -226,8 +228,8 @@ export default function ContentPage() {
       {/* New Post Modal */}
       {showNewPost && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl bg-white border border-[#E5E5EA] p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
+          <div className="w-full max-w-lg w-[95vw] rounded-2xl bg-white border border-[#E5E5EA] p-6 shadow-2xl">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6">
               <h2 className="text-lg font-bold text-[#1D1D1F]">Nova Publicação</h2>
               <button onClick={() => setShowNewPost(false)} className="text-[#AEAEB2] hover:text-[#1D1D1F]"><X className="h-5 w-5" /></button>
             </div>
@@ -251,7 +253,7 @@ export default function ContentPage() {
                 <label className="text-xs font-medium text-[#6E6E73] mb-1 block">Conteúdo</label>
                 <textarea rows={4} placeholder="Texto da publicação..." className="w-full rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] px-4 py-2.5 text-sm text-[#1D1D1F] placeholder-[#AEAEB2] focus:border-[#C4956A]/50 focus:outline-none transition-all resize-none" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div>
                   <label className="text-xs font-medium text-[#6E6E73] mb-1 block">Data</label>
                   <input type="date" className="w-full rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] px-4 py-2.5 text-sm text-[#1D1D1F] focus:border-[#C4956A]/50 focus:outline-none transition-all" />

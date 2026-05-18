@@ -200,10 +200,10 @@ export default function VoiceCommandPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] p-6">
+    <div className="min-h-screen bg-[#F5F5F7] p-4 md:p-6">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#C4956A] to-[#A0784C] text-white">
             <Mic className="h-5 w-5 text-white" />
           </div>
@@ -214,9 +214,9 @@ export default function VoiceCommandPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         {/* Main Voice Control */}
-        <div className="col-span-2 space-y-6">
+        <div className="col-span-1 lg:col-span-2 space-y-6">
           {/* Voice Orb */}
           <div className="rounded-2xl bg-white border border-[#E5E5EA] p-8 flex flex-col items-center">
             {/* Microphone Button */}

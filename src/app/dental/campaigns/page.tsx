@@ -59,10 +59,10 @@ export default function CampaignsPage() {
   const filtered = MOCK_CAMPAIGNS.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-[#F5F5F7] p-4 md:p-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
+          <h1 className="text-xl md:text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 to-pink-700">
               <TrendingUp className="h-5 w-5 text-white" />
             </div>
@@ -76,13 +76,13 @@ export default function CampaignsPage() {
         </button>
       </div>
 
-      <div className="relative mb-6 max-w-md">
+      <div className="relative mb-4 md:mb-6 max-w-full md:max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#AEAEB2]" />
         <input type="text" placeholder="Buscar campanha..." value={search} onChange={(e) => setSearch(e.target.value)}
           className="w-full rounded-xl bg-white border border-[#E5E5EA] pl-10 pr-4 py-2.5 text-sm text-[#1D1D1F] placeholder-[#AEAEB2] focus:border-[#C4956A]/50 focus:outline-none transition-all" />
       </div>
 
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filtered.map((campaign) => {
           const conf = STATUS_MAP[campaign.status];
           const budgetPct = campaign.budget > 0 ? (campaign.spent / campaign.budget) * 100 : 0;
@@ -160,14 +160,14 @@ export default function CampaignsPage() {
       {/* Campaign Wizard Modal */}
       {showWizard && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <div className="w-full max-w-2xl rounded-2xl bg-white border border-[#E5E5EA] p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
+          <div className="w-full max-w-2xl w-[95vw] rounded-2xl bg-white border border-[#E5E5EA] p-6 shadow-2xl">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6">
               <h2 className="text-lg font-bold text-[#1D1D1F]">Nova Campanha</h2>
               <button onClick={() => setShowWizard(false)} className="text-[#AEAEB2] hover:text-[#1D1D1F]"><X className="h-5 w-5" /></button>
             </div>
 
             {/* Progress Steps */}
-            <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center gap-2 mb-6 overflow-x-auto">
               {['Tipo', 'Público', 'Conteúdo', 'Orçamento'].map((step, i) => (
                 <div key={step} className="flex items-center gap-2 flex-1">
                   <div className={`flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold ${
@@ -202,7 +202,7 @@ export default function CampaignsPage() {
               {wizardStep === 1 && (
                 <div className="space-y-4">
                   <p className="text-sm text-[#6E6E73] mb-4">Defina o público-alvo:</p>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                     <div>
                       <label className="text-xs font-medium text-[#6E6E73] mb-1 block">Faixa Etária</label>
                       <select className="w-full rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] px-4 py-2.5 text-sm text-[#1D1D1F] focus:border-[#C4956A]/50 focus:outline-none transition-all">
@@ -245,7 +245,7 @@ export default function CampaignsPage() {
               {wizardStep === 3 && (
                 <div className="space-y-4">
                   <p className="text-sm text-[#6E6E73] mb-4">Defina o orçamento e período:</p>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                     <div>
                       <label className="text-xs font-medium text-[#6E6E73] mb-1 block">Orçamento Total (R$)</label>
                       <input type="number" placeholder="2000" className="w-full rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] px-4 py-2.5 text-sm text-[#1D1D1F] focus:border-[#C4956A]/50 focus:outline-none transition-all" />

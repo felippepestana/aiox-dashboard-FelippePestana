@@ -48,11 +48,11 @@ export default function FinancialPage() {
   const [period, setPeriod] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] p-6">
+    <div className="min-h-screen bg-[#F5F5F7] p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 md:mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
+          <h1 className="text-xl md:text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-green-700">
               <DollarSign className="h-5 w-5 text-white" />
             </div>
@@ -60,7 +60,7 @@ export default function FinancialPage() {
           </h1>
           <p className="text-sm text-[#86868B] mt-1">Visão geral financeira e contábil</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           <div className="flex rounded-xl bg-white border border-[#E5E5EA] overflow-hidden">
             {(['week', 'month', 'quarter', 'year'] as const).map((p) => (
               <button
@@ -81,7 +81,7 @@ export default function FinancialPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-8">
         {MOCK_KPI.map((kpi) => {
           const Icon = kpi.icon;
           const colors: Record<string, { card: string; icon: string }> = {
@@ -100,23 +100,23 @@ export default function FinancialPage() {
                   {kpi.change}
                 </span>
               </div>
-              <p className="text-2xl font-bold text-[#1D1D1F]">{kpi.value}</p>
+              <p className="text-xl md:text-2xl font-bold text-[#1D1D1F]">{kpi.value}</p>
               <p className="text-xs text-[#86868B] mt-1">{kpi.label}</p>
             </div>
           );
         })}
       </div>
 
-      <div className="grid grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 mb-6">
         {/* Revenue Chart */}
-        <div className="col-span-2 rounded-2xl bg-white border border-[#E5E5EA] p-6">
-          <div className="flex items-center justify-between mb-6">
+        <div className="col-span-1 lg:col-span-2 rounded-2xl bg-white border border-[#E5E5EA] p-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6">
             <h3 className="text-sm font-semibold text-[#1D1D1F] flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-green-400" />
               Receita Mensal
             </h3>
           </div>
-          <div className="flex items-end justify-between gap-3 h-48">
+          <div className="flex items-end justify-between gap-3 h-32 md:h-48">
             {MOCK_REVENUE.map((r) => {
               const height = (r.value / maxRevenue) * 100;
               return (
@@ -192,9 +192,9 @@ export default function FinancialPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         {/* Recent Transactions */}
-        <div className="col-span-2 rounded-2xl bg-white border border-[#E5E5EA] p-6">
+        <div className="col-span-1 lg:col-span-2 rounded-2xl bg-white border border-[#E5E5EA] p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-[#1D1D1F] flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-[#C4956A]" />

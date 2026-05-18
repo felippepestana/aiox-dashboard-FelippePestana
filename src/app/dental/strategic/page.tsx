@@ -62,10 +62,10 @@ export default function StrategicPage() {
   const [activeTab, setActiveTab] = useState<'goals' | 'swot' | 'scenarios' | 'kpis'>('goals');
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-[#F5F5F7] p-4 md:p-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
+          <h1 className="text-xl md:text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-purple-700">
               <Target className="h-5 w-5 text-white" />
             </div>
@@ -76,10 +76,10 @@ export default function StrategicPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex rounded-xl bg-white border border-[#E5E5EA] overflow-hidden mb-8 w-fit">
+      <div className="flex rounded-xl bg-white border border-[#E5E5EA] overflow-x-auto mb-6 md:mb-8 w-full md:w-fit">
         {([
           { id: 'goals', label: 'Metas', icon: Target },
-          { id: 'swot', label: 'Análise SWOT', icon: Shield },
+          { id: 'swot', label: 'SWOT', icon: Shield },
           { id: 'scenarios', label: 'Cenários', icon: BarChart3 },
           { id: 'kpis', label: 'KPIs', icon: TrendingUp },
         ] as const).map((tab) => {
@@ -88,12 +88,12 @@ export default function StrategicPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-5 py-3 text-xs font-medium transition-all ${
+              className={`flex items-center gap-2 px-4 md:px-5 py-3 text-xs font-medium transition-all whitespace-nowrap ${
                 activeTab === tab.id ? 'bg-[#C4956A]/20 text-[#C4956A]' : 'text-[#86868B] hover:text-[#1D1D1F]'
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
-              {tab.label}
+              <span className="hidden sm:inline">{tab.label}</span>
             </button>
           );
         })}
@@ -102,7 +102,7 @@ export default function StrategicPage() {
       {/* Goals Tab */}
       {activeTab === 'goals' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             {GOALS.map((goal) => {
               const progress = typeof goal.current === 'number' && typeof goal.target === 'number'
                 ? Math.min(100, (goal.current / goal.target) * 100)
@@ -142,7 +142,7 @@ export default function StrategicPage() {
               <Calculator className="h-4 w-4 text-purple-400" />
               Calculadora de Ponto de Equilíbrio
             </h3>
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
               <div className="rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] p-4">
                 <p className="text-[10px] text-[#AEAEB2] mb-1">Custos Fixos Mensais</p>
                 <p className="text-lg font-bold text-[#1D1D1F]">R$ 12.800</p>
@@ -166,7 +166,7 @@ export default function StrategicPage() {
 
       {/* SWOT Tab */}
       {activeTab === 'swot' && (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           {([
             { key: 'strengths', title: 'Forças', color: 'green', icon: CheckCircle2 },
             { key: 'weaknesses', title: 'Fraquezas', color: 'red', icon: AlertCircle },
@@ -203,7 +203,7 @@ export default function StrategicPage() {
 
       {/* Scenarios Tab */}
       {activeTab === 'scenarios' && (
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           {SCENARIOS.map((scenario) => {
             const colorMap: Record<string, { bg: string; border: string; text: string }> = {
               green: { bg: 'from-green-500/15 to-green-500/5', border: 'border-green-500/20', text: 'text-green-400' },
@@ -217,17 +217,17 @@ export default function StrategicPage() {
                 <div className="space-y-6">
                   <div>
                     <p className="text-[10px] text-[#AEAEB2] uppercase tracking-wider mb-1">Receita Mensal</p>
-                    <p className="text-2xl font-bold text-[#1D1D1F]">
+                    <p className="text-xl md:text-2xl font-bold text-[#1D1D1F]">
                       {scenario.revenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </p>
                   </div>
                   <div>
                     <p className="text-[10px] text-[#AEAEB2] uppercase tracking-wider mb-1">Novos Pacientes/Mês</p>
-                    <p className="text-2xl font-bold text-[#1D1D1F]">{scenario.patients}</p>
+                    <p className="text-xl md:text-2xl font-bold text-[#1D1D1F]">{scenario.patients}</p>
                   </div>
                   <div>
                     <p className="text-[10px] text-[#AEAEB2] uppercase tracking-wider mb-1">Crescimento Anual</p>
-                    <p className="text-2xl font-bold text-[#1D1D1F]">{scenario.growth}%</p>
+                    <p className="text-xl md:text-2xl font-bold text-[#1D1D1F]">{scenario.growth}%</p>
                   </div>
                   <div>
                     <p className="text-[10px] text-[#AEAEB2] uppercase tracking-wider mb-1">Receita Anual Projetada</p>
@@ -244,14 +244,14 @@ export default function StrategicPage() {
 
       {/* KPIs Tab */}
       {activeTab === 'kpis' && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           {KPI_TRACKING.map((kpi) => (
             <div key={kpi.name} className="rounded-2xl bg-white border border-[#E5E5EA] p-5 hover:border-[#C4956A]/10 transition-all">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs text-[#86868B]">{kpi.name}</p>
                 {kpi.status === 'attention' && <AlertCircle className="h-4 w-4 text-amber-400" />}
               </div>
-              <p className="text-2xl font-bold text-[#1D1D1F] mb-2">{kpi.value}</p>
+              <p className="text-xl md:text-2xl font-bold text-[#1D1D1F] mb-2">{kpi.value}</p>
               <span className={`flex items-center gap-1 text-xs font-medium ${
                 kpi.status === 'good' ? 'text-green-400' : 'text-amber-400'
               }`}>
@@ -262,12 +262,12 @@ export default function StrategicPage() {
           ))}
 
           {/* AI Recommendations */}
-          <div className="col-span-3 rounded-2xl bg-gradient-to-br from-[#D4A76A]/10 to-[#D4A76A]/5 border border-[#D4A76A]/20 p-6 mt-4">
+          <div className="col-span-1 sm:col-span-2 lg:col-span-3 rounded-2xl bg-gradient-to-br from-[#D4A76A]/10 to-[#D4A76A]/5 border border-[#D4A76A]/20 p-4 md:p-6 mt-4">
             <h3 className="text-sm font-semibold text-[#1D1D1F] flex items-center gap-2 mb-4">
               <Sparkles className="h-4 w-4 text-[#D4A76A]" />
               Recomendações Estratégicas IA
             </h3>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
               {[
                 { title: 'Expansão de Serviços', text: 'Considere adicionar Harmonização Orofacial ao portfólio. O mercado em Porto Velho tem baixa concorrência neste segmento.' },
                 { title: 'Fidelização de Pacientes', text: 'Implemente um programa de indicação com desconto de 10%. Pacientes indicados têm 37% mais chance de aderir a tratamentos completos.' },

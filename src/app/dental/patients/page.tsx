@@ -54,11 +54,11 @@ export default function PatientsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] p-6">
+    <div className="min-h-screen bg-[#F5F5F7] p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
+          <h1 className="text-xl md:text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700">
               <Users className="h-5 w-5 text-white" />
             </div>
@@ -76,8 +76,8 @@ export default function PatientsPage() {
       </div>
 
       {/* Search and Filters */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-4 md:mb-6">
+        <div className="relative flex-1 max-w-full md:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#AEAEB2]" />
           <input
             type="text"
@@ -102,9 +102,9 @@ export default function PatientsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         {/* Patient List */}
-        <div className="col-span-2 space-y-2">
+        <div className="col-span-1 lg:col-span-2 space-y-2">
           {filtered.map((patient) => (
             <div
               key={patient.id}
@@ -146,9 +146,10 @@ export default function PatientsPage() {
         </div>
 
         {/* Patient Detail */}
-        <div>
+        <div className="lg:sticky lg:top-6">
           {selectedPatient ? (
-            <div className="rounded-2xl bg-white border border-[#E5E5EA] p-6 sticky top-6">
+            <div className="fixed inset-0 z-40 bg-white p-4 overflow-y-auto lg:relative lg:inset-auto lg:z-auto lg:bg-white lg:p-6 lg:rounded-2xl lg:border lg:border-[#E5E5EA]">
+              <button onClick={() => setSelectedPatient(null)} className="lg:hidden absolute top-4 right-4 p-2 rounded-lg text-[#86868B] hover:text-[#1D1D1F] hover:bg-[#F0F0F2]"><X className="h-5 w-5" /></button>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-[#1D1D1F]">Detalhes do Paciente</h3>
                 <button onClick={() => setSelectedPatient(null)} className="text-[#AEAEB2] hover:text-[#1D1D1F]">
@@ -226,7 +227,7 @@ export default function PatientsPage() {
               </div>
             </div>
           ) : (
-            <div className="rounded-2xl bg-white border border-[#E5E5EA] p-8 text-center">
+            <div className="hidden lg:block rounded-2xl bg-white border border-[#E5E5EA] p-8 text-center">
               <Users className="h-12 w-12 text-[#D1D1D6] mx-auto mb-3" />
               <p className="text-sm text-[#AEAEB2]">Selecione um paciente para ver os detalhes</p>
             </div>
@@ -237,8 +238,8 @@ export default function PatientsPage() {
       {/* New Patient Modal */}
       {showNewForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl bg-white border border-[#E5E5EA] p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
+          <div className="w-full max-w-lg w-[95vw] rounded-2xl bg-white border border-[#E5E5EA] p-6 shadow-2xl">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6">
               <h2 className="text-lg font-bold text-[#1D1D1F]">Novo Paciente</h2>
               <button onClick={() => setShowNewForm(false)} className="text-[#AEAEB2] hover:text-[#1D1D1F]">
                 <X className="h-5 w-5" />

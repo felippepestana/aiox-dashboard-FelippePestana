@@ -74,11 +74,11 @@ export default function ExamsPage() {
   }, {} as Record<string, number>);
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] p-6">
+    <div className="min-h-screen bg-[#F5F5F7] p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
+          <h1 className="text-xl md:text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-700">
               <ImageIcon className="h-5 w-5 text-white" />
             </div>
@@ -96,7 +96,7 @@ export default function ExamsPage() {
       </div>
 
       {/* Status Summary */}
-      <div className="grid grid-cols-5 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3 mb-6">
         {Object.entries(STATUS_MAP).map(([key, conf]) => {
           const Icon = conf.icon;
           return (
@@ -120,7 +120,7 @@ export default function ExamsPage() {
       </div>
 
       {/* Search */}
-      <div className="relative mb-6 max-w-md">
+      <div className="relative mb-4 md:mb-6 max-w-full md:max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#AEAEB2]" />
         <input
           type="text"
@@ -190,8 +190,8 @@ export default function ExamsPage() {
       {/* New Exam Modal */}
       {showNewExam && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <div className="w-full max-w-2xl rounded-2xl bg-white border border-[#E5E5EA] p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
+          <div className="w-full max-w-2xl w-[95vw] rounded-2xl bg-white border border-[#E5E5EA] p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6">
               <h2 className="text-lg font-bold text-[#1D1D1F] flex items-center gap-2">
                 <ImageIcon className="h-5 w-5 text-amber-400" />
                 Nova Solicitação de Exame

@@ -46,10 +46,10 @@ export default function MarketingPage() {
   const [period, setPeriod] = useState<'week' | 'month' | 'quarter'>('month');
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] p-6">
-      <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen bg-[#F5F5F7] p-4 md:p-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 md:mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
+          <h1 className="text-xl md:text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 to-purple-700">
               <Megaphone className="h-5 w-5 text-white" />
             </div>
@@ -70,7 +70,7 @@ export default function MarketingPage() {
       </div>
 
       {/* Metrics */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-8">
         {MOCK_METRICS.map((m) => {
           const Icon = m.icon;
           const colorMap: Record<string, { card: string; icon: string }> = {
@@ -88,21 +88,21 @@ export default function MarketingPage() {
                   <ArrowUpRight className="h-3 w-3" />{m.change}
                 </span>
               </div>
-              <p className="text-2xl font-bold text-[#1D1D1F]">{m.value}</p>
+              <p className="text-xl md:text-2xl font-bold text-[#1D1D1F]">{m.value}</p>
               <p className="text-xs text-[#86868B] mt-1">{m.label}</p>
             </div>
           );
         })}
       </div>
 
-      <div className="grid grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 mb-6">
         {/* Channel Performance */}
-        <div className="col-span-2 rounded-2xl bg-white border border-[#E5E5EA] p-6">
+        <div className="col-span-1 lg:col-span-2 rounded-2xl bg-white border border-[#E5E5EA] p-6">
           <h3 className="text-sm font-semibold text-[#1D1D1F] flex items-center gap-2 mb-4">
             <Share2 className="h-4 w-4 text-pink-400" />
             Performance por Canal
           </h3>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {CHANNEL_STATS.map((ch) => {
               const Icon = ch.icon;
               return (
@@ -137,7 +137,7 @@ export default function MarketingPage() {
             <BarChart3 className="h-4 w-4 text-blue-400" />
             Alcance Semanal
           </h3>
-          <div className="flex items-end justify-between gap-2 h-36">
+          <div className="flex items-end justify-between gap-2 h-36 overflow-x-auto">
             {WEEKLY_REACH.map((d) => {
               const h = (d.value / maxReach) * 100;
               return (
@@ -153,9 +153,9 @@ export default function MarketingPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         {/* Top Content */}
-        <div className="col-span-2 rounded-2xl bg-white border border-[#E5E5EA] p-6">
+        <div className="col-span-1 lg:col-span-2 rounded-2xl bg-white border border-[#E5E5EA] p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-[#1D1D1F] flex items-center gap-2">
               <Heart className="h-4 w-4 text-pink-400" />

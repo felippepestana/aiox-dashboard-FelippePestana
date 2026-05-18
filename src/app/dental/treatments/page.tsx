@@ -101,7 +101,7 @@ function TreatmentPresentation({ plan, onClose }: { plan: TreatmentPlan; onClose
             <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[#C4956A] to-[#A0784C] mx-auto mb-6 shadow-lg shadow-[#C4956A]/30">
               <Stethoscope className="h-10 w-10 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-[#1D1D1F] mb-2">Plano de Tratamento</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-[#1D1D1F] mb-2">Plano de Tratamento</h1>
             <p className="text-xl text-[#D4A76A] mb-6">{plan.patientName}</p>
             <p className="text-sm text-[#86868B] leading-relaxed max-w-md mx-auto">
               Preparamos este plano personalizado para restaurar a saúde e beleza do seu sorriso.
@@ -109,12 +109,12 @@ function TreatmentPresentation({ plan, onClose }: { plan: TreatmentPlan; onClose
             </p>
             <div className="mt-8 flex justify-center gap-6">
               <div className="text-center">
-                <p className="text-2xl font-bold text-[#C4956A]">{plan.procedures.length}</p>
+                <p className="text-xl md:text-2xl font-bold text-[#C4956A]">{plan.procedures.length}</p>
                 <p className="text-xs text-[#86868B]">Procedimentos</p>
               </div>
               <div className="h-12 w-px bg-[#E5E5EA]" />
               <div className="text-center">
-                <p className="text-2xl font-bold text-[#D4A76A]">
+                <p className="text-xl md:text-2xl font-bold text-[#D4A76A]">
                   {plan.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </p>
                 <p className="text-xs text-[#86868B]">Investimento Total</p>
@@ -127,12 +127,12 @@ function TreatmentPresentation({ plan, onClose }: { plan: TreatmentPlan; onClose
             {(() => {
               const proc = plan.procedures[currentSlide - 1];
               return (
-                <div className="grid grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
                   <div>
                     <span className="text-xs text-[#C4956A] font-medium tracking-wider uppercase">
                       Procedimento {currentSlide} de {plan.procedures.length}
                     </span>
-                    <h2 className="text-2xl font-bold text-[#1D1D1F] mt-2 mb-4">{proc.name}</h2>
+                    <h2 className="text-xl md:text-2xl font-bold text-[#1D1D1F] mt-2 mb-4">{proc.name}</h2>
                     {proc.tooth !== '-' && (
                       <div className="inline-flex items-center gap-2 rounded-xl bg-[#C4956A]/10 border border-[#C4956A]/20 px-3 py-1.5 mb-4">
                         <span className="text-xs text-[#C4956A]">Dente {proc.tooth}</span>
@@ -182,7 +182,7 @@ function TreatmentPresentation({ plan, onClose }: { plan: TreatmentPlan; onClose
         ) : (
           // Summary Slide
           <div className="max-w-2xl w-full">
-            <h2 className="text-2xl font-bold text-[#1D1D1F] text-center mb-6">Resumo do Tratamento</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-[#1D1D1F] text-center mb-6">Resumo do Tratamento</h2>
             <div className="rounded-2xl bg-white border border-[#E5E5EA] overflow-hidden">
               <div className="divide-y divide-[#E8E8ED]">
                 {plan.procedures.map((proc, i) => (
@@ -225,7 +225,8 @@ function TreatmentPresentation({ plan, onClose }: { plan: TreatmentPlan; onClose
         >
           <ChevronLeft className="h-4 w-4" /> Anterior
         </button>
-        <div className="flex items-center gap-2">
+        <span className="sm:hidden text-xs text-[#86868B]">{currentSlide + 1} / {totalSlides}</span>
+        <div className="hidden sm:flex items-center gap-2">
           {Array.from({ length: totalSlides }, (_, i) => (
             <button
               key={i}
@@ -254,11 +255,11 @@ export default function TreatmentsPage() {
   const [presentingPlan, setPresentingPlan] = useState<TreatmentPlan | null>(null);
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] p-6">
+    <div className="min-h-screen bg-[#F5F5F7] p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
+          <h1 className="text-xl md:text-2xl font-bold text-[#1D1D1F] flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700">
               <ClipboardList className="h-5 w-5 text-white" />
             </div>
@@ -273,7 +274,7 @@ export default function TreatmentsPage() {
       </div>
 
       {/* Plans Grid */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
         {MOCK_TREATMENTS.map((plan) => {
           const statusConf = STATUS_CONFIG[plan.status];
           const completedCount = plan.procedures.filter((p) => p.status === 'completed').length;

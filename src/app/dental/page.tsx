@@ -61,11 +61,11 @@ export default function DentalDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] p-6">
+    <div className="min-h-screen bg-[#F5F5F7] p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 md:mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-[#1D1D1F]">
+          <h1 className="text-xl md:text-2xl font-bold text-[#1D1D1F]">
             Bom dia, Dra. Vanessa
             <Sparkles className="inline-block ml-2 h-5 w-5 text-[#D4A76A]" />
           </h1>
@@ -73,7 +73,7 @@ export default function DentalDashboard() {
             {new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#AEAEB2]" />
             <input
@@ -81,7 +81,7 @@ export default function DentalDashboard() {
               placeholder="Buscar paciente, procedimento..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-72 rounded-xl bg-white border border-[#E5E5EA] pl-10 pr-4 py-2.5 text-sm text-[#1D1D1F] placeholder-[#AEAEB2] focus:border-[#C4956A]/50 focus:outline-none focus:ring-1 focus:ring-[#C4956A]/20 transition-all"
+              className="w-full md:w-72 rounded-xl bg-white border border-[#E5E5EA] pl-10 pr-4 py-2.5 text-sm text-[#1D1D1F] placeholder-[#AEAEB2] focus:border-[#C4956A]/50 focus:outline-none focus:ring-1 focus:ring-[#C4956A]/20 transition-all"
             />
           </div>
           <button className="relative p-2.5 rounded-xl bg-white border border-[#E5E5EA] text-[#86868B] hover:text-[#1D1D1F] hover:border-[#D1D1D6] transition-all">
@@ -91,8 +91,16 @@ export default function DentalDashboard() {
         </div>
       </div>
 
+      {/* Mobile Search */}
+      <div className="md:hidden mb-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#AEAEB2]" />
+          <input type="text" placeholder="Buscar..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full rounded-xl bg-white border border-[#E5E5EA] pl-10 pr-4 py-2.5 text-sm text-[#1D1D1F] placeholder-[#AEAEB2] focus:border-[#C4956A]/50 focus:outline-none transition-all" />
+        </div>
+      </div>
+
       {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-8">
         {MOCK_STATS.map((stat) => {
           const Icon = stat.icon;
           const colorMap: Record<string, string> = {
@@ -121,7 +129,7 @@ export default function DentalDashboard() {
                   {stat.change}
                 </span>
               </div>
-              <p className="text-2xl font-bold text-[#1D1D1F]">{stat.value}</p>
+              <p className="text-xl md:text-2xl font-bold text-[#1D1D1F]">{stat.value}</p>
               <p className="text-xs text-[#86868B] mt-1">{stat.label}</p>
             </div>
           );
@@ -131,7 +139,7 @@ export default function DentalDashboard() {
       {/* Quick Actions */}
       <div className="mb-8">
         <h2 className="text-sm font-semibold text-[#6E6E73] uppercase tracking-wider mb-4">Ações Rápidas</h2>
-        <div className="grid grid-cols-6 gap-3">
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-3">
           {QUICK_ACTIONS.map((action) => {
             const Icon = action.icon;
             return (
@@ -151,9 +159,9 @@ export default function DentalDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         {/* Today's Appointments */}
-        <div className="col-span-2 rounded-2xl bg-white border border-[#E5E5EA] p-6">
+        <div className="col-span-1 lg:col-span-2 rounded-2xl bg-white border border-[#E5E5EA] p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-[#1D1D1F] flex items-center gap-2">
               <Calendar className="h-4 w-4 text-[#C4956A]" />
@@ -167,7 +175,7 @@ export default function DentalDashboard() {
             {MOCK_APPOINTMENTS.map((apt, i) => (
               <div
                 key={i}
-                className="flex items-center gap-4 rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] p-3 hover:border-[#C4956A]/20 transition-all cursor-pointer group"
+                className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 rounded-xl bg-[#FAFAFA] border border-[#E8E8ED] p-3 hover:border-[#C4956A]/20 transition-all cursor-pointer group"
               >
                 <div className="text-center min-w-[60px]">
                   <p className="text-sm font-bold text-[#1D1D1F]">{apt.time}</p>
