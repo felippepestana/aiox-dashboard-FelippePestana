@@ -118,16 +118,48 @@ export default function ChatPage() {
     setChatInput('');
     setIsTyping(true);
 
-    setTimeout(() => {
-      const response = getAIResponse(input, docContext);
-      setMessages(prev => [...prev, {
-        id: `ai-${Date.now()}`,
-        role: 'assistant',
-        content: response,
-        timestamp: new Date(),
-      }]);
-      setIsTyping(false);
-    }, 1000 + Math.random() * 1500);
+    // Try real AI first, fallback to local keyword-matching
+    (async () => {
+      try {
+        const contextMsg = docContext?.analyzed
+          ? `[Contexto: documento "${docContext.fileName}" analisado como ${docContext.polo === 'autor' ? 'polo ativo' : 'polo passivo'}] `
+          : '';
+
+        const aiMessages = messages
+          .filter(m => m.role !== 'system')
+          .slice(-10)
+          .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }));
+        aiMessages.push({ role: 'user', content: contextMsg + input });
+
+        const res = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: aiMessages, taskType: 'chat_response' }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setMessages(prev => [...prev, {
+            id: `ai-${Date.now()}`,
+            role: 'assistant',
+            content: data.content + `\n\n---\n_${data.model} | ${data.tokensUsed} tokens | R$ ${(data.estimatedCost * 5.5).toFixed(4)}_`,
+            timestamp: new Date(),
+          }]);
+        } else {
+          throw new Error('API unavailable');
+        }
+      } catch {
+        const response = getAIResponse(input, docContext);
+        setMessages(prev => [...prev, {
+          id: `ai-${Date.now()}`,
+          role: 'assistant',
+          content: response + '\n\n---\n_Resposta local (IA indisponível)_',
+          timestamp: new Date(),
+        }]);
+      } finally {
+        setIsTyping(false);
+      }
+    })();
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {

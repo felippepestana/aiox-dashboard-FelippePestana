@@ -138,11 +138,34 @@ export default function GeneratorPage() {
       // Generate petition
       setIsGenerating(true);
       setCurrentStep(2);
-      setTimeout(() => {
-        const text = generatePetition(area, petitionType, details);
-        setGeneratedText(text);
-        setIsGenerating(false);
-      }, 2000);
+      // Try real AI generation, fallback to local template
+      (async () => {
+        try {
+          const res = await fetch('/api/ai/petition', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              area,
+              type: petitionType,
+              facts: details.facts || '',
+              arguments: details.arguments || '',
+              requests: details.requests || '',
+              court: details.court || '',
+            }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setGeneratedText(data.petition + `\n\n---\nGerado por ${data.model} | ${data.tokensUsed} tokens | R$ ${(data.estimatedCost * 5.5).toFixed(2)}`);
+          } else {
+            throw new Error('API unavailable');
+          }
+        } catch {
+          const text = generatePetition(area, petitionType, details);
+          setGeneratedText(text + '\n\n---\nGerado localmente (IA indisponível)');
+        } finally {
+          setIsGenerating(false);
+        }
+      })();
     } else {
       setCurrentStep((s) => Math.min(s + 1, 2));
     }
