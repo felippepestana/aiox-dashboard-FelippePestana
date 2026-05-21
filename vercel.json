@@ -4,7 +4,7 @@
       "claude/analyze-case-files-enZip": true
     }
   },
-  "env": {
-    "AUTH_SECRET": "@auth-secret"
-  }
+  "framework": "nextjs",
+  "buildCommand": "next build",
+  "installCommand": "npm install"
 }

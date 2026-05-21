@@ -1,47 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { findUserByEmail, verifyPassword, createSession } from '@/lib/auth';
+import { NextResponse } from 'next/server';
+import { findUserByEmail, hashPassword, createSession } from '@/lib/auth';
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { email, password } = body;
+    const { email, password } = await request.json();
 
     if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email e senha são obrigatórios' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Email and password required' }, { status: 400 });
     }
 
     const user = findUserByEmail(email);
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Credenciais inválidas' },
-        { status: 401 }
-      );
+    if (!user || user.passwordHash !== hashPassword(password)) {
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    if (!verifyPassword(password, user.passwordHash)) {
-      return NextResponse.json(
-        { error: 'Credenciais inválidas' },
-        { status: 401 }
-      );
-    }
+    const { passwordHash: _, ...safeUser } = user;
+    await createSession(safeUser);
 
-    await createSession(user.id);
-
-    return NextResponse.json({
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      },
-    });
+    return NextResponse.json({ user: safeUser });
   } catch {
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 }
