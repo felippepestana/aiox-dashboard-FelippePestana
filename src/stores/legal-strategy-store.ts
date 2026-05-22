@@ -1,10 +1,11 @@
 // =============================================================================
 // Legal Strategy Store - Advocacia Privada Brasileira
-// Zustand store for SELEM assessments, Legal Canvas, Scaling Up, KPIs, Leadership
+// Zustand store with Supabase API sync for SELEM, Canvas, Scaling Up, KPIs, Leadership
 // =============================================================================
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import * as api from '@/lib/api';
 
 import type {
   SelemAssessment,
@@ -40,31 +41,28 @@ interface LegalStrategyState {
   scalingUpPlan: ScalingUpPlan | null;
   kpis: KPI[];
   leadershipPipeline: LeadershipEntry[];
+  syncing: boolean;
 
-  // ── SELEM Actions ───────────────────────────────────────────────────────
+  hydrateFromApi: () => Promise<void>;
+
   addAssessment: (assessment: Omit<SelemAssessment, 'id'>) => string;
   updateAssessment: (id: string, updates: Partial<Omit<SelemAssessment, 'id'>>) => void;
   removeAssessment: (id: string) => void;
 
-  // ── Canvas Actions ──────────────────────────────────────────────────────
   updateCanvas: (canvas: LegalCanvas) => void;
   clearCanvas: () => void;
 
-  // ── Scaling Up Actions ──────────────────────────────────────────────────
   updateScalingPlan: (plan: ScalingUpPlan) => void;
   clearScalingPlan: () => void;
 
-  // ── KPI Actions ─────────────────────────────────────────────────────────
   addKPI: (kpi: Omit<KPI, 'id'>) => string;
   updateKPI: (id: string, updates: Partial<Omit<KPI, 'id'>>) => void;
   removeKPI: (id: string) => void;
 
-  // ── Leadership Actions ──────────────────────────────────────────────────
   addLeadershipEntry: (entry: Omit<LeadershipEntry, 'id' | 'createdAt' | 'updatedAt'>) => string;
   updateLeadershipEntry: (id: string, updates: Partial<Omit<LeadershipEntry, 'id' | 'createdAt'>>) => void;
   removeLeadershipEntry: (id: string) => void;
 
-  // ── Selectors ───────────────────────────────────────────────────────────
   getAssessmentsByPillar: (pillar: SelemPillar) => SelemAssessment[];
   getLatestAssessments: () => SelemAssessment[];
   getSelemOverallScore: () => number;
@@ -74,8 +72,6 @@ interface LegalStrategyState {
   getLeadershipByLevel: (level: AttorneyLevel) => LeadershipEntry[];
 }
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
 function generateId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 }
@@ -84,25 +80,56 @@ function nowISO(): string {
   return new Date().toISOString();
 }
 
-// ─── Store ──────────────────────────────────────────────────────────────────
+function fire(fn: () => Promise<unknown>) {
+  fn().catch(() => {});
+}
 
 export const useLegalStrategyStore = create<LegalStrategyState>()(
   persist(
     (set, get) => ({
-      // ── Initial State ─────────────────────────────────────────────────────
       selemAssessments: [],
       legalCanvas: null,
       scalingUpPlan: null,
       kpis: [],
       leadershipPipeline: [],
+      syncing: false,
 
-      // ── SELEM Actions ─────────────────────────────────────────────────────
+      hydrateFromApi: async () => {
+        set({ syncing: true });
+        try {
+          const [assessments, kpis, entries, canvas] = await Promise.all([
+            api.fetchSelemAssessments(),
+            api.fetchKpis(),
+            api.fetchLeadershipEntries(),
+            api.fetchCanvas(),
+          ]);
+          set({
+            selemAssessments: assessments as SelemAssessment[],
+            kpis: kpis as KPI[],
+            leadershipPipeline: entries as LeadershipEntry[],
+            legalCanvas: canvas as LegalCanvas | null,
+            syncing: false,
+          });
+        } catch {
+          set({ syncing: false });
+        }
+      },
+
+      // ── SELEM ─────────────────────────────────────────────────────────────
 
       addAssessment: (assessment) => {
         const id = generateId('selem');
         set((state) => ({
           selemAssessments: [...state.selemAssessments, { ...assessment, id }],
         }));
+        fire(async () => {
+          const saved = await api.createSelemAssessment(assessment as unknown as Record<string, unknown>);
+          set((state) => ({
+            selemAssessments: state.selemAssessments.map((a) =>
+              a.id === id ? { ...a, ...(saved as Partial<SelemAssessment>), id: saved.id as string || id } : a
+            ),
+          }));
+        });
         return id;
       },
 
@@ -112,25 +139,28 @@ export const useLegalStrategyStore = create<LegalStrategyState>()(
             a.id === id ? { ...a, ...updates } : a
           ),
         }));
+        fire(() => api.updateSelemAssessment(id, updates as unknown as Record<string, unknown>));
       },
 
       removeAssessment: (id) => {
         set((state) => ({
           selemAssessments: state.selemAssessments.filter((a) => a.id !== id),
         }));
+        fire(() => api.deleteSelemAssessment(id));
       },
 
-      // ── Canvas Actions ────────────────────────────────────────────────────
+      // ── Canvas ────────────────────────────────────────────────────────────
 
       updateCanvas: (canvas) => {
         set({ legalCanvas: canvas });
+        fire(() => api.saveCanvas(canvas as unknown as Record<string, unknown>));
       },
 
       clearCanvas: () => {
         set({ legalCanvas: null });
       },
 
-      // ── Scaling Up Actions ────────────────────────────────────────────────
+      // ── Scaling Up (stays local — single-document, no table needed) ───────
 
       updateScalingPlan: (plan) => {
         set({ scalingUpPlan: plan });
@@ -140,41 +170,50 @@ export const useLegalStrategyStore = create<LegalStrategyState>()(
         set({ scalingUpPlan: null });
       },
 
-      // ── KPI Actions ───────────────────────────────────────────────────────
+      // ── KPIs ──────────────────────────────────────────────────────────────
 
       addKPI: (kpi) => {
         const id = generateId('kpi');
-        set((state) => ({
-          kpis: [...state.kpis, { ...kpi, id }],
-        }));
+        set((state) => ({ kpis: [...state.kpis, { ...kpi, id }] }));
+        fire(async () => {
+          const saved = await api.createKpi(kpi as unknown as Record<string, unknown>);
+          set((state) => ({
+            kpis: state.kpis.map((k) =>
+              k.id === id ? { ...k, ...(saved as Partial<KPI>), id: saved.id as string || id } : k
+            ),
+          }));
+        });
         return id;
       },
 
       updateKPI: (id, updates) => {
         set((state) => ({
-          kpis: state.kpis.map((k) =>
-            k.id === id ? { ...k, ...updates } : k
-          ),
+          kpis: state.kpis.map((k) => (k.id === id ? { ...k, ...updates } : k)),
         }));
+        fire(() => api.updateKpi(id, updates as unknown as Record<string, unknown>));
       },
 
       removeKPI: (id) => {
-        set((state) => ({
-          kpis: state.kpis.filter((k) => k.id !== id),
-        }));
+        set((state) => ({ kpis: state.kpis.filter((k) => k.id !== id) }));
+        fire(() => api.deleteKpi(id));
       },
 
-      // ── Leadership Actions ────────────────────────────────────────────────
+      // ── Leadership ────────────────────────────────────────────────────────
 
       addLeadershipEntry: (entry) => {
         const id = generateId('ldr');
         const now = nowISO();
         set((state) => ({
-          leadershipPipeline: [
-            ...state.leadershipPipeline,
-            { ...entry, id, createdAt: now, updatedAt: now },
-          ],
+          leadershipPipeline: [...state.leadershipPipeline, { ...entry, id, createdAt: now, updatedAt: now }],
         }));
+        fire(async () => {
+          const saved = await api.createLeadershipEntry(entry as unknown as Record<string, unknown>);
+          set((state) => ({
+            leadershipPipeline: state.leadershipPipeline.map((e) =>
+              e.id === id ? { ...e, ...(saved as Partial<LeadershipEntry>), id: saved.id as string || id } : e
+            ),
+          }));
+        });
         return id;
       },
 
@@ -184,12 +223,14 @@ export const useLegalStrategyStore = create<LegalStrategyState>()(
             e.id === id ? { ...e, ...updates, updatedAt: nowISO() } : e
           ),
         }));
+        fire(() => api.updateLeadershipEntry(id, updates as unknown as Record<string, unknown>));
       },
 
       removeLeadershipEntry: (id) => {
         set((state) => ({
           leadershipPipeline: state.leadershipPipeline.filter((e) => e.id !== id),
         }));
+        fire(() => api.deleteLeadershipEntry(id));
       },
 
       // ── Selectors ─────────────────────────────────────────────────────────
@@ -201,37 +242,25 @@ export const useLegalStrategyStore = create<LegalStrategyState>()(
         const { selemAssessments } = get();
         const pillars: SelemPillar[] = ['synergy', 'strategy', 'leadership', 'education', 'mastery'];
         const latest: SelemAssessment[] = [];
-
         for (const pillar of pillars) {
-          const pillarAssessments = selemAssessments
+          const sorted = selemAssessments
             .filter((a) => a.pillar === pillar)
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-          if (pillarAssessments.length > 0) {
-            latest.push(pillarAssessments[0]);
-          }
+          if (sorted.length > 0) latest.push(sorted[0]);
         }
-
         return latest;
       },
 
       getSelemOverallScore: () => {
         const latest = get().getLatestAssessments();
         if (latest.length === 0) return 0;
-        const total = latest.reduce((sum, a) => sum + a.score, 0);
-        return total / latest.length;
+        return latest.reduce((sum, a) => sum + a.score, 0) / latest.length;
       },
 
-      getKPIsByCategory: (category) =>
-        get().kpis.filter((k) => k.category === category),
-
-      getKPIsOnTarget: () =>
-        get().kpis.filter((k) => k.target > 0 && (k.value / k.target) >= 0.8),
-
-      getKPIsBelowTarget: () =>
-        get().kpis.filter((k) => k.target > 0 && (k.value / k.target) < 0.6),
-
-      getLeadershipByLevel: (level) =>
-        get().leadershipPipeline.filter((e) => e.level === level),
+      getKPIsByCategory: (category) => get().kpis.filter((k) => k.category === category),
+      getKPIsOnTarget: () => get().kpis.filter((k) => k.target > 0 && (k.value / k.target) >= 0.8),
+      getKPIsBelowTarget: () => get().kpis.filter((k) => k.target > 0 && (k.value / k.target) < 0.6),
+      getLeadershipByLevel: (level) => get().leadershipPipeline.filter((e) => e.level === level),
     }),
     {
       name: 'aios-legal-strategy-store',

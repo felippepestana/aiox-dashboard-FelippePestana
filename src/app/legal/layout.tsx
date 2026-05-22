@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLegalStore } from '@/stores/legal-store';
 import { useLegalFinancialStore } from '@/stores/legal-financial-store';
+import { useLegalMarketingStore } from '@/stores/legal-marketing-store';
+import { useLegalStrategyStore } from '@/stores/legal-strategy-store';
 import {
   Scale,
   Briefcase,
@@ -124,6 +126,8 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
 
   const hydrateFromApi = useLegalStore((s) => s.hydrateFromApi);
   const hydrateFinancialFromApi = useLegalFinancialStore((s) => s.hydrateFromApi);
+  const hydrateMarketingFromApi = useLegalMarketingStore((s) => s.hydrateFromApi);
+  const hydrateStrategyFromApi = useLegalStrategyStore((s) => s.hydrateFromApi);
 
   useEffect(() => {
     setMounted(true);
@@ -131,8 +135,10 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       hydrated.current = true;
       hydrateFromApi();
       hydrateFinancialFromApi();
+      hydrateMarketingFromApi();
+      hydrateStrategyFromApi();
     }
-  }, [hydrateFromApi, hydrateFinancialFromApi]);
+  }, [hydrateFromApi, hydrateFinancialFromApi, hydrateMarketingFromApi, hydrateStrategyFromApi]);
 
   const isActive = useCallback((href: string) => {
     if (href === '/legal') return pathname === '/legal';
