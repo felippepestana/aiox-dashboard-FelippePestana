@@ -1,10 +1,11 @@
 // =============================================================================
 // Legal Store - Advocacia Privada Brasileira
-// Zustand store for processes, clients, deadlines, petitions, and movements
+// Zustand store with Supabase API sync (optimistic local + background persist)
 // =============================================================================
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import * as api from '@/lib/api';
 
 import type {
   LegalProcess,
@@ -27,6 +28,11 @@ interface LegalState {
   deadlines: Deadline[];
   petitions: Petition[];
   movements: ProcessMovement[];
+  syncing: boolean;
+  lastSyncAt: string | null;
+
+  // ── Hydration ───────────────────────────────────────────────────────────
+  hydrateFromApi: () => Promise<void>;
 
   // ── Process Actions ──────────────────────────────────────────────────────
   addProcess: (process: Omit<LegalProcess, 'id' | 'createdAt' | 'updatedAt'>) => string;
@@ -81,6 +87,10 @@ function nowISO(): string {
   return new Date().toISOString();
 }
 
+function fire(fn: () => Promise<unknown>) {
+  fn().catch(() => {});
+}
+
 // ─── Store ──────────────────────────────────────────────────────────────────
 
 export const useLegalStore = create<LegalState>()(
@@ -92,15 +102,59 @@ export const useLegalStore = create<LegalState>()(
       deadlines: [],
       petitions: [],
       movements: [],
+      syncing: false,
+      lastSyncAt: null,
+
+      // ── Hydration from API ────────────────────────────────────────────────
+
+      hydrateFromApi: async () => {
+        set({ syncing: true });
+        try {
+          const [processes, clients, deadlines, petitions, movements] = await Promise.all([
+            api.fetchProcesses(),
+            api.fetchClients(),
+            api.fetchDeadlines(),
+            api.fetchPetitions(),
+            api.fetchMovements(),
+          ]);
+          set({
+            processes: processes as LegalProcess[],
+            clients: (clients as LegalClient[]).map((c) => ({
+              ...c,
+              processIds: c.processIds || [],
+              contractIds: c.contractIds || [],
+            })),
+            deadlines: deadlines as Deadline[],
+            petitions: (petitions as Petition[]).map((p) => ({
+              ...p,
+              documentIds: p.documentIds || [],
+            })),
+            movements: movements as ProcessMovement[],
+            syncing: false,
+            lastSyncAt: nowISO(),
+          });
+        } catch {
+          set({ syncing: false });
+        }
+      },
 
       // ── Process Actions ───────────────────────────────────────────────────
 
       addProcess: (process) => {
         const id = generateId('proc');
         const now = nowISO();
-        set((state) => ({
-          processes: [...state.processes, { ...process, id, createdAt: now, updatedAt: now }],
-        }));
+        const newProcess = { ...process, id, createdAt: now, updatedAt: now };
+        set((state) => ({ processes: [...state.processes, newProcess] }));
+
+        fire(async () => {
+          const saved = await api.createProcess(process as unknown as Record<string, unknown>);
+          set((state) => ({
+            processes: state.processes.map((p) =>
+              p.id === id ? { ...p, ...(saved as Partial<LegalProcess>), id: saved.id as string || id } : p
+            ),
+          }));
+        });
+
         return id;
       },
 
@@ -110,6 +164,7 @@ export const useLegalStore = create<LegalState>()(
             p.id === id ? { ...p, ...updates, updatedAt: nowISO() } : p
           ),
         }));
+        fire(() => api.updateProcess(id, updates as unknown as Record<string, unknown>));
       },
 
       removeProcess: (id) => {
@@ -119,6 +174,7 @@ export const useLegalStore = create<LegalState>()(
           petitions: state.petitions.filter((p) => p.processId !== id),
           movements: state.movements.filter((m) => m.processId !== id),
         }));
+        fire(() => api.deleteProcess(id));
       },
 
       // ── Client Actions ────────────────────────────────────────────────────
@@ -129,6 +185,16 @@ export const useLegalStore = create<LegalState>()(
         set((state) => ({
           clients: [...state.clients, { ...client, id, processIds: [], contractIds: [], createdAt: now, updatedAt: now }],
         }));
+
+        fire(async () => {
+          const saved = await api.createClient(client as unknown as Record<string, unknown>);
+          set((state) => ({
+            clients: state.clients.map((c) =>
+              c.id === id ? { ...c, ...(saved as Partial<LegalClient>), id: saved.id as string || id } : c
+            ),
+          }));
+        });
+
         return id;
       },
 
@@ -138,12 +204,14 @@ export const useLegalStore = create<LegalState>()(
             c.id === id ? { ...c, ...updates, updatedAt: nowISO() } : c
           ),
         }));
+        fire(() => api.updateClient(id, updates as unknown as Record<string, unknown>));
       },
 
       removeClient: (id) => {
         set((state) => ({
           clients: state.clients.filter((c) => c.id !== id),
         }));
+        fire(() => api.deleteClient(id));
       },
 
       // ── Deadline Actions ──────────────────────────────────────────────────
@@ -153,6 +221,16 @@ export const useLegalStore = create<LegalState>()(
         set((state) => ({
           deadlines: [...state.deadlines, { ...deadline, id, createdAt: nowISO() }],
         }));
+
+        fire(async () => {
+          const saved = await api.createDeadline(deadline as unknown as Record<string, unknown>);
+          set((state) => ({
+            deadlines: state.deadlines.map((d) =>
+              d.id === id ? { ...d, ...(saved as Partial<Deadline>), id: saved.id as string || id } : d
+            ),
+          }));
+        });
+
         return id;
       },
 
@@ -162,12 +240,14 @@ export const useLegalStore = create<LegalState>()(
             d.id === id ? { ...d, ...updates } : d
           ),
         }));
+        fire(() => api.updateDeadline(id, updates as unknown as Record<string, unknown>));
       },
 
       removeDeadline: (id) => {
         set((state) => ({
           deadlines: state.deadlines.filter((d) => d.id !== id),
         }));
+        fire(() => api.deleteDeadline(id));
       },
 
       completeDeadline: (id) => {
@@ -176,6 +256,7 @@ export const useLegalStore = create<LegalState>()(
             d.id === id ? { ...d, status: 'completed' as DeadlineStatus } : d
           ),
         }));
+        fire(() => api.updateDeadline(id, { status: 'completed' }));
       },
 
       // ── Petition Actions ──────────────────────────────────────────────────
@@ -186,6 +267,16 @@ export const useLegalStore = create<LegalState>()(
         set((state) => ({
           petitions: [...state.petitions, { ...petition, id, createdAt: now, updatedAt: now }],
         }));
+
+        fire(async () => {
+          const saved = await api.createPetition(petition as unknown as Record<string, unknown>);
+          set((state) => ({
+            petitions: state.petitions.map((p) =>
+              p.id === id ? { ...p, ...(saved as Partial<Petition>), id: saved.id as string || id } : p
+            ),
+          }));
+        });
+
         return id;
       },
 
@@ -195,12 +286,14 @@ export const useLegalStore = create<LegalState>()(
             p.id === id ? { ...p, ...updates, updatedAt: nowISO() } : p
           ),
         }));
+        fire(() => api.updatePetition(id, updates as unknown as Record<string, unknown>));
       },
 
       removePetition: (id) => {
         set((state) => ({
           petitions: state.petitions.filter((p) => p.id !== id),
         }));
+        fire(() => api.deletePetition(id));
       },
 
       updatePetitionStatus: (id, status) => {
@@ -209,6 +302,7 @@ export const useLegalStore = create<LegalState>()(
             p.id === id ? { ...p, status, updatedAt: nowISO() } : p
           ),
         }));
+        fire(() => api.updatePetition(id, { status }));
       },
 
       // ── Movement Actions ──────────────────────────────────────────────────
@@ -218,6 +312,16 @@ export const useLegalStore = create<LegalState>()(
         set((state) => ({
           movements: [...state.movements, { ...movement, id }],
         }));
+
+        fire(async () => {
+          const saved = await api.createMovement(movement as unknown as Record<string, unknown>);
+          set((state) => ({
+            movements: state.movements.map((m) =>
+              m.id === id ? { ...m, ...(saved as Partial<ProcessMovement>), id: saved.id as string || id } : m
+            ),
+          }));
+        });
+
         return id;
       },
 
@@ -227,6 +331,7 @@ export const useLegalStore = create<LegalState>()(
             m.id === id ? { ...m, isRead: true } : m
           ),
         }));
+        fire(() => api.updateMovement(id, { isRead: true }));
       },
 
       // ── Selectors ─────────────────────────────────────────────────────────
@@ -296,6 +401,7 @@ export const useLegalStore = create<LegalState>()(
         deadlines: state.deadlines,
         petitions: state.petitions,
         movements: state.movements,
+        lastSyncAt: state.lastSyncAt,
       }),
     }
   )

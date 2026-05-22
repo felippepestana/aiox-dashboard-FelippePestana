@@ -1,10 +1,11 @@
 // =============================================================================
 // Legal Financial Store - Advocacia Privada Brasileira
-// Zustand store for honorarios, transactions, invoices, and tax obligations
+// Zustand store with Supabase API sync (optimistic local + background persist)
 // =============================================================================
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import * as api from '@/lib/api';
 
 import type {
   Honorario,
@@ -24,6 +25,11 @@ interface LegalFinancialState {
   transactions: LegalTransaction[];
   invoices: LegalInvoice[];
   taxObligations: TaxObligation[];
+  syncing: boolean;
+  lastSyncAt: string | null;
+
+  // ── Hydration ───────────────────────────────────────────────────────────
+  hydrateFromApi: () => Promise<void>;
 
   // ── Honorario Actions ────────────────────────────────────────────────────
   addHonorario: (honorario: Omit<Honorario, 'id' | 'createdAt' | 'updatedAt'>) => string;
@@ -73,6 +79,10 @@ function nowISO(): string {
   return new Date().toISOString();
 }
 
+function fire(fn: () => Promise<unknown>) {
+  fn().catch(() => {});
+}
+
 // ─── Store ──────────────────────────────────────────────────────────────────
 
 export const useLegalFinancialStore = create<LegalFinancialState>()(
@@ -82,6 +92,28 @@ export const useLegalFinancialStore = create<LegalFinancialState>()(
       transactions: [],
       invoices: [],
       taxObligations: [],
+      syncing: false,
+      lastSyncAt: null,
+
+      // ── Hydration from API ────────────────────────────────────────────────
+
+      hydrateFromApi: async () => {
+        set({ syncing: true });
+        try {
+          const [honorarios, transactions] = await Promise.all([
+            api.fetchHonorarios(),
+            api.fetchTransactions(),
+          ]);
+          set({
+            honorarios: honorarios as Honorario[],
+            transactions: transactions as LegalTransaction[],
+            syncing: false,
+            lastSyncAt: nowISO(),
+          });
+        } catch {
+          set({ syncing: false });
+        }
+      },
 
       // ── Honorario Actions ─────────────────────────────────────────────────
 
@@ -91,6 +123,16 @@ export const useLegalFinancialStore = create<LegalFinancialState>()(
         set((state) => ({
           honorarios: [...state.honorarios, { ...honorario, id, createdAt: now, updatedAt: now }],
         }));
+
+        fire(async () => {
+          const saved = await api.createHonorario(honorario as unknown as Record<string, unknown>);
+          set((state) => ({
+            honorarios: state.honorarios.map((h) =>
+              h.id === id ? { ...h, ...(saved as Partial<Honorario>), id: saved.id as string || id } : h
+            ),
+          }));
+        });
+
         return id;
       },
 
@@ -100,24 +142,30 @@ export const useLegalFinancialStore = create<LegalFinancialState>()(
             h.id === id ? { ...h, ...updates, updatedAt: nowISO() } : h
           ),
         }));
+        fire(() => api.updateHonorario(id, updates as unknown as Record<string, unknown>));
       },
 
       removeHonorario: (id) => {
         set((state) => ({
           honorarios: state.honorarios.filter((h) => h.id !== id),
         }));
+        fire(() => api.deleteHonorario(id));
       },
 
       recordInstallmentPayment: (id) => {
+        const hon = get().honorarios.find((h) => h.id === id);
+        if (!hon) return;
+
+        const paidInstallments = hon.paidInstallments + 1;
+        const status: HonorarioStatus =
+          paidInstallments >= hon.installments ? 'completed' : hon.status;
+
         set((state) => ({
-          honorarios: state.honorarios.map((h) => {
-            if (h.id !== id) return h;
-            const paidInstallments = h.paidInstallments + 1;
-            const status: HonorarioStatus =
-              paidInstallments >= h.installments ? 'completed' : h.status;
-            return { ...h, paidInstallments, status, updatedAt: nowISO() };
-          }),
+          honorarios: state.honorarios.map((h) =>
+            h.id === id ? { ...h, paidInstallments, status, updatedAt: nowISO() } : h
+          ),
         }));
+        fire(() => api.updateHonorario(id, { paidInstallments, status }));
       },
 
       // ── Transaction Actions ───────────────────────────────────────────────
@@ -127,6 +175,16 @@ export const useLegalFinancialStore = create<LegalFinancialState>()(
         set((state) => ({
           transactions: [...state.transactions, { ...transaction, id, createdAt: nowISO() }],
         }));
+
+        fire(async () => {
+          const saved = await api.createTransaction(transaction as unknown as Record<string, unknown>);
+          set((state) => ({
+            transactions: state.transactions.map((t) =>
+              t.id === id ? { ...t, ...(saved as Partial<LegalTransaction>), id: saved.id as string || id } : t
+            ),
+          }));
+        });
+
         return id;
       },
 
@@ -134,9 +192,11 @@ export const useLegalFinancialStore = create<LegalFinancialState>()(
         set((state) => ({
           transactions: state.transactions.filter((t) => t.id !== id),
         }));
+        fire(() => api.deleteTransaction(id));
       },
 
       // ── Invoice Actions ───────────────────────────────────────────────────
+      // Invoices stay local for now (no invoices table in Supabase yet)
 
       addInvoice: (invoice) => {
         const id = generateId('inv');
@@ -171,6 +231,7 @@ export const useLegalFinancialStore = create<LegalFinancialState>()(
       },
 
       // ── Tax Actions ───────────────────────────────────────────────────────
+      // Tax obligations stay local for now (no tax table in Supabase yet)
 
       addTaxObligation: (tax) => {
         const id = generateId('tax');
@@ -291,6 +352,7 @@ export const useLegalFinancialStore = create<LegalFinancialState>()(
         transactions: state.transactions,
         invoices: state.invoices,
         taxObligations: state.taxObligations,
+        lastSyncAt: state.lastSyncAt,
       }),
     }
   )

@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useLegalStore } from '@/stores/legal-store';
+import { useLegalFinancialStore } from '@/stores/legal-financial-store';
 import {
   Scale,
   Briefcase,
@@ -118,8 +120,19 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+  const hydrated = useRef(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  const hydrateFromApi = useLegalStore((s) => s.hydrateFromApi);
+  const hydrateFinancialFromApi = useLegalFinancialStore((s) => s.hydrateFromApi);
+
+  useEffect(() => {
+    setMounted(true);
+    if (!hydrated.current) {
+      hydrated.current = true;
+      hydrateFromApi();
+      hydrateFinancialFromApi();
+    }
+  }, [hydrateFromApi, hydrateFinancialFromApi]);
 
   const isActive = useCallback((href: string) => {
     if (href === '/legal') return pathname === '/legal';
