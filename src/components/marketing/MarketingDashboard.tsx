@@ -140,7 +140,7 @@ export default function MarketingDashboard() {
           <p className="text-sm text-gray-500">Sbarzi Odontologia e Saude</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0D9488] text-white rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors shadow-sm">
+          <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0D9488] text-[#1D1D1F] rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors shadow-sm">
             <Plus className="w-4 h-4" /> Criar Campanha
           </button>
           <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-gray-700 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm">
@@ -382,7 +382,7 @@ export default function MarketingDashboard() {
                 {d.posts.map((post, idx) => (
                   <div
                     key={idx}
-                    className={`${post.color} text-white text-[8px] px-1 py-0.5 rounded truncate`}
+                    className={`${post.color} text-[#1D1D1F] text-[8px] px-1 py-0.5 rounded truncate`}
                     title={post.title}
                   >
                     {post.title}

@@ -277,8 +277,8 @@ export function ToothChart({
     <div className={cn('rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden', className)}>
       <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center">
-            <Info className="w-5 h-5 text-teal-600" />
+          <div className="w-9 h-9 rounded-lg bg-[#C4956A]/10 flex items-center justify-center">
+            <Info className="w-5 h-5 text-[#A0784C]" />
           </div>
           <div>
             <h3 className="text-sm font-semibold text-gray-900">Odontograma</h3>
@@ -286,7 +286,7 @@ export function ToothChart({
           </div>
         </div>
         {selected.length > 0 && (
-          <span className="text-xs font-medium text-teal-700 bg-teal-50 px-2.5 py-1 rounded-full">
+          <span className="text-xs font-medium text-[#A0784C] bg-[#C4956A]/10 px-2.5 py-1 rounded-full">
             {selected.length} dente{selected.length > 1 ? 's' : ''} selecionado{selected.length > 1 ? 's' : ''}
           </span>
         )}

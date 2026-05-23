@@ -310,7 +310,7 @@ export default function InvoiceManager() {
           <div className="mt-6 flex justify-center print:hidden">
             <button
               onClick={() => window.print()}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0D9488] text-white rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0D9488] text-[#1D1D1F] rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors"
             >
               <Printer className="w-4 h-4" /> Imprimir / Salvar PDF
             </button>
@@ -440,7 +440,7 @@ export default function InvoiceManager() {
                   <p className="text-sm font-medium text-amber-800">
                     Aguardando pagamento ate {new Date(selectedInvoice.dueDate).toLocaleDateString('pt-BR')}
                   </p>
-                  <button className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0D9488] text-white rounded-md text-xs font-medium hover:bg-[#0D9488]/90 transition-colors">
+                  <button className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0D9488] text-[#1D1D1F] rounded-md text-xs font-medium hover:bg-[#0D9488]/90 transition-colors">
                     <DollarSign className="w-3.5 h-3.5" /> Registrar Pagamento
                   </button>
                 </div>
@@ -574,7 +574,7 @@ export default function InvoiceManager() {
             </button>
             <button
               onClick={handleCreateSubmit}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0D9488] text-white rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0D9488] text-[#1D1D1F] rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors"
             >
               <Send className="w-4 h-4" /> Criar Fatura
             </button>
@@ -595,7 +595,7 @@ export default function InvoiceManager() {
         </div>
         <button
           onClick={() => setView('create')}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0D9488] text-white rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors shadow-sm"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0D9488] text-[#1D1D1F] rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors shadow-sm"
         >
           <Plus className="w-4 h-4" /> Nova Fatura
         </button>
@@ -630,7 +630,7 @@ export default function InvoiceManager() {
           <button
             onClick={() => setStatusFilter('all')}
             className={`px-3 py-2 text-xs font-medium transition-colors ${
-              statusFilter === 'all' ? 'bg-[#0D9488] text-white' : 'text-gray-600 hover:bg-gray-100'
+              statusFilter === 'all' ? 'bg-[#0D9488] text-[#1D1D1F]' : 'text-gray-600 hover:bg-gray-100'
             }`}
           >
             Todas
@@ -640,7 +640,7 @@ export default function InvoiceManager() {
               key={s}
               onClick={() => setStatusFilter(s)}
               className={`px-3 py-2 text-xs font-medium transition-colors ${
-                statusFilter === s ? 'bg-[#0D9488] text-white' : 'text-gray-600 hover:bg-gray-100'
+                statusFilter === s ? 'bg-[#0D9488] text-[#1D1D1F]' : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
               {statusConfig[s].label}

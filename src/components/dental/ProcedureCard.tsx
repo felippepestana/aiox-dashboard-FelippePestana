@@ -40,7 +40,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   'Prótese': 'bg-purple-50 text-purple-700 border-purple-200',
   'Ortodontia': 'bg-pink-50 text-pink-700 border-pink-200',
   'Implante': 'bg-indigo-50 text-indigo-700 border-indigo-200',
-  'Estética': 'bg-teal-50 text-teal-700 border-teal-200',
+  'Estética': 'bg-[#C4956A]/10 text-[#A0784C] border-[#E8D5C0]',
   'Prevenção': 'bg-emerald-50 text-emerald-700 border-emerald-200',
 };
 
@@ -132,7 +132,7 @@ export function ProcedureCard({
           <div className="mt-3">
             <button
               onClick={() => setExpanded((v) => !v)}
-              className="flex items-center gap-1 text-xs text-gray-500 hover:text-teal-600 transition-colors"
+              className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#A0784C] transition-colors"
             >
               {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               {expanded ? 'Ocultar descrição' : 'Ver descrição'}
@@ -149,7 +149,7 @@ export function ProcedureCard({
         {onAddToPlan && (
           <button
             onClick={() => onAddToPlan(procedure)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[#1D1D1F] transition-colors"
             style={{ backgroundColor: '#0D9488' }}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#0F766E')}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#0D9488')}

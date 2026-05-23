@@ -129,7 +129,7 @@ function calculateAge(dateOfBirth: string): number {
 
 const EVENT_TYPE_STYLES: Record<MedicalEvent['type'], { bg: string; icon: typeof Clock; label: string }> = {
   consultation: { bg: 'bg-blue-100 text-blue-700', icon: User, label: 'Consulta' },
-  procedure: { bg: 'bg-teal-100 text-teal-700', icon: ClipboardList, label: 'Procedimento' },
+  procedure: { bg: 'bg-[#C4956A]/15 text-[#A0784C]', icon: ClipboardList, label: 'Procedimento' },
   exam: { bg: 'bg-amber-100 text-amber-700', icon: FileText, label: 'Exame' },
   note: { bg: 'bg-gray-100 text-gray-600', icon: Edit2, label: 'Nota' },
 };
@@ -194,8 +194,8 @@ export function PatientPanel({
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center">
-            <User className="w-5 h-5 text-teal-600" />
+          <div className="w-9 h-9 rounded-lg bg-[#C4956A]/10 flex items-center justify-center">
+            <User className="w-5 h-5 text-[#A0784C]" />
           </div>
           <div>
             <h3 className="text-sm font-semibold text-gray-900">Pacientes</h3>
@@ -207,7 +207,7 @@ export function PatientPanel({
             setFormData({});
             setShowForm(true);
           }}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[#1D1D1F] transition-colors"
           style={{ backgroundColor: '#0D9488' }}
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#0F766E')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#0D9488')}
@@ -226,13 +226,13 @@ export function PatientPanel({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por nome, CPF ou telefone..."
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400"
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A]"
           />
         </div>
         <select
           value={filterGender}
           onChange={(e) => setFilterGender(e.target.value as '' | 'M' | 'F' | 'O')}
-          className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-200"
+          className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30"
         >
           <option value="">Todos</option>
           <option value="M">Masculino</option>
@@ -257,7 +257,7 @@ export function PatientPanel({
                   onClick={() => handleSelectPatient(p)}
                   className={cn(
                     'w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center gap-3',
-                    selectedPatient?.id === p.id && 'bg-teal-50/50'
+                    selectedPatient?.id === p.id && 'bg-[#C4956A]/10'
                   )}
                 >
                   {/* Avatar */}
@@ -301,7 +301,7 @@ export function PatientPanel({
               <h4 className="text-sm font-semibold text-gray-900">{selectedPatient.name}</h4>
               <button
                 onClick={() => openEditForm(selectedPatient)}
-                className="text-gray-500 hover:text-teal-600 transition-colors"
+                className="text-gray-500 hover:text-[#A0784C] transition-colors"
               >
                 <Edit2 className="w-4 h-4" />
               </button>
@@ -368,21 +368,21 @@ export function PatientPanel({
               <div className="grid grid-cols-3 gap-2">
                 <button
                   onClick={() => onNewAppointment?.(selectedPatient)}
-                  className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-200 hover:border-teal-300 hover:bg-teal-50/50 transition-colors"
+                  className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-200 hover:border-[#D4A76A] hover:bg-[#C4956A]/10 transition-colors"
                 >
                   <Calendar className="w-5 h-5" style={{ color: '#0D9488' }} />
                   <span className="text-[10px] font-medium text-gray-700">Agendar</span>
                 </button>
                 <button
                   onClick={() => onNewTreatmentPlan?.(selectedPatient)}
-                  className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-200 hover:border-teal-300 hover:bg-teal-50/50 transition-colors"
+                  className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-200 hover:border-[#D4A76A] hover:bg-[#C4956A]/10 transition-colors"
                 >
                   <ClipboardList className="w-5 h-5" style={{ color: '#0D9488' }} />
                   <span className="text-[10px] font-medium text-gray-700">Plano</span>
                 </button>
                 <button
                   onClick={() => onRequestExam?.(selectedPatient)}
-                  className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-200 hover:border-teal-300 hover:bg-teal-50/50 transition-colors"
+                  className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-200 hover:border-[#D4A76A] hover:bg-[#C4956A]/10 transition-colors"
                 >
                   <FileText className="w-5 h-5" style={{ color: '#0D9488' }} />
                   <span className="text-[10px] font-medium text-gray-700">Exame</span>
@@ -461,7 +461,7 @@ export function PatientPanel({
                   type="text"
                   value={formData.name || ''}
                   onChange={(e) => setFormData((f) => ({ ...f, name: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A]"
                   placeholder="Nome completo do paciente"
                 />
               </div>
@@ -472,7 +472,7 @@ export function PatientPanel({
                     type="date"
                     value={formData.dateOfBirth || ''}
                     onChange={(e) => setFormData((f) => ({ ...f, dateOfBirth: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A]"
                   />
                 </div>
                 <div>
@@ -480,7 +480,7 @@ export function PatientPanel({
                   <select
                     value={formData.gender || ''}
                     onChange={(e) => setFormData((f) => ({ ...f, gender: e.target.value as 'M' | 'F' | 'O' }))}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A]"
                   >
                     <option value="">Selecionar</option>
                     <option value="M">Masculino</option>
@@ -495,7 +495,7 @@ export function PatientPanel({
                   type="text"
                   value={formData.cpf || ''}
                   onChange={(e) => setFormData((f) => ({ ...f, cpf: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A]"
                   placeholder="000.000.000-00"
                 />
               </div>
@@ -506,7 +506,7 @@ export function PatientPanel({
                     type="tel"
                     value={formData.phone || ''}
                     onChange={(e) => setFormData((f) => ({ ...f, phone: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A]"
                     placeholder="(00) 00000-0000"
                   />
                 </div>
@@ -516,7 +516,7 @@ export function PatientPanel({
                     type="email"
                     value={formData.email || ''}
                     onChange={(e) => setFormData((f) => ({ ...f, email: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A]"
                     placeholder="email@exemplo.com"
                   />
                 </div>
@@ -526,16 +526,16 @@ export function PatientPanel({
                 <textarea
                   value={formData.notes || ''}
                   onChange={(e) => setFormData((f) => ({ ...f, notes: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400 resize-none"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A] resize-none"
                   rows={3}
                   placeholder="Alergias, medicamentos, condições especiais..."
                 />
               </div>
 
               {/* LGPD consent */}
-              <div className="rounded-lg bg-teal-50 border border-teal-100 px-3 py-2 flex items-start gap-2">
-                <Shield className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
-                <p className="text-[10px] text-teal-700 leading-relaxed">
+              <div className="rounded-lg bg-[#C4956A]/10 border border-[#F0E6D8] px-3 py-2 flex items-start gap-2">
+                <Shield className="w-4 h-4 text-[#A0784C] shrink-0 mt-0.5" />
+                <p className="text-[10px] text-[#A0784C] leading-relaxed">
                   Ao cadastrar este paciente, você declara que obteve o consentimento para coleta e tratamento dos dados pessoais conforme a LGPD (Lei 13.709/2018).
                 </p>
               </div>
@@ -550,7 +550,7 @@ export function PatientPanel({
               <button
                 onClick={handleSaveForm}
                 disabled={!formData.name || !formData.dateOfBirth}
-                className="px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg text-sm font-medium text-[#1D1D1F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: '#0D9488' }}
               >
                 {formData.id ? 'Salvar Alterações' : 'Cadastrar Paciente'}

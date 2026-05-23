@@ -103,7 +103,7 @@ export default function DashboardFinancial() {
                 onClick={() => setPeriod(p)}
                 className={`px-3 py-2 text-xs font-medium transition-colors ${
                   period === p
-                    ? 'bg-[#0D9488] text-white'
+                    ? 'bg-[#0D9488] text-[#1D1D1F]'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -207,7 +207,7 @@ export default function DashboardFinancial() {
 
       {/* Quick Actions */}
       <div className="flex flex-wrap gap-3">
-        <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0D9488] text-white rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors shadow-sm">
+        <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0D9488] text-[#1D1D1F] rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors shadow-sm">
           <Plus className="w-4 h-4" />
           Nova Transacao
         </button>

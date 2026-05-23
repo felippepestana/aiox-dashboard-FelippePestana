@@ -212,7 +212,7 @@ export function VoiceCommandPanel({ onCommand, className }: VoiceCommandPanelPro
   };
 
   const commandTypeColor: Record<ParsedCommand['type'], string> = {
-    procedimento: 'bg-teal-100 text-teal-800',
+    procedimento: 'bg-[#C4956A]/15 text-[#8B6914]',
     paciente: 'bg-blue-100 text-blue-800',
     agendar: 'bg-purple-100 text-purple-800',
     exame: 'bg-amber-100 text-amber-800',
@@ -230,8 +230,8 @@ export function VoiceCommandPanel({ onCommand, className }: VoiceCommandPanelPro
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center">
-            <Volume2 className="w-5 h-5 text-teal-600" />
+          <div className="w-9 h-9 rounded-lg bg-[#C4956A]/10 flex items-center justify-center">
+            <Volume2 className="w-5 h-5 text-[#A0784C]" />
           </div>
           <div>
             <h3 className="text-sm font-semibold text-gray-900">Comando de Voz</h3>
@@ -270,13 +270,13 @@ export function VoiceCommandPanel({ onCommand, className }: VoiceCommandPanelPro
           className={cn(
             'relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 focus:outline-none focus:ring-4',
             {
-              'bg-teal-600 hover:bg-teal-700 text-white shadow-lg hover:shadow-xl focus:ring-teal-200':
+              'bg-[#B08050] hover:bg-[#A0784C] text-[#1D1D1F] shadow-lg hover:shadow-xl focus:ring-[#C4956A]/30':
                 status === 'idle',
-              'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-200 focus:ring-red-200':
+              'bg-[#D4848B] hover:bg-[#C47580] text-[#1D1D1F] shadow-lg shadow-[#F5D5D5] focus:ring-[#F5D5D5]':
                 status === 'listening',
-              'bg-amber-500 text-white cursor-wait focus:ring-amber-200':
+              'bg-amber-500 text-[#1D1D1F] cursor-wait focus:ring-amber-200':
                 status === 'processing',
-              'bg-red-100 text-red-600 hover:bg-red-200 focus:ring-red-200':
+              'bg-red-100 text-red-600 hover:bg-red-200 focus:ring-[#F5D5D5]':
                 status === 'error',
             }
           )}
@@ -285,8 +285,8 @@ export function VoiceCommandPanel({ onCommand, className }: VoiceCommandPanelPro
         >
           {status === 'listening' && (
             <>
-              <span className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-30" />
-              <span className="absolute inset-[-8px] rounded-full border-2 border-red-300 animate-pulse" />
+              <span className="absolute inset-0 rounded-full bg-[#E8A0A0] animate-ping opacity-30" />
+              <span className="absolute inset-[-8px] rounded-full border-2 border-[#F0C0C0] animate-pulse" />
             </>
           )}
           {status === 'processing' ? (
@@ -306,7 +306,7 @@ export function VoiceCommandPanel({ onCommand, className }: VoiceCommandPanelPro
             <div
               key={i}
               className={cn('w-1.5 rounded-full transition-all duration-100', {
-                'bg-teal-400': status === 'listening',
+                'bg-[#C4956A]': status === 'listening',
                 'bg-gray-200': status !== 'listening',
               })}
               style={{ height: `${height}px` }}
@@ -355,7 +355,7 @@ export function VoiceCommandPanel({ onCommand, className }: VoiceCommandPanelPro
                 key={cmd.label}
                 className="flex items-start gap-2 text-xs text-gray-600 py-1"
               >
-                <Mic className="w-3 h-3 text-teal-500 mt-0.5 shrink-0" />
+                <Mic className="w-3 h-3 text-[#C4956A] mt-0.5 shrink-0" />
                 <div>
                   <span className="font-medium text-gray-700">{cmd.label}:</span>{' '}
                   <span className="text-gray-500">{cmd.example}</span>

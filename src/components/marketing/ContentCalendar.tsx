@@ -240,7 +240,7 @@ export default function ContentCalendar() {
                     <div className="flex items-center justify-between mb-1">
                       <span className={`text-xs font-medium ${
                         isToday
-                          ? 'w-6 h-6 rounded-full bg-[#0D9488] text-white flex items-center justify-center'
+                          ? 'w-6 h-6 rounded-full bg-[#0D9488] text-[#1D1D1F] flex items-center justify-center'
                           : 'text-gray-500'
                       }`}>
                         {day}
@@ -261,7 +261,7 @@ export default function ContentCalendar() {
                               handleDragStart(post.id);
                             }}
                             onClick={(e) => e.stopPropagation()}
-                            className={`${cfg.color} text-white text-[9px] px-1.5 py-0.5 rounded truncate cursor-grab active:cursor-grabbing flex items-center gap-1 group relative`}
+                            className={`${cfg.color} text-[#1D1D1F] text-[9px] px-1.5 py-0.5 rounded truncate cursor-grab active:cursor-grabbing flex items-center gap-1 group relative`}
                             title={`${post.title} - ${post.time}`}
                           >
                             <GripVertical className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 shrink-0" />
@@ -441,7 +441,7 @@ export default function ContentCalendar() {
               </button>
               <button
                 onClick={handleCreatePost}
-                className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0D9488] text-white rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0D9488] text-[#1D1D1F] rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors"
               >
                 <Calendar className="w-4 h-4" /> Agendar Post
               </button>
