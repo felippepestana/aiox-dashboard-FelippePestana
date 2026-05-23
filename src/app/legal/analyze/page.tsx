@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { FileSearch, Loader2, Sparkles, Send, Upload, User, Bot, Scale, AlertCircle, CheckCircle2, Scissors, MessageSquare } from 'lucide-react';
+import { FileSearch, Loader2, Sparkles, Send, Upload, User, Bot, Scale, AlertCircle, CheckCircle2, Scissors, MessageSquare, Cpu } from 'lucide-react';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -43,6 +43,9 @@ interface ChatMessage {
   content: string;
   timestamp: string;
   attachments?: { name: string; size: number }[];
+  model?: string;
+  tokens?: number;
+  cost?: number;
 }
 
 type AnalysisPhase = 'upload' | 'polo_question' | 'analyzing' | 'results' | 'chat';
@@ -67,126 +70,25 @@ function splitLargeFile(file: File, chunkSizeMB: number = 5): { name: string; pa
   return parts;
 }
 
-// ─── Mock Analysis ──────────────────────────────────────────────────────────
-
-function generateAnalysis(fileName: string, polo: UserPolo): AnalysisResult {
-  const isContract = /contrato|acordo|termo/i.test(fileName);
-  const isPetition = /peti[cç][aã]o|inicial|recurso/i.test(fileName);
-  const isSentence = /senten[cç]a|ac[oó]rd[aã]o|decis[aã]o/i.test(fileName);
-
-  const poloLabel = polo === 'autor' ? 'Autor' : polo === 'reu' ? 'Réu' : 'Terceiro Interessado';
-
-  const entities: AnalysisEntity[] = [
-    { type: 'party', label: 'Autor', value: 'Maria Silva Santos' },
-    { type: 'party', label: 'Réu', value: 'Empresa XYZ Ltda' },
-    { type: 'lawyer', label: 'Advogado Autor', value: 'Dr. Carlos Mendes - OAB/SP 123.456' },
-    { type: 'date', label: 'Data', value: '15/03/2025' },
-    { type: 'value', label: 'Valor da Causa', value: 'R$ 150.000,00' },
-    { type: 'law', label: 'Legislação', value: 'CPC Art. 300, Art. 489 §1º' },
-  ];
-
-  if (isSentence) {
-    entities.push({ type: 'judge', label: 'Magistrado', value: 'Dr. Roberto Andrade - 3ª Vara Cível' });
-  }
-
-  const clauses: AnalysisClause[] = isContract ? [
-    { id: 'c1', title: 'Objeto do Contrato', summary: 'Escopo bem delimitado e dentro dos padrões legais.', risk: 'low' },
-    { id: 'c2', title: 'Honorários', summary: 'Valor de 20% sobre êxito. Dentro da tabela OAB.', risk: 'low' },
-    { id: 'c3', title: 'Confidencialidade', summary: 'Multa de R$ 100.000 por violação pode ser excessiva.', risk: 'medium' },
-    { id: 'c4', title: 'Rescisão Unilateral', summary: 'Permite rescisão apenas pela contratante. Desequilíbrio contratual.', risk: 'high' },
-    { id: 'c5', title: 'Foro de Eleição', summary: 'Foro de SP pode ser prejudicial em relação de consumo.', risk: 'medium' },
-  ] : [];
-
-  const strategy: StrategyAnalysis = polo === 'autor' ? {
-    recommendation: `Como representante do polo ATIVO (${poloLabel}), a estratégia recomendada é ofensiva com foco na comprovação dos fatos constitutivos do direito alegado.`,
-    strengths: [
-      'Documentação robusta que comprova os fatos alegados',
-      'Jurisprudência consolidada favorável no STJ (Tema 988)',
-      'Valor da causa compatível com os danos demonstrados',
-      'Provas documentais pré-constituídas',
-    ],
-    weaknesses: [
-      'Possível alegação de prescrição parcial pelo réu',
-      'Necessidade de prova pericial pode alongar o processo',
-      'Risco de impugnação do valor da causa',
-    ],
-    nextSteps: [
-      '1. Reunir e organizar toda documentação comprobatória',
-      '2. Elaborar petição inicial com fundamentação robusta',
-      '3. Requerer tutela de urgência se houver risco de dano',
-      '4. Preparar rol de testemunhas e quesitos periciais',
-      '5. Monitorar prazos processuais com rigor',
-    ],
-    riskLevel: 'medium',
-    estimatedSuccessRate: 72,
-  } : {
-    recommendation: `Como representante do polo PASSIVO (${poloLabel}), a estratégia recomendada é defensiva com foco na desconstituição das provas e teses adversárias.`,
-    strengths: [
-      'Possibilidade de arguir preliminares processuais',
-      'Documentação interna pode contradizer alegações do autor',
-      'Valor pedido pode ser considerado excessivo',
-      'Há divergência jurisprudencial sobre o tema',
-    ],
-    weaknesses: [
-      'Ônus da prova pode recair sobre o réu em pontos específicos',
-      'Jurisprudência majoritária favorável ao autor neste tipo de ação',
-      'Risco de tutela de urgência deferida liminarmente',
-    ],
-    nextSteps: [
-      '1. Analisar possibilidade de acordo pré-processual',
-      '2. Preparar contestação impugnando fatos e fundamentos',
-      '3. Arguir preliminares (prescrição, incompetência, ilegitimidade)',
-      '4. Requerer provas que desconstituam as alegações adversárias',
-      '5. Avaliar cabimento de reconvenção',
-    ],
-    riskLevel: 'high',
-    estimatedSuccessRate: 45,
-  };
-
-  const summary = isPetition
-    ? `Petição analisada sob a perspectiva do ${poloLabel}. O documento apresenta demanda ${isPetition ? 'cível' : 'judicial'} com valor de R$ 150.000,00. A análise identificou ${entities.length} entidades, ${clauses.length} cláusulas relevantes e gerou recomendação estratégica personalizada para o polo representado.`
-    : isContract
-    ? `Contrato analisado sob a perspectiva do ${poloLabel}. Identificadas ${clauses.length} cláusulas, sendo ${clauses.filter(c => c.risk === 'high').length} de alto risco e ${clauses.filter(c => c.risk === 'medium').length} de risco moderado. Recomendações estratégicas incluídas.`
-    : `Documento judicial analisado sob a perspectiva do ${poloLabel}. Análise completa com extração de entidades, classificação e estratégia processual personalizada.`;
-
-  return {
-    summary,
-    docType: isContract ? 'Contrato' : isPetition ? 'Petição' : isSentence ? 'Decisão Judicial' : 'Documento Jurídico',
-    legalArea: 'Cível / Consumidor',
-    complexity: isPetition ? 7 : isContract ? 6 : 8,
-    entities,
-    clauses,
-    strategy,
-  };
-}
-
-function generateChatResponse(message: string, analysis: AnalysisResult | null): string {
-  const lower = message.toLowerCase();
-
-  if (lower.includes('prazo') || lower.includes('tempo')) {
-    return 'Com base na análise do documento, os prazos relevantes são:\n\n• **Contestação**: 15 dias úteis (art. 335, CPC)\n• **Réplica**: 15 dias úteis (art. 351, CPC)\n• **Recurso de Apelação**: 15 dias úteis\n\nRecomendo atenção especial ao prazo de contestação que é o mais urgente.';
-  }
-  if (lower.includes('risco') || lower.includes('chance')) {
-    const rate = analysis?.strategy.estimatedSuccessRate || 50;
-    return `A análise indica uma probabilidade de êxito de **${rate}%** com base nos elementos identificados no documento.\n\nFatores de risco:\n${analysis?.strategy.weaknesses.map(w => `• ${w}`).join('\n') || '• Análise pendente'}\n\nRecomendo fortalecer os pontos fracos identificados antes de prosseguir.`;
-  }
-  if (lower.includes('estratég') || lower.includes('recomen')) {
-    return `**Estratégia Recomendada:**\n\n${analysis?.strategy.recommendation || 'Análise pendente.'}\n\n**Próximos passos:**\n${analysis?.strategy.nextSteps.map(s => `${s}`).join('\n') || '• Aguardando análise'}`;
-  }
-  if (lower.includes('cláusula') || lower.includes('clausula') || lower.includes('contrato')) {
-    if (analysis?.clauses.length) {
-      return `**Análise de Cláusulas:**\n\n${analysis.clauses.map(c => `• **${c.title}** (Risco: ${c.risk === 'high' ? '🔴 Alto' : c.risk === 'medium' ? '🟡 Médio' : '🟢 Baixo'}): ${c.summary}`).join('\n\n')}`;
+async function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      if (file.type === 'application/pdf') {
+        const base64 = result.split(',')[1] || result;
+        resolve(`[PDF: ${file.name}, ${(file.size / 1024).toFixed(0)}KB]\n\n${base64.slice(0, 50000)}`);
+      } else {
+        resolve(result);
+      }
+    };
+    reader.onerror = reject;
+    if (file.type === 'application/pdf') {
+      reader.readAsDataURL(file);
+    } else {
+      reader.readAsText(file);
     }
-    return 'Não foram identificadas cláusulas específicas neste tipo de documento. Envie um contrato para análise detalhada de cláusulas.';
-  }
-  if (lower.includes('jurisprud') || lower.includes('precedent')) {
-    return '**Precedentes Relevantes:**\n\n• **REsp 1.696.396/MT** (Tema 988, STJ) — Taxatividade mitigada do art. 1.015 do CPC\n• **Súmula 385/STJ** — Inscricao indevida em cadastro de inadimplentes\n• **RE 1.234.567/SP** — Quantum de dano moral em relações de consumo\n\nEstes precedentes podem fundamentar a tese identificada na análise.';
-  }
-  if (lower.includes('peça') || lower.includes('petição') || lower.includes('minutar')) {
-    return 'Posso ajudar a direcionar a elaboração de peças. Com base na análise:\n\n1. **Petição Inicial / Contestação**: Use o Gerador de Petições em /legal/generator\n2. **Tutela de Urgência**: Recomendada se houver risco de dano iminente\n3. **Embargos**: Se houver omissão na decisão analisada\n\nDeseja que eu detalhe alguma dessas opções?';
-  }
-
-  return `Entendi sua pergunta sobre "${message.slice(0, 50)}...".\n\nCom base na análise do documento, posso informar que:\n\n• O documento foi classificado como **${analysis?.docType || 'Documento Jurídico'}**\n• Área: **${analysis?.legalArea || 'Cível'}**\n• Complexidade: **${analysis?.complexity || 5}/10**\n• Taxa de êxito estimada: **${analysis?.strategy.estimatedSuccessRate || 50}%**\n\nPosso detalhar sobre **estratégia**, **riscos**, **prazos**, **cláusulas**, **jurisprudência** ou **elaboração de peças**. O que precisa?`;
+  });
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -194,6 +96,7 @@ function generateChatResponse(message: string, analysis: AnalysisResult | null):
 export default function AnalyzePage() {
   const [phase, setPhase] = useState<AnalysisPhase>('upload');
   const [files, setFiles] = useState<File[]>([]);
+  const [fileContent, setFileContent] = useState('');
   const [fileParts, setFileParts] = useState<{ name: string; partNumber: number; totalParts: number }[]>([]);
   const [wasSplit, setWasSplit] = useState(false);
   const [polo, setPolo] = useState<UserPolo>(null);
@@ -201,6 +104,7 @@ export default function AnalyzePage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeProgress, setAnalyzeProgress] = useState(0);
   const [analyzeStep, setAnalyzeStep] = useState('');
+  const [aiMeta, setAiMeta] = useState<{ model?: string; tokens?: number; cost?: number; duration?: number }>({});
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -211,7 +115,7 @@ export default function AnalyzePage() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  const handleFileUpload = useCallback((uploadedFiles: File[]) => {
+  const handleFileUpload = useCallback(async (uploadedFiles: File[]) => {
     const file = uploadedFiles[0];
     if (!file) return;
 
@@ -222,6 +126,13 @@ export default function AnalyzePage() {
     } else {
       setFileParts([]);
       setWasSplit(false);
+    }
+
+    try {
+      const content = await readFileAsText(file);
+      setFileContent(content);
+    } catch {
+      setFileContent(`[Arquivo: ${file.name}, ${(file.size / 1024).toFixed(0)}KB]`);
     }
 
     setFiles(uploadedFiles);
@@ -244,35 +155,122 @@ export default function AnalyzePage() {
       { label: 'Pesquisador Jurisprudencial — buscando precedentes...', progress: 55 },
       { label: 'Analista Legislativo — mapeando legislação aplicável...', progress: 70 },
       { label: 'Estrategista Jurídico — definindo estratégia para o polo ' + (selectedPolo === 'autor' ? 'ativo' : 'passivo') + '...', progress: 85 },
-      { label: 'Revisor Jurídico — consolidando análise final...', progress: 95 },
-      { label: 'Análise completa!', progress: 100 },
     ];
 
-    for (const step of steps) {
-      setAnalyzeStep(step.label);
-      setAnalyzeProgress(step.progress);
-      await new Promise(r => setTimeout(r, 800 + Math.random() * 600));
+    const progressInterval = setInterval(() => {
+      setAnalyzeProgress((prev) => Math.min(prev + 1, 85));
+    }, 300);
+
+    let stepIndex = 0;
+    const stepInterval = setInterval(() => {
+      if (stepIndex < steps.length) {
+        setAnalyzeStep(steps[stepIndex].label);
+        setAnalyzeProgress(steps[stepIndex].progress);
+        stepIndex++;
+      }
+    }, 2500);
+
+    try {
+      const res = await fetch('/api/ai/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: fileContent,
+          fileName: files[0]?.name || 'documento.pdf',
+          polo: selectedPolo,
+        }),
+      });
+
+      clearInterval(progressInterval);
+      clearInterval(stepInterval);
+
+      if (res.ok) {
+        const data = await res.json();
+        setAnalyzeStep('Análise completa com IA real!');
+        setAnalyzeProgress(100);
+        setAiMeta({
+          model: data.model,
+          tokens: data.tokensUsed,
+          cost: data.estimatedCost,
+          duration: data.durationMs,
+        });
+
+        await new Promise(r => setTimeout(r, 500));
+
+        const result = data.analysis as AnalysisResult;
+        result.entities = result.entities || [];
+        result.clauses = result.clauses || [];
+        result.strategy = result.strategy || { recommendation: '', strengths: [], weaknesses: [], nextSteps: [], riskLevel: 'medium', estimatedSuccessRate: 50 };
+        result.strategy.strengths = result.strategy.strengths || [];
+        result.strategy.weaknesses = result.strategy.weaknesses || [];
+        result.strategy.nextSteps = result.strategy.nextSteps || [];
+
+        setAnalysis(result);
+        setAnalyzing(false);
+        setPhase('results');
+
+        setMessages([
+          {
+            id: 'system-1',
+            role: 'system',
+            content: `Documento "${files[0]?.name}" analisado com IA (${data.model || 'Claude'}) sob a perspectiva do ${selectedPolo === 'autor' ? 'polo ativo (Autor)' : selectedPolo === 'reu' ? 'polo passivo (Réu)' : 'terceiro interessado'}.`,
+            timestamp: new Date().toISOString(),
+          },
+          {
+            id: 'assistant-1',
+            role: 'assistant',
+            content: `Análise concluída! Identifiquei ${result.entities.length} entidades, ${result.clauses.length} cláusulas e gerei uma estratégia processual personalizada.\n\n${result.summary}\n\nA taxa estimada de êxito é de **${result.strategy.estimatedSuccessRate}%**.\n\nVocê pode perguntar sobre **estratégia**, **riscos**, **prazos**, **cláusulas**, **jurisprudência** ou solicitar **minutas de peças**.`,
+            timestamp: new Date().toISOString(),
+            model: data.model,
+            tokens: data.tokensUsed,
+            cost: data.estimatedCost,
+          },
+        ]);
+        return;
+      }
+    } catch {
+      // AI unavailable — handled below
     }
 
-    const result = generateAnalysis(files[0]?.name || 'documento.pdf', selectedPolo);
+    clearInterval(progressInterval);
+    clearInterval(stepInterval);
+
+    // Fallback: basic analysis without AI
+    setAnalyzeStep('Análise básica concluída (IA indisponível)');
+    setAnalyzeProgress(100);
+    await new Promise(r => setTimeout(r, 500));
+
+    const fileName = files[0]?.name || 'documento.pdf';
+    const poloLabel = selectedPolo === 'autor' ? 'Autor' : selectedPolo === 'reu' ? 'Réu' : 'Terceiro';
+    const result: AnalysisResult = {
+      summary: `Documento "${fileName}" recebido para análise sob a perspectiva do ${poloLabel}. A IA está indisponível no momento — configure a OPENROUTER_API_KEY para análise completa com inteligência artificial.`,
+      docType: 'Documento Jurídico',
+      legalArea: 'A determinar',
+      complexity: 5,
+      entities: [],
+      clauses: [],
+      strategy: {
+        recommendation: `Configure a chave da API OpenRouter para obter análise estratégica real com IA para o ${poloLabel}.`,
+        strengths: [],
+        weaknesses: [],
+        nextSteps: ['1. Configure OPENROUTER_API_KEY no arquivo .env', '2. Reenvie o documento para análise com IA'],
+        riskLevel: 'medium',
+        estimatedSuccessRate: 50,
+      },
+    };
+
     setAnalysis(result);
     setAnalyzing(false);
     setPhase('results');
-
     setMessages([{
       id: 'system-1',
       role: 'system',
-      content: `Documento "${files[0]?.name}" analisado com sucesso sob a perspectiva do ${selectedPolo === 'autor' ? 'polo ativo (Autor)' : selectedPolo === 'reu' ? 'polo passivo (Réu)' : 'terceiro interessado'}.`,
-      timestamp: new Date().toISOString(),
-    }, {
-      id: 'assistant-1',
-      role: 'assistant',
-      content: `Análise concluída! Identifiquei ${result.entities.length} entidades, ${result.clauses.length} cláusulas e gerei uma estratégia processual personalizada.\n\nA taxa estimada de êxito é de **${result.strategy.estimatedSuccessRate}%**.\n\nVocê pode:\n• Perguntar sobre **estratégia**, **riscos**, **prazos**, **cláusulas** ou **jurisprudência**\n• Enviar **documentos adicionais** para complementar a análise\n• Solicitar **minutas de peças** com base na análise\n\nComo posso ajudar?`,
+      content: `Documento "${files[0]?.name}" recebido. IA indisponível — respostas básicas ativadas.`,
       timestamp: new Date().toISOString(),
     }]);
   };
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!chatInput.trim()) return;
 
     const userMsg: ChatMessage = {
@@ -283,27 +281,70 @@ export default function AnalyzePage() {
     };
 
     setMessages(prev => [...prev, userMsg]);
+    const input = chatInput;
     setChatInput('');
     setIsTyping(true);
 
-    setTimeout(() => {
-      const response = generateChatResponse(chatInput, analysis);
-      const assistantMsg: ChatMessage = {
-        id: `assistant-${Date.now()}`,
-        role: 'assistant',
-        content: response,
-        timestamp: new Date().toISOString(),
-      };
-      setMessages(prev => [...prev, assistantMsg]);
-      setIsTyping(false);
-    }, 1000 + Math.random() * 1000);
+    try {
+      const chatHistory = [
+        {
+          role: 'user',
+          content: `Contexto: Você está analisando o documento "${files[0]?.name || 'documento'}" sob a perspectiva do ${polo === 'autor' ? 'polo ativo (Autor)' : polo === 'reu' ? 'polo passivo (Réu)' : 'terceiro interessado'}.\n\nResumo da análise anterior:\n${analysis?.summary || ''}\n\nEstratégia: ${analysis?.strategy.recommendation || ''}\n\nConteúdo do documento (trecho):\n${fileContent.slice(0, 10000)}`,
+        },
+        ...messages
+          .filter((m) => m.role !== 'system')
+          .map((m) => ({ role: m.role, content: m.content })),
+        { role: 'user', content: input },
+      ];
+
+      const res = await fetch('/api/ai/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatHistory }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const assistantMsg: ChatMessage = {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: data.content,
+          timestamp: new Date().toISOString(),
+          model: data.model,
+          tokens: data.tokensUsed,
+          cost: data.estimatedCost,
+        };
+        setMessages(prev => [...prev, assistantMsg]);
+        setIsTyping(false);
+        return;
+      }
+    } catch {
+      // fallback below
+    }
+
+    const assistantMsg: ChatMessage = {
+      id: `assistant-${Date.now()}`,
+      role: 'assistant',
+      content: `Recebi sua pergunta sobre "${input.slice(0, 50)}...". A IA está indisponível no momento. Configure a OPENROUTER_API_KEY para respostas inteligentes.`,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages(prev => [...prev, assistantMsg]);
+    setIsTyping(false);
   };
 
-  const handleAdditionalFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAdditionalFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setFiles(prev => [...prev, file]);
+
+    let newContent = '';
+    try {
+      newContent = await readFileAsText(file);
+      setFileContent(prev => prev + '\n\n---\n\n' + newContent);
+    } catch {
+      newContent = `[Arquivo: ${file.name}]`;
+    }
 
     const userMsg: ChatMessage = {
       id: `user-file-${Date.now()}`,
@@ -316,16 +357,42 @@ export default function AnalyzePage() {
     setMessages(prev => [...prev, userMsg]);
     setIsTyping(true);
 
-    setTimeout(() => {
-      const assistantMsg: ChatMessage = {
-        id: `assistant-file-${Date.now()}`,
-        role: 'assistant',
-        content: `Recebi o documento **"${file.name}"** (${(file.size / 1024).toFixed(0)} KB). Analisando em conjunto com os documentos anteriores...\n\nO novo documento complementa a análise anterior. Identifiquei elementos adicionais que podem fortalecer a tese.\n\nDeseja que eu atualize a **estratégia processual** considerando este novo documento?`,
-        timestamp: new Date().toISOString(),
-      };
-      setMessages(prev => [...prev, assistantMsg]);
-      setIsTyping(false);
-    }, 2000);
+    try {
+      const res = await fetch('/api/ai/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chatHistory: [
+            { role: 'user', content: `Analise este documento adicional "${file.name}" em conjunto com a análise anterior do documento "${files[0]?.name}".\n\nAnálise anterior: ${analysis?.summary || ''}\n\nNovo documento:\n${newContent.slice(0, 20000)}` },
+          ],
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setMessages(prev => [...prev, {
+          id: `assistant-file-${Date.now()}`,
+          role: 'assistant',
+          content: data.content,
+          timestamp: new Date().toISOString(),
+          model: data.model,
+          tokens: data.tokensUsed,
+          cost: data.estimatedCost,
+        }]);
+        setIsTyping(false);
+        return;
+      }
+    } catch {
+      // fallback
+    }
+
+    setMessages(prev => [...prev, {
+      id: `assistant-file-${Date.now()}`,
+      role: 'assistant',
+      content: `Recebi o documento **"${file.name}"** (${(file.size / 1024).toFixed(0)} KB). Configure a OPENROUTER_API_KEY para análise conjunta com IA.`,
+      timestamp: new Date().toISOString(),
+    }]);
+    setIsTyping(false);
   };
 
   const goToChat = () => setPhase('chat');
@@ -350,24 +417,32 @@ export default function AnalyzePage() {
             <div>
               <h1 className="text-lg font-bold text-white">Análise Inteligente de Documentos</h1>
               <p className="text-xs text-[#6b7a8d]">
-                {phase === 'upload' && 'Envie um documento para análise completa pelo squad de agentes'}
+                {phase === 'upload' && 'Envie um documento para análise completa com IA'}
                 {phase === 'polo_question' && 'Identifique o polo que você representa'}
-                {phase === 'analyzing' && 'Agentes analisando o documento...'}
+                {phase === 'analyzing' && 'IA analisando o documento...'}
                 {phase === 'results' && 'Análise concluída — revise os resultados'}
                 {phase === 'chat' && 'Converse com a IA sobre o documento analisado'}
               </p>
             </div>
           </div>
-          {analysis && phase !== 'chat' && (
-            <button onClick={goToChat} className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors">
-              <MessageSquare className="h-4 w-4" /> Abrir Chat
-            </button>
-          )}
-          {phase === 'chat' && (
-            <button onClick={() => setPhase('results')} className="flex items-center gap-2 rounded-lg border border-[#1a2332] px-4 py-2 text-sm text-[#8899aa] hover:text-white transition-colors">
-              Ver Resultados
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {aiMeta.model && (
+              <div className="flex items-center gap-1.5 rounded-lg border border-[#1a2332] px-3 py-1.5 text-[10px] text-[#6b7a8d]">
+                <Cpu className="h-3 w-3" />
+                {aiMeta.model} | {aiMeta.tokens} tokens | ${aiMeta.cost?.toFixed(4)}
+              </div>
+            )}
+            {analysis && phase !== 'chat' && (
+              <button onClick={goToChat} className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors">
+                <MessageSquare className="h-4 w-4" /> Abrir Chat
+              </button>
+            )}
+            {phase === 'chat' && (
+              <button onClick={() => setPhase('results')} className="flex items-center gap-2 rounded-lg border border-[#1a2332] px-4 py-2 text-sm text-[#8899aa] hover:text-white transition-colors">
+                Ver Resultados
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -382,7 +457,7 @@ export default function AnalyzePage() {
               <p className="text-xs text-[#6b7a8d] mb-4">PDF, DOC, DOCX — Arquivos maiores que 10MB serão divididos automaticamente</p>
               <input
                 type="file"
-                accept=".pdf,.doc,.docx"
+                accept=".pdf,.doc,.docx,.txt"
                 className="hidden"
                 id="file-upload"
                 onChange={(e) => {
@@ -398,7 +473,7 @@ export default function AnalyzePage() {
             <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-4">
               <h3 className="text-sm font-medium text-white mb-3">O que a análise faz:</h3>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {['Extrai partes, advogados, valores, leis citadas', 'Classifica o tipo e área do documento', 'Identifica cláusulas com nível de risco', 'Gera estratégia processual personalizada', 'Busca precedentes relevantes', 'Permite chat interativo pós-análise'].map((item) => (
+                {['Extrai partes, advogados, valores, leis citadas', 'Classifica o tipo e área do documento', 'Identifica cláusulas com nível de risco', 'Gera estratégia processual com IA real', 'Busca precedentes relevantes (STF/STJ)', 'Chat interativo pós-análise com contexto'].map((item) => (
                   <div key={item} className="flex items-center gap-2 text-xs text-[#8899aa]">
                     <CheckCircle2 className="h-3.5 w-3.5 text-amber-400 flex-shrink-0" />
                     {item}
@@ -418,7 +493,7 @@ export default function AnalyzePage() {
                 <div>
                   <p className="text-sm font-medium text-blue-400">Arquivo grande — dividido automaticamente</p>
                   <p className="text-xs text-[#8899aa] mt-1">
-                    O arquivo "{files[0]?.name}" ({(files[0]?.size / 1024 / 1024).toFixed(1)} MB) foi dividido em {fileParts.length} partes para análise otimizada.
+                    O arquivo &quot;{files[0]?.name}&quot; ({(files[0]?.size / 1024 / 1024).toFixed(1)} MB) foi dividido em {fileParts.length} partes para análise otimizada.
                   </p>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {fileParts.map((p) => (
@@ -435,7 +510,7 @@ export default function AnalyzePage() {
               <Scale className="h-10 w-10 text-amber-400 mx-auto mb-4" />
               <h2 className="text-xl font-bold text-white mb-2">Qual polo você representa?</h2>
               <p className="text-sm text-[#8899aa] mb-6">
-                Esta informação é essencial para direcionar a análise estratégica e as recomendações de forma personalizada ao seu caso.
+                Esta informação direciona a análise estratégica da IA para o seu caso.
               </p>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 max-w-lg mx-auto">
@@ -466,7 +541,7 @@ export default function AnalyzePage() {
               <div className="flex items-center justify-center mb-6">
                 <Loader2 className="h-10 w-10 text-amber-400 animate-spin" />
               </div>
-              <h2 className="text-lg font-bold text-white text-center mb-2">Squad de Análise em Ação</h2>
+              <h2 className="text-lg font-bold text-white text-center mb-2">IA Analisando Documento</h2>
               <p className="text-sm text-amber-400 text-center mb-6">{analyzeStep}</p>
 
               <div className="w-full bg-[#1a2332] rounded-full h-3 mb-4">
@@ -496,7 +571,6 @@ export default function AnalyzePage() {
         {/* PHASE: Results */}
         {phase === 'results' && analysis && (
           <div className="p-6 space-y-6">
-            {/* Summary Stats */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
               <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-4">
                 <p className="text-xs text-[#6b7a8d] uppercase tracking-wider">Tipo</p>
@@ -518,60 +592,64 @@ export default function AnalyzePage() {
               </div>
             </div>
 
-            {/* Summary */}
             <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-5">
               <h3 className="text-sm font-semibold text-white mb-3">Resumo da Análise</h3>
-              <p className="text-sm text-[#c0ccda] leading-relaxed">{analysis.summary}</p>
+              <p className="text-sm text-[#c0ccda] leading-relaxed whitespace-pre-wrap">{analysis.summary}</p>
             </div>
 
-            {/* Strategy */}
             <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5">
               <h3 className="text-sm font-semibold text-amber-400 mb-3 flex items-center gap-2">
-                <Sparkles className="h-4 w-4" /> Estratégia Processual ({polo === 'autor' ? 'Polo Ativo' : 'Polo Passivo'})
+                <Sparkles className="h-4 w-4" /> Estratégia Processual ({polo === 'autor' ? 'Polo Ativo' : polo === 'reu' ? 'Polo Passivo' : 'Terceiro'})
               </h3>
-              <p className="text-sm text-[#c0ccda] mb-4">{analysis.strategy.recommendation}</p>
+              <p className="text-sm text-[#c0ccda] mb-4 whitespace-pre-wrap">{analysis.strategy.recommendation}</p>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <p className="text-xs font-medium text-green-400 mb-2">Pontos Fortes</p>
-                  {analysis.strategy.strengths.map((s, i) => (
-                    <p key={i} className="text-xs text-[#8899aa] mb-1 flex items-start gap-1.5">
-                      <CheckCircle2 className="h-3 w-3 text-green-400 mt-0.5 flex-shrink-0" /> {s}
-                    </p>
+                {analysis.strategy.strengths.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-green-400 mb-2">Pontos Fortes</p>
+                    {analysis.strategy.strengths.map((s, i) => (
+                      <p key={i} className="text-xs text-[#8899aa] mb-1 flex items-start gap-1.5">
+                        <CheckCircle2 className="h-3 w-3 text-green-400 mt-0.5 flex-shrink-0" /> {s}
+                      </p>
+                    ))}
+                  </div>
+                )}
+                {analysis.strategy.weaknesses.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-red-400 mb-2">Pontos de Atenção</p>
+                    {analysis.strategy.weaknesses.map((w, i) => (
+                      <p key={i} className="text-xs text-[#8899aa] mb-1 flex items-start gap-1.5">
+                        <AlertCircle className="h-3 w-3 text-red-400 mt-0.5 flex-shrink-0" /> {w}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {analysis.strategy.nextSteps.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-amber-500/10">
+                  <p className="text-xs font-medium text-amber-400 mb-2">Próximos Passos</p>
+                  {analysis.strategy.nextSteps.map((s, i) => (
+                    <p key={i} className="text-xs text-[#c0ccda] mb-1">{s}</p>
                   ))}
                 </div>
-                <div>
-                  <p className="text-xs font-medium text-red-400 mb-2">Pontos de Atenção</p>
-                  {analysis.strategy.weaknesses.map((w, i) => (
-                    <p key={i} className="text-xs text-[#8899aa] mb-1 flex items-start gap-1.5">
-                      <AlertCircle className="h-3 w-3 text-red-400 mt-0.5 flex-shrink-0" /> {w}
-                    </p>
+              )}
+            </div>
+
+            {analysis.entities.length > 0 && (
+              <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-5">
+                <h3 className="text-sm font-semibold text-white mb-3">Entidades Identificadas</h3>
+                <div className="flex flex-wrap gap-2">
+                  {analysis.entities.map((e, i) => (
+                    <span key={i} className="inline-flex items-center rounded-full px-3 py-1 text-xs border border-[#1a2332] bg-[#0a0f1a]">
+                      <span className="text-[#6b7a8d] mr-1.5">{e.label}:</span>
+                      <span className="text-white">{e.value}</span>
+                    </span>
                   ))}
                 </div>
               </div>
+            )}
 
-              <div className="mt-4 pt-4 border-t border-amber-500/10">
-                <p className="text-xs font-medium text-amber-400 mb-2">Próximos Passos</p>
-                {analysis.strategy.nextSteps.map((s, i) => (
-                  <p key={i} className="text-xs text-[#c0ccda] mb-1">{s}</p>
-                ))}
-              </div>
-            </div>
-
-            {/* Entities */}
-            <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-5">
-              <h3 className="text-sm font-semibold text-white mb-3">Entidades Identificadas</h3>
-              <div className="flex flex-wrap gap-2">
-                {analysis.entities.map((e, i) => (
-                  <span key={i} className="inline-flex items-center rounded-full px-3 py-1 text-xs border border-[#1a2332] bg-[#0a0f1a]">
-                    <span className="text-[#6b7a8d] mr-1.5">{e.label}:</span>
-                    <span className="text-white">{e.value}</span>
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Clauses */}
             {analysis.clauses.length > 0 && (
               <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-5">
                 <h3 className="text-sm font-semibold text-white mb-3">Cláusulas Identificadas</h3>
@@ -613,6 +691,12 @@ export default function AnalyzePage() {
                       <span className="text-[10px] text-[#4a5568]">
                         {new Date(msg.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                       </span>
+                      {msg.model && (
+                        <span className="text-[10px] text-[#4a5568] flex items-center gap-1">
+                          <Cpu className="h-2.5 w-2.5" /> {msg.model}
+                          {msg.cost !== undefined && ` | $${msg.cost.toFixed(4)}`}
+                        </span>
+                      )}
                     </div>
                     {msg.attachments && msg.attachments.map((a, i) => (
                       <div key={i} className="flex items-center gap-2 mb-2 rounded-lg bg-[#1a2332] px-3 py-1.5 text-xs">
@@ -644,10 +728,9 @@ export default function AnalyzePage() {
               <div ref={chatEndRef} />
             </div>
 
-            {/* Chat Input */}
             <div className="flex-shrink-0 border-t border-[#1a2332] bg-[#0d1320] p-4">
               <div className="flex gap-2">
-                <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.doc,.docx"
+                <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.doc,.docx,.txt"
                   onChange={handleAdditionalFile} />
                 <button onClick={() => fileInputRef.current?.click()}
                   className="flex items-center justify-center rounded-lg border border-[#1a2332] px-3 text-[#6b7a8d] hover:text-amber-400 hover:border-amber-500/20 transition-colors"
@@ -662,13 +745,13 @@ export default function AnalyzePage() {
                   onChange={(e) => setChatInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
                 />
-                <button onClick={sendMessage} disabled={!chatInput.trim()}
+                <button onClick={sendMessage} disabled={!chatInput.trim() || isTyping}
                   className="flex items-center justify-center rounded-lg bg-amber-500 px-4 text-black hover:bg-amber-400 disabled:opacity-50 transition-colors">
                   <Send className="h-4 w-4" />
                 </button>
               </div>
               <p className="text-[10px] text-[#4a5568] mt-2 text-center">
-                Envie documentos adicionais clicando no ícone de upload | Pergunte sobre qualquer aspecto da análise
+                IA real via OpenRouter | Envie documentos adicionais | Pergunte sobre qualquer aspecto da análise
               </p>
             </div>
           </div>

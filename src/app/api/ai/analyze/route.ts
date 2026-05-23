@@ -1,0 +1,139 @@
+import { NextResponse } from 'next/server';
+import { callAI, type TaskType } from '@/lib/ai-router';
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { content, fileName, polo, chatHistory } = body as {
+      content: string;
+      fileName: string;
+      polo: 'autor' | 'reu' | 'terceiro';
+      chatHistory?: { role: string; content: string }[];
+    };
+
+    if (chatHistory) {
+      const result = await callAI(
+        chatHistory.map((m) => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+        })),
+        'document_analysis'
+      );
+
+      return NextResponse.json({
+        content: result.content,
+        model: result.model,
+        tokensUsed: result.tokensUsed,
+        estimatedCost: result.estimatedCost,
+        durationMs: result.durationMs,
+      });
+    }
+
+    if (!content || !fileName || !polo) {
+      return NextResponse.json(
+        { error: 'content, fileName, and polo are required' },
+        { status: 400 }
+      );
+    }
+
+    const poloLabel =
+      polo === 'autor' ? 'polo ativo (Autor)' :
+      polo === 'reu' ? 'polo passivo (Réu)' :
+      'terceiro interessado';
+
+    const taskType: TaskType = content.length > 10000 ? 'strategy_analysis' : 'document_analysis';
+
+    const result = await callAI(
+      [
+        {
+          role: 'user',
+          content: `Analise este documento jurídico ("${fileName}") sob a perspectiva do ${poloLabel}.
+
+Retorne OBRIGATORIAMENTE no formato JSON abaixo. Não inclua nenhum texto fora do JSON:
+
+{
+  "summary": "Resumo de 2-4 frases do documento analisado",
+  "docType": "Tipo (Petição Inicial, Contestação, Contrato, Sentença, Acórdão, etc)",
+  "legalArea": "Área do direito (Cível, Trabalhista, Tributário, etc)",
+  "complexity": 7,
+  "entities": [
+    {"type": "party", "label": "Autor", "value": "Nome completo"},
+    {"type": "party", "label": "Réu", "value": "Nome completo"},
+    {"type": "lawyer", "label": "Advogado", "value": "Nome - OAB/UF"},
+    {"type": "judge", "label": "Magistrado", "value": "Nome - Vara"},
+    {"type": "date", "label": "Data", "value": "DD/MM/AAAA"},
+    {"type": "value", "label": "Valor da Causa", "value": "R$ X.XXX,XX"},
+    {"type": "law", "label": "Legislação", "value": "Artigos citados"}
+  ],
+  "clauses": [
+    {"id": "c1", "title": "Nome da cláusula", "summary": "Resumo e implicações", "risk": "low|medium|high"}
+  ],
+  "strategy": {
+    "recommendation": "Recomendação estratégica principal para o ${poloLabel}",
+    "strengths": ["Ponto forte 1", "Ponto forte 2"],
+    "weaknesses": ["Ponto fraco 1", "Ponto fraco 2"],
+    "nextSteps": ["1. Primeiro passo", "2. Segundo passo"],
+    "riskLevel": "low|medium|high",
+    "estimatedSuccessRate": 65
+  }
+}
+
+Documento (conteúdo extraído):
+${content.slice(0, 50000)}`,
+        },
+      ],
+      taskType,
+      { maxTokens: 4096, temperature: 0.2 }
+    );
+
+    let analysis;
+    try {
+      const jsonMatch = result.content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        analysis = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No JSON found in AI response');
+      }
+    } catch {
+      analysis = {
+        summary: result.content.slice(0, 500),
+        docType: 'Documento Jurídico',
+        legalArea: 'Cível',
+        complexity: 5,
+        entities: [],
+        clauses: [],
+        strategy: {
+          recommendation: result.content,
+          strengths: [],
+          weaknesses: [],
+          nextSteps: [],
+          riskLevel: 'medium',
+          estimatedSuccessRate: 50,
+        },
+      };
+    }
+
+    return NextResponse.json({
+      analysis,
+      model: result.model,
+      complexity: result.complexity,
+      tokensUsed: result.tokensUsed,
+      estimatedCost: result.estimatedCost,
+      durationMs: result.durationMs,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+
+    if (message.includes('OPENROUTER_API_KEY')) {
+      return NextResponse.json(
+        { error: 'AI not configured', message: 'OpenRouter API key missing' },
+        { status: 503 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: 'Analysis failed', message },
+      { status: 500 }
+    );
+  }
+}
