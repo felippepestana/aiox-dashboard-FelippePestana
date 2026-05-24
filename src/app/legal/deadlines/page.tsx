@@ -10,6 +10,9 @@ import {
   XCircle,
   ChevronLeft,
   ChevronRight,
+  Plus,
+  X,
+  Save,
 } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
 import type { DeadlineType, DeadlineStatus } from '@/types/legal';
@@ -29,9 +32,26 @@ const deadlineStatusIcon: Record<DeadlineStatus, { icon: typeof Clock; className
   extended: { icon: Clock, className: 'text-blue-400' },
 };
 
+const DEADLINE_TYPES: { value: DeadlineType; label: string }[] = [
+  { value: 'fatal', label: 'Fatal' },
+  { value: 'judicial', label: 'Judicial' },
+  { value: 'internal', label: 'Interno' },
+  { value: 'hearing', label: 'Audiência' },
+  { value: 'mediation', label: 'Mediação' },
+];
+
 export default function DeadlinesPage() {
-  const { deadlines, getProcessById, completeDeadline } = useLegalStore();
+  const { deadlines, processes, getProcessById, completeDeadline, addDeadline } = useLegalStore();
   const [view, setView] = useState<'list' | 'calendar'>('list');
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({
+    title: '',
+    type: 'judicial' as DeadlineType,
+    processId: '',
+    dueDate: '',
+    assignedTo: '',
+    notes: '',
+  });
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
@@ -137,6 +157,14 @@ export default function DeadlinesPage() {
         </div>
 
         {/* View Toggle */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
+          >
+            <Plus className="h-4 w-4" /> Novo Prazo
+          </button>
+
         <div className="flex items-center gap-1 rounded-lg border border-[#1a2332] bg-[#0d1320] p-1">
           <button
             onClick={() => setView('list')}
@@ -161,7 +189,86 @@ export default function DeadlinesPage() {
             Calendario
           </button>
         </div>
+        </div>
       </div>
+
+      {/* New Deadline Form */}
+      {showForm && (
+        <div className="rounded-xl border border-amber-500/20 bg-[#0d1320] p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-white">Novo Prazo</h2>
+            <button onClick={() => setShowForm(false)} className="text-[#6b7a8d] hover:text-white">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Título *</label>
+              <input type="text" value={form.title} onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))}
+                placeholder="Contestação - Processo CNJ..."
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white placeholder-[#4a5568] focus:border-amber-500/50 focus:outline-none" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Tipo *</label>
+              <select value={form.type} onChange={(e) => setForm(f => ({ ...f, type: e.target.value as DeadlineType }))}
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50">
+                {DEADLINE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Data de Vencimento *</label>
+              <input type="date" value={form.dueDate} onChange={(e) => setForm(f => ({ ...f, dueDate: e.target.value }))}
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Processo</label>
+              <select value={form.processId} onChange={(e) => setForm(f => ({ ...f, processId: e.target.value }))}
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50">
+                <option value="">Selecionar processo...</option>
+                {processes.filter(p => p.status === 'active').map((p) => (
+                  <option key={p.id} value={p.id}>{p.cnj} — {p.title}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Responsável</label>
+              <input type="text" value={form.assignedTo} onChange={(e) => setForm(f => ({ ...f, assignedTo: e.target.value }))}
+                placeholder="Dr. Nome"
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white placeholder-[#4a5568] focus:border-amber-500/50 focus:outline-none" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Observações</label>
+              <input type="text" value={form.notes} onChange={(e) => setForm(f => ({ ...f, notes: e.target.value }))}
+                placeholder="Notas..."
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white placeholder-[#4a5568] focus:border-amber-500/50 focus:outline-none" />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-[#1a2332]">
+            <button onClick={() => setShowForm(false)} className="rounded-lg border border-[#1a2332] px-4 py-2 text-sm text-[#6b7a8d] hover:text-white transition-colors">Cancelar</button>
+            <button
+              onClick={() => {
+                if (!form.title.trim() || !form.dueDate) return;
+                addDeadline({
+                  processId: form.processId,
+                  title: form.title.trim(),
+                  type: form.type,
+                  dueDate: new Date(form.dueDate).toISOString(),
+                  reminderDays: [3, 1],
+                  status: 'pending',
+                  assignedTo: form.assignedTo,
+                  notes: form.notes,
+                });
+                setForm({ title: '', type: 'judicial', processId: '', dueDate: '', assignedTo: '', notes: '' });
+                setShowForm(false);
+              }}
+              disabled={!form.title.trim() || !form.dueDate}
+              className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 disabled:opacity-50 transition-colors"
+            >
+              <Save className="h-4 w-4" /> Salvar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* List View */}
       {view === 'list' && (

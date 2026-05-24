@@ -10,6 +10,9 @@ import {
   User,
   Briefcase,
   Calendar,
+  Plus,
+  X,
+  Save,
 } from 'lucide-react';
 import { useLegalFinancialStore } from '@/stores/legal-financial-store';
 import { useLegalStore } from '@/stores/legal-store';
@@ -34,11 +37,28 @@ const honorarioStatusConfig: Record<
   cancelled: { className: 'bg-gray-500/10 text-gray-400', label: 'Cancelado', icon: XCircle },
 };
 
+const HONORARIO_TYPES: { value: HonorarioType; label: string }[] = [
+  { value: 'contractual', label: 'Contratual' },
+  { value: 'sucumbencial', label: 'Sucumbencial' },
+  { value: 'ad_exitum', label: 'Ad Exitum' },
+  { value: 'pro_bono', label: 'Pro Bono' },
+];
+
 export default function HonorariosPage() {
-  const { honorarios, recordInstallmentPayment } = useLegalFinancialStore();
-  const { getClientById, getProcessById } = useLegalStore();
+  const { honorarios, recordInstallmentPayment, addHonorario } = useLegalFinancialStore();
+  const { clients, processes, getClientById, getProcessById } = useLegalStore();
 
   const [activeTab, setActiveTab] = useState<TabValue>('active');
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({
+    clientId: '',
+    processId: '',
+    type: 'contractual' as HonorarioType,
+    amount: '',
+    installments: '1',
+    dueDay: '10',
+    notes: '',
+  });
 
   const filteredHonorarios = useMemo(() => {
     return honorarios.filter((h) => h.status === activeTab);
@@ -80,15 +100,110 @@ export default function HonorariosPage() {
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-          <Receipt className="h-7 w-7 text-amber-400" />
-          Honorarios
-        </h1>
-        <p className="text-sm text-[#6b7a8d] mt-1">
-          {honorarios.length} contratos de honorarios
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+            <Receipt className="h-7 w-7 text-amber-400" />
+            Honorarios
+          </h1>
+          <p className="text-sm text-[#6b7a8d] mt-1">
+            {honorarios.length} contratos de honorarios
+          </p>
+        </div>
+        <button
+          onClick={() => setShowForm(true)}
+          className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
+        >
+          <Plus className="h-4 w-4" /> Novo Honorário
+        </button>
       </div>
+
+      {/* New Honorario Form */}
+      {showForm && (
+        <div className="rounded-xl border border-amber-500/20 bg-[#0d1320] p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-white">Novo Honorário</h2>
+            <button onClick={() => setShowForm(false)} className="text-[#6b7a8d] hover:text-white">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Cliente *</label>
+              <select value={form.clientId} onChange={(e) => setForm(f => ({ ...f, clientId: e.target.value }))}
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50">
+                <option value="">Selecionar cliente...</option>
+                {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Processo</label>
+              <select value={form.processId} onChange={(e) => setForm(f => ({ ...f, processId: e.target.value }))}
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50">
+                <option value="">Selecionar processo...</option>
+                {processes.map((p) => <option key={p.id} value={p.id}>{p.cnj} — {p.title}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Tipo *</label>
+              <select value={form.type} onChange={(e) => setForm(f => ({ ...f, type: e.target.value as HonorarioType }))}
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50">
+                {HONORARIO_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Valor Total (R$) *</label>
+              <input type="number" value={form.amount} onChange={(e) => setForm(f => ({ ...f, amount: e.target.value }))}
+                placeholder="10000" min="0" step="100"
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white placeholder-[#4a5568] focus:border-amber-500/50 focus:outline-none" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Parcelas</label>
+              <input type="number" value={form.installments} onChange={(e) => setForm(f => ({ ...f, installments: e.target.value }))}
+                min="1" max="120"
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:border-amber-500/50 focus:outline-none" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Dia de Vencimento</label>
+              <input type="number" value={form.dueDay} onChange={(e) => setForm(f => ({ ...f, dueDay: e.target.value }))}
+                min="1" max="31"
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:border-amber-500/50 focus:outline-none" />
+            </div>
+            <div className="sm:col-span-2 lg:col-span-3">
+              <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Observações</label>
+              <input type="text" value={form.notes} onChange={(e) => setForm(f => ({ ...f, notes: e.target.value }))}
+                placeholder="Notas sobre o contrato..."
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white placeholder-[#4a5568] focus:border-amber-500/50 focus:outline-none" />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-[#1a2332]">
+            <button onClick={() => setShowForm(false)} className="rounded-lg border border-[#1a2332] px-4 py-2 text-sm text-[#6b7a8d] hover:text-white transition-colors">Cancelar</button>
+            <button
+              onClick={() => {
+                if (!form.clientId || !form.amount) return;
+                addHonorario({
+                  clientId: form.clientId,
+                  processId: form.processId || undefined,
+                  type: form.type,
+                  amount: parseFloat(form.amount),
+                  installments: parseInt(form.installments) || 1,
+                  paidInstallments: 0,
+                  contractDate: new Date().toISOString(),
+                  dueDay: parseInt(form.dueDay) || 10,
+                  status: 'active',
+                  notes: form.notes,
+                });
+                setForm({ clientId: '', processId: '', type: 'contractual', amount: '', installments: '1', dueDay: '10', notes: '' });
+                setShowForm(false);
+              }}
+              disabled={!form.clientId || !form.amount}
+              className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 disabled:opacity-50 transition-colors"
+            >
+              <Save className="h-4 w-4" /> Salvar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex items-center gap-2 rounded-xl border border-[#1a2332] bg-[#0d1320] p-2">
