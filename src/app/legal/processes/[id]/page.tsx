@@ -1,9 +1,10 @@
 'use client';
 
-import { use } from 'react';
+import { use, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Briefcase, Clock, FileText, Plus, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Briefcase, Clock, FileText, MessageSquare, RefreshCw, Edit3, Check, ChevronDown } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
+import type { ProcessStatus } from '@/types/legal';
 
 const areaLabels: Record<string, string> = {
   civil: 'Cível', trabalhista: 'Trabalhista', tributario: 'Tributário', penal: 'Penal',
@@ -23,12 +24,17 @@ const statusColors: Record<string, string> = {
   closed: 'bg-gray-500/10 text-gray-400',
 };
 
+const ALL_STATUSES: ProcessStatus[] = ['active', 'suspended', 'won', 'lost', 'settled', 'archived', 'closed'];
+
 export default function ProcessDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const {
     getProcessById, getClientById, getDeadlinesByProcess,
-    getPetitionsByProcess, getMovementsByProcess,
+    getPetitionsByProcess, getMovementsByProcess, updateProcess,
   } = useLegalStore();
+
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   const process = getProcessById(id);
   const client = process ? getClientById(process.clientId) : undefined;
@@ -66,12 +72,61 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${statusColors[process.status]}`}>
-            {statusLabels[process.status]}
-          </span>
+          {/* Status dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowStatusMenu(!showStatusMenu)}
+              className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity ${statusColors[process.status]}`}
+            >
+              {statusLabels[process.status]}
+              <ChevronDown className="h-3 w-3" />
+            </button>
+            {showStatusMenu && (
+              <div className="absolute right-0 top-full mt-1 z-10 rounded-lg border border-[#1a2332] bg-[#0d1320] p-1 shadow-xl min-w-[140px]">
+                {ALL_STATUSES.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => {
+                      updateProcess(id, { status: s });
+                      setShowStatusMenu(false);
+                    }}
+                    className={`w-full flex items-center gap-2 rounded-md px-3 py-1.5 text-xs transition-colors ${
+                      s === process.status ? 'text-amber-400 bg-amber-500/10' : 'text-[#8899aa] hover:text-white hover:bg-[#1a2332]'
+                    }`}
+                  >
+                    {s === process.status && <Check className="h-3 w-3" />}
+                    {statusLabels[s]}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-amber-500/10 text-amber-400">
             {areaLabels[process.area] || process.area}
           </span>
+          {process.cnj && (
+            <button
+              onClick={async () => {
+                setSyncing(true);
+                try {
+                  const res = await fetch(`/api/legal/court/datajud?cnj=${encodeURIComponent(process.cnj)}`);
+                  if (res.ok) {
+                    const data = await res.json();
+                    if (data.success && data.data?.movements) {
+                      alert(`Sincronizado! ${data.data.movements.length} movimentações encontradas.`);
+                    }
+                  }
+                } catch { /* ignore */ }
+                setSyncing(false);
+              }}
+              disabled={syncing}
+              className="flex items-center gap-1 rounded-full px-3 py-1 text-xs text-[#6b7a8d] hover:text-amber-400 border border-[#1a2332] hover:border-amber-500/20 transition-colors"
+              title="Sincronizar com DataJud"
+            >
+              <RefreshCw className={`h-3 w-3 ${syncing ? 'animate-spin' : ''}`} />
+              Sync
+            </button>
+          )}
         </div>
       </div>
 

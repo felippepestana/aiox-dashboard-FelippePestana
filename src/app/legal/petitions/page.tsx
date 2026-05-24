@@ -53,7 +53,7 @@ const STATUS_FILTERS: { value: PetitionStatus | ''; label: string }[] = [
 ];
 
 export default function PetitionsPage() {
-  const { petitions, getProcessById } = useLegalStore();
+  const { petitions, getProcessById, updatePetitionStatus } = useLegalStore();
 
   const [filterStatus, setFilterStatus] = useState<PetitionStatus | ''>('');
 
@@ -179,6 +179,36 @@ export default function PetitionsPage() {
                 {petition.protocolNumber && (
                   <div className="mt-2 text-xs text-[#6b7a8d]">
                     Protocolo: <span className="text-white font-mono">{petition.protocolNumber}</span>
+                  </div>
+                )}
+
+                {/* Status Actions */}
+                {petition.status !== 'filed' && petition.status !== 'rejected' && (
+                  <div className="flex gap-2 mt-3 pt-3 border-t border-[#1a2332]">
+                    {petition.status === 'draft' && (
+                      <button onClick={() => updatePetitionStatus(petition.id, 'review')}
+                        className="flex-1 rounded-lg bg-yellow-500/10 px-2 py-1.5 text-xs text-yellow-400 hover:bg-yellow-500/20 transition-colors">
+                        Enviar p/ Revisão
+                      </button>
+                    )}
+                    {petition.status === 'review' && (
+                      <button onClick={() => updatePetitionStatus(petition.id, 'approved')}
+                        className="flex-1 rounded-lg bg-green-500/10 px-2 py-1.5 text-xs text-green-400 hover:bg-green-500/20 transition-colors">
+                        Aprovar
+                      </button>
+                    )}
+                    {petition.status === 'approved' && (
+                      <button onClick={() => updatePetitionStatus(petition.id, 'filed')}
+                        className="flex-1 rounded-lg bg-blue-500/10 px-2 py-1.5 text-xs text-blue-400 hover:bg-blue-500/20 transition-colors">
+                        Protocolar
+                      </button>
+                    )}
+                    {petition.status !== 'approved' && (
+                      <button onClick={() => updatePetitionStatus(petition.id, 'rejected')}
+                        className="rounded-lg bg-red-500/10 px-2 py-1.5 text-xs text-red-400 hover:bg-red-500/20 transition-colors">
+                        Rejeitar
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
