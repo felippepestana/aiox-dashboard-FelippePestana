@@ -397,7 +397,7 @@ export default function CampaignManager() {
                   <div
                     className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
                       wizardStep >= step.num
-                        ? 'bg-[#0D9488] text-white'
+                        ? 'bg-[#0D9488] text-[#1D1D1F]'
                         : 'bg-gray-200 text-gray-500'
                     }`}
                   >
@@ -431,7 +431,7 @@ export default function CampaignManager() {
                         }`}
                       >
                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                          selectedType === type.id ? 'bg-[#0D9488] text-white' : 'bg-gray-100 text-gray-500'
+                          selectedType === type.id ? 'bg-[#0D9488] text-[#1D1D1F]' : 'bg-gray-100 text-gray-500'
                         }`}>
                           <Icon className="w-5 h-5" />
                         </div>
@@ -465,7 +465,7 @@ export default function CampaignManager() {
                         selectedAudiences.includes(aud.id) ? 'border-[#0D9488] bg-[#0D9488]' : 'border-gray-300'
                       }`}>
                         {selectedAudiences.includes(aud.id) && (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-[#1D1D1F]" />
                         )}
                       </div>
                       <div>
@@ -648,7 +648,7 @@ export default function CampaignManager() {
                     setWizardStep((wizardStep + 1) as WizardStep);
                   }
                 }}
-                className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0D9488] text-white rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0D9488] text-[#1D1D1F] rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors"
               >
                 {wizardStep === 4 ? 'Criar Campanha' : 'Proximo'}
                 {wizardStep < 4 && <ChevronRight className="w-4 h-4" />}
@@ -671,7 +671,7 @@ export default function CampaignManager() {
         </div>
         <button
           onClick={handleStartCreate}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0D9488] text-white rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors shadow-sm"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0D9488] text-[#1D1D1F] rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors shadow-sm"
         >
           <Plus className="w-4 h-4" /> Nova Campanha
         </button>
@@ -693,7 +693,7 @@ export default function CampaignManager() {
           <button
             onClick={() => setStatusFilter('all')}
             className={`px-3 py-2 text-xs font-medium transition-colors ${
-              statusFilter === 'all' ? 'bg-[#0D9488] text-white' : 'text-gray-600 hover:bg-gray-100'
+              statusFilter === 'all' ? 'bg-[#0D9488] text-[#1D1D1F]' : 'text-gray-600 hover:bg-gray-100'
             }`}
           >
             Todas
@@ -703,7 +703,7 @@ export default function CampaignManager() {
               key={s}
               onClick={() => setStatusFilter(s)}
               className={`px-3 py-2 text-xs font-medium transition-colors ${
-                statusFilter === s ? 'bg-[#0D9488] text-white' : 'text-gray-600 hover:bg-gray-100'
+                statusFilter === s ? 'bg-[#0D9488] text-[#1D1D1F]' : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
               {statusConfig[s].label}

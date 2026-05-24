@@ -85,7 +85,7 @@ const STATUS_CONFIG: Record<ExamStatus, { label: string; bg: string; icon: typeo
   scheduled: { label: 'Agendado', bg: 'bg-purple-100 text-purple-700', icon: Calendar },
   in_progress: { label: 'Em Andamento', bg: 'bg-amber-100 text-amber-700', icon: Clock },
   completed: { label: 'Concluído', bg: 'bg-green-100 text-green-700', icon: CheckCircle2 },
-  delivered: { label: 'Entregue', bg: 'bg-teal-100 text-teal-700', icon: Image },
+  delivered: { label: 'Entregue', bg: 'bg-[#C4956A]/15 text-[#A0784C]', icon: Image },
 };
 
 const URGENCY_CONFIG: Record<string, { label: string; bg: string }> = {
@@ -228,8 +228,8 @@ export function ExamRequestPanel({
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center">
-            <FileText className="w-5 h-5 text-teal-600" />
+          <div className="w-9 h-9 rounded-lg bg-[#C4956A]/10 flex items-center justify-center">
+            <FileText className="w-5 h-5 text-[#A0784C]" />
           </div>
           <div>
             <h3 className="text-sm font-semibold text-gray-900">Solicitação de Exames</h3>
@@ -238,7 +238,7 @@ export function ExamRequestPanel({
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[#1D1D1F] transition-colors"
           style={{ backgroundColor: '#0D9488' }}
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#0F766E')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#0D9488')}
@@ -254,7 +254,7 @@ export function ExamRequestPanel({
           onClick={() => setFilterStatus('')}
           className={cn(
             'px-3 py-1 rounded-full text-xs font-medium transition-colors shrink-0',
-            filterStatus === '' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            filterStatus === '' ? 'bg-gray-900 text-[#1D1D1F]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           )}
         >
           Todos ({requests.length})
@@ -265,7 +265,7 @@ export function ExamRequestPanel({
             onClick={() => setFilterStatus(filterStatus === s ? '' : s)}
             className={cn(
               'px-3 py-1 rounded-full text-xs font-medium transition-colors shrink-0',
-              filterStatus === s ? 'bg-gray-900 text-white' : cn(STATUS_CONFIG[s].bg, 'hover:opacity-80')
+              filterStatus === s ? 'bg-gray-900 text-[#1D1D1F]' : cn(STATUS_CONFIG[s].bg, 'hover:opacity-80')
             )}
           >
             {STATUS_CONFIG[s].label} ({statusCounts[s] || 0})
@@ -282,7 +282,7 @@ export function ExamRequestPanel({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por paciente ou tipo de exame..."
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400"
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A]"
           />
         </div>
       </div>
@@ -398,7 +398,7 @@ export function ExamRequestPanel({
                           {req.status === 'completed' && (
                             <button
                               onClick={() => onUpdateStatus(req.id, 'delivered')}
-                              className="text-xs px-3 py-1 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 transition-colors"
+                              className="text-xs px-3 py-1 rounded-lg bg-[#C4956A]/10 text-[#A0784C] hover:bg-[#C4956A]/15 transition-colors"
                             >
                               Marcar como Entregue
                             </button>
@@ -453,7 +453,7 @@ export function ExamRequestPanel({
                   type="text"
                   value={formData.patientName}
                   onChange={(e) => setFormData((f) => ({ ...f, patientName: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A]"
                   placeholder="Nome do paciente"
                 />
               </div>
@@ -463,7 +463,7 @@ export function ExamRequestPanel({
                 <select
                   value={formData.examType}
                   onChange={(e) => setFormData((f) => ({ ...f, examType: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A]"
                 >
                   <option value="">Selecionar tipo de exame</option>
                   {EXAM_TYPES.map((t) => (
@@ -477,7 +477,7 @@ export function ExamRequestPanel({
                 <select
                   value={formData.region}
                   onChange={(e) => setFormData((f) => ({ ...f, region: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A]"
                 >
                   <option value="">Selecionar região</option>
                   {REGIONS.map((r) => (
@@ -492,7 +492,7 @@ export function ExamRequestPanel({
                   type="text"
                   value={formData.toothNumbers}
                   onChange={(e) => setFormData((f) => ({ ...f, toothNumbers: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A]"
                   placeholder="Ex: 36, 37 (notação FDI)"
                 />
               </div>
@@ -502,7 +502,7 @@ export function ExamRequestPanel({
                 <textarea
                   value={formData.clinicalJustification}
                   onChange={(e) => setFormData((f) => ({ ...f, clinicalJustification: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400 resize-none"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A] resize-none"
                   rows={3}
                   placeholder="Descreva a indicação clínica para este exame..."
                 />
@@ -514,7 +514,7 @@ export function ExamRequestPanel({
                   <select
                     value={formData.urgency}
                     onChange={(e) => setFormData((f) => ({ ...f, urgency: e.target.value as 'routine' | 'urgent' | 'emergency' }))}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A]"
                   >
                     <option value="routine">Rotina</option>
                     <option value="urgent">Urgente</option>
@@ -527,7 +527,7 @@ export function ExamRequestPanel({
                     type="text"
                     value={formData.professional}
                     onChange={(e) => setFormData((f) => ({ ...f, professional: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A]"
                   />
                 </div>
               </div>
@@ -537,7 +537,7 @@ export function ExamRequestPanel({
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData((f) => ({ ...f, notes: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400 resize-none"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A] resize-none"
                   rows={2}
                   placeholder="Informações adicionais..."
                 />
@@ -554,7 +554,7 @@ export function ExamRequestPanel({
               <button
                 onClick={handleSubmit}
                 disabled={!formData.patientName || !formData.examType || !formData.region || !formData.clinicalJustification}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-[#1D1D1F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: '#0D9488' }}
               >
                 <Send className="w-3.5 h-3.5" />

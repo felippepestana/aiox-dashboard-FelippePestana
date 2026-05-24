@@ -184,11 +184,11 @@ export default function AutomationPanel() {
   const activeCount = automations.filter((a) => a.isActive).length;
 
   const stepTypeConfig: Record<string, { color: string; bg: string; icon: React.ReactNode }> = {
-    trigger: { color: 'text-[#0D9488]', bg: 'bg-[#0D9488]', icon: <Zap className="w-4 h-4 text-white" /> },
-    wait: { color: 'text-amber-600', bg: 'bg-amber-400', icon: <Timer className="w-4 h-4 text-white" /> },
-    message: { color: 'text-blue-600', bg: 'bg-blue-500', icon: <Send className="w-4 h-4 text-white" /> },
-    condition: { color: 'text-purple-600', bg: 'bg-purple-500', icon: <Target className="w-4 h-4 text-white" /> },
-    action: { color: 'text-[#D4A76A]', bg: 'bg-[#D4A76A]', icon: <Settings className="w-4 h-4 text-white" /> },
+    trigger: { color: 'text-[#0D9488]', bg: 'bg-[#0D9488]', icon: <Zap className="w-4 h-4 text-[#1D1D1F]" /> },
+    wait: { color: 'text-amber-600', bg: 'bg-amber-400', icon: <Timer className="w-4 h-4 text-[#1D1D1F]" /> },
+    message: { color: 'text-blue-600', bg: 'bg-blue-500', icon: <Send className="w-4 h-4 text-[#1D1D1F]" /> },
+    condition: { color: 'text-purple-600', bg: 'bg-purple-500', icon: <Target className="w-4 h-4 text-[#1D1D1F]" /> },
+    action: { color: 'text-[#D4A76A]', bg: 'bg-[#D4A76A]', icon: <Settings className="w-4 h-4 text-[#1D1D1F]" /> },
   };
 
   // Detail View
@@ -305,7 +305,7 @@ export default function AutomationPanel() {
           <h1 className="text-2xl font-bold text-gray-800">Automacao de Marketing</h1>
           <p className="text-sm text-gray-500">Sbarzi Odontologia e Saude</p>
         </div>
-        <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0D9488] text-white rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors shadow-sm">
+        <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0D9488] text-[#1D1D1F] rounded-lg text-sm font-medium hover:bg-[#0D9488]/90 transition-colors shadow-sm">
           <Plus className="w-4 h-4" /> Novo Workflow
         </button>
       </div>
