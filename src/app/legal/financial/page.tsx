@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   DollarSign,
   TrendingUp,
@@ -10,9 +10,27 @@ import {
   ArrowDownRight,
   CreditCard,
   Wallet,
+  Plus,
+  X,
+  Save,
 } from 'lucide-react';
 import { useLegalFinancialStore } from '@/stores/legal-financial-store';
 import { useLegalStore } from '@/stores/legal-store';
+import type { LegalTransactionType, LegalTransactionCategory } from '@/types/legal';
+
+const CATEGORIES: { value: LegalTransactionCategory; label: string; type: LegalTransactionType }[] = [
+  { value: 'honorario_contratual', label: 'Honorário Contratual', type: 'income' },
+  { value: 'honorario_sucumbencial', label: 'Honorário Sucumbencial', type: 'income' },
+  { value: 'honorario_exitum', label: 'Honorário Ad Exitum', type: 'income' },
+  { value: 'custas_judiciais', label: 'Custas Judiciais', type: 'expense' },
+  { value: 'emolumentos', label: 'Emolumentos', type: 'expense' },
+  { value: 'pericia', label: 'Perícia', type: 'expense' },
+  { value: 'salario', label: 'Salário', type: 'expense' },
+  { value: 'aluguel', label: 'Aluguel', type: 'expense' },
+  { value: 'tecnologia', label: 'Tecnologia', type: 'expense' },
+  { value: 'marketing_legal', label: 'Marketing', type: 'expense' },
+  { value: 'outro', label: 'Outro', type: 'income' },
+];
 
 export default function FinancialPage() {
   const {
@@ -21,9 +39,19 @@ export default function FinancialPage() {
     getTotalExpenses,
     getProfit,
     getOutstandingHonorarios,
+    addTransaction,
   } = useLegalFinancialStore();
 
   const { getClientById, getProcessById } = useLegalStore();
+
+  const [showForm, setShowForm] = useState(false);
+  const [txnForm, setTxnForm] = useState({
+    type: 'income' as LegalTransactionType,
+    category: 'honorario_contratual' as LegalTransactionCategory,
+    amount: '',
+    description: '',
+    date: new Date().toISOString().split('T')[0],
+  });
 
   const totalRevenue = getTotalRevenue();
   const totalExpenses = getTotalExpenses();
@@ -104,15 +132,95 @@ export default function FinancialPage() {
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-          <DollarSign className="h-7 w-7 text-amber-400" />
-          Dashboard Financeiro
-        </h1>
-        <p className="text-sm text-[#6b7a8d] mt-1">
-          Visao geral das financas do escritorio
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+            <DollarSign className="h-7 w-7 text-amber-400" />
+            Dashboard Financeiro
+          </h1>
+          <p className="text-sm text-[#6b7a8d] mt-1">
+            Visao geral das financas do escritorio
+          </p>
+        </div>
+        <button
+          onClick={() => setShowForm(true)}
+          className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
+        >
+          <Plus className="h-4 w-4" /> Nova Transação
+        </button>
       </div>
+
+      {/* Transaction Form */}
+      {showForm && (
+        <div className="rounded-xl border border-amber-500/20 bg-[#0d1320] p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-white">Nova Transação</h2>
+            <button onClick={() => setShowForm(false)} className="text-[#6b7a8d] hover:text-white">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <div>
+              <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Tipo *</label>
+              <div className="flex gap-2">
+                <button onClick={() => setTxnForm(f => ({ ...f, type: 'income' }))}
+                  className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${txnForm.type === 'income' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'text-[#6b7a8d] border border-[#1a2332]'}`}>
+                  Receita
+                </button>
+                <button onClick={() => setTxnForm(f => ({ ...f, type: 'expense' }))}
+                  className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${txnForm.type === 'expense' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'text-[#6b7a8d] border border-[#1a2332]'}`}>
+                  Despesa
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Categoria *</label>
+              <select value={txnForm.category} onChange={(e) => setTxnForm(f => ({ ...f, category: e.target.value as LegalTransactionCategory }))}
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50">
+                {CATEGORIES.filter(c => c.type === txnForm.type || c.value === 'outro').map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Valor (R$) *</label>
+              <input type="number" value={txnForm.amount} onChange={(e) => setTxnForm(f => ({ ...f, amount: e.target.value }))}
+                placeholder="1000" min="0" step="0.01"
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white placeholder-[#4a5568] focus:border-amber-500/50 focus:outline-none" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Data *</label>
+              <input type="date" value={txnForm.date} onChange={(e) => setTxnForm(f => ({ ...f, date: e.target.value }))}
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Descrição</label>
+              <input type="text" value={txnForm.description} onChange={(e) => setTxnForm(f => ({ ...f, description: e.target.value }))}
+                placeholder="Descrição..."
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white placeholder-[#4a5568] focus:border-amber-500/50 focus:outline-none" />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-[#1a2332]">
+            <button onClick={() => setShowForm(false)} className="rounded-lg border border-[#1a2332] px-4 py-2 text-sm text-[#6b7a8d] hover:text-white transition-colors">Cancelar</button>
+            <button
+              onClick={() => {
+                if (!txnForm.amount || !txnForm.date) return;
+                addTransaction({
+                  type: txnForm.type,
+                  category: txnForm.category,
+                  amount: parseFloat(txnForm.amount),
+                  description: txnForm.description,
+                  date: txnForm.date,
+                });
+                setTxnForm({ type: 'income', category: 'honorario_contratual', amount: '', description: '', date: new Date().toISOString().split('T')[0] });
+                setShowForm(false);
+              }}
+              disabled={!txnForm.amount || !txnForm.date}
+              className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 disabled:opacity-50 transition-colors"
+            >
+              <Save className="h-4 w-4" /> Salvar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
