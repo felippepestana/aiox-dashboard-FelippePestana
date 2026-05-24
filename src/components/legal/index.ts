@@ -44,7 +44,7 @@ export type { DeadlineCalculatorProps, DeadlineCalcResult } from './DeadlineCalc
 export { DocumentAnalysis } from './DocumentAnalysis';
 export { BIDashboard } from './BIDashboard';
 export type { AnalysisResult, AnalysisEntity, AnalysisClause, DocumentAnalysisProps } from './DocumentAnalysis';
-export type { BIDashboardProps, BIMetric, RevenueByArea, CaseDistribution, MonthlyRevenue, TopClient } from './BIDashboard';
+export type { BIDashboardProps } from './BIDashboard';
 export { PetitionWizard } from './PetitionWizard';
 export { JurimetriaPanel } from './JurimetriaPanel';
 export { ProcessFlowchart } from './ProcessFlowchart';
