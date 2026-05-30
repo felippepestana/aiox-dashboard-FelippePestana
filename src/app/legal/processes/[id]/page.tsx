@@ -2,9 +2,9 @@
 
 import { use, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Briefcase, Clock, FileText, MessageSquare, RefreshCw, Edit3, Check, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Briefcase, Clock, FileText, MessageSquare, RefreshCw, Edit3, Check, ChevronDown, Plus, Save, X, Wand2 } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
-import type { ProcessStatus } from '@/types/legal';
+import type { ProcessStatus, DeadlineType } from '@/types/legal';
 
 const areaLabels: Record<string, string> = {
   civil: 'Cível', trabalhista: 'Trabalhista', tributario: 'Tributário', penal: 'Penal',
@@ -35,6 +35,12 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ id: st
 
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [showAddDeadline, setShowAddDeadline] = useState(false);
+  const [showAddMovement, setShowAddMovement] = useState(false);
+  const [dlForm, setDlForm] = useState({ title: '', type: 'judicial' as DeadlineType, dueDate: '' });
+  const [mvForm, setMvForm] = useState({ description: '', date: new Date().toISOString().split('T')[0] });
+
+  const { addDeadline, addMovement } = useLegalStore();
 
   const process = getProcessById(id);
   const client = process ? getClientById(process.clientId) : undefined;
@@ -152,6 +158,90 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ id: st
         </div>
       </div>
 
+      {/* Quick Actions */}
+      <div className="flex flex-wrap gap-2">
+        <button onClick={() => setShowAddDeadline(!showAddDeadline)}
+          className="flex items-center gap-1.5 rounded-lg border border-[#1a2332] px-3 py-2 text-xs text-[#8899aa] hover:text-amber-400 hover:border-amber-500/20 transition-colors">
+          <Plus className="h-3 w-3" /> Adicionar Prazo
+        </button>
+        <button onClick={() => setShowAddMovement(!showAddMovement)}
+          className="flex items-center gap-1.5 rounded-lg border border-[#1a2332] px-3 py-2 text-xs text-[#8899aa] hover:text-amber-400 hover:border-amber-500/20 transition-colors">
+          <Plus className="h-3 w-3" /> Registrar Movimentação
+        </button>
+        <Link href="/legal/generator"
+          className="flex items-center gap-1.5 rounded-lg border border-[#1a2332] px-3 py-2 text-xs text-[#8899aa] hover:text-amber-400 hover:border-amber-500/20 transition-colors">
+          <Wand2 className="h-3 w-3" /> Gerar Petição
+        </Link>
+        <Link href="/legal/analyze"
+          className="flex items-center gap-1.5 rounded-lg border border-[#1a2332] px-3 py-2 text-xs text-[#8899aa] hover:text-amber-400 hover:border-amber-500/20 transition-colors">
+          <FileText className="h-3 w-3" /> Analisar Documento
+        </Link>
+      </div>
+
+      {/* Inline Add Deadline */}
+      {showAddDeadline && (
+        <div className="rounded-xl border border-amber-500/20 bg-[#0d1320] p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-white">Novo Prazo</h3>
+            <button onClick={() => setShowAddDeadline(false)} className="text-[#6b7a8d] hover:text-white"><X className="h-4 w-4" /></button>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <input type="text" placeholder="Título do prazo..." value={dlForm.title}
+              onChange={(e) => setDlForm(f => ({ ...f, title: e.target.value }))}
+              className="flex-1 min-w-[200px] rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white placeholder-[#4a5568] focus:border-amber-500/50 focus:outline-none" />
+            <select value={dlForm.type} onChange={(e) => setDlForm(f => ({ ...f, type: e.target.value as DeadlineType }))}
+              className="rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="fatal">Fatal</option>
+              <option value="judicial">Judicial</option>
+              <option value="internal">Interno</option>
+              <option value="hearing">Audiência</option>
+              <option value="mediation">Mediação</option>
+            </select>
+            <input type="date" value={dlForm.dueDate} onChange={(e) => setDlForm(f => ({ ...f, dueDate: e.target.value }))}
+              className="rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:outline-none" />
+            <button
+              onClick={() => {
+                if (!dlForm.title || !dlForm.dueDate) return;
+                addDeadline({ processId: id, title: dlForm.title, type: dlForm.type, dueDate: new Date(dlForm.dueDate).toISOString(), reminderDays: [3, 1], status: 'pending', assignedTo: '', notes: '' });
+                setDlForm({ title: '', type: 'judicial', dueDate: '' });
+                setShowAddDeadline(false);
+              }}
+              disabled={!dlForm.title || !dlForm.dueDate}
+              className="flex items-center gap-1 rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-black hover:bg-amber-400 disabled:opacity-50 transition-colors">
+              <Save className="h-3.5 w-3.5" /> Salvar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Inline Add Movement */}
+      {showAddMovement && (
+        <div className="rounded-xl border border-amber-500/20 bg-[#0d1320] p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-white">Registrar Movimentação</h3>
+            <button onClick={() => setShowAddMovement(false)} className="text-[#6b7a8d] hover:text-white"><X className="h-4 w-4" /></button>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <input type="text" placeholder="Descrição da movimentação..." value={mvForm.description}
+              onChange={(e) => setMvForm(f => ({ ...f, description: e.target.value }))}
+              className="flex-1 min-w-[200px] rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white placeholder-[#4a5568] focus:border-amber-500/50 focus:outline-none" />
+            <input type="date" value={mvForm.date} onChange={(e) => setMvForm(f => ({ ...f, date: e.target.value }))}
+              className="rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:outline-none" />
+            <button
+              onClick={() => {
+                if (!mvForm.description) return;
+                addMovement({ processId: id, description: mvForm.description, date: mvForm.date, type: '', source: 'manual', isRead: true });
+                setMvForm({ description: '', date: new Date().toISOString().split('T')[0] });
+                setShowAddMovement(false);
+              }}
+              disabled={!mvForm.description}
+              className="flex items-center gap-1 rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-black hover:bg-amber-400 disabled:opacity-50 transition-colors">
+              <Save className="h-3.5 w-3.5" /> Salvar
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Tabs Content */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Deadlines */}
@@ -169,7 +259,7 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ id: st
               {deadlines.slice(0, 5).map((d) => (
                 <div key={d.id} className="flex items-center justify-between py-2 border-b border-[#1a2332] last:border-0">
                   <span className="text-sm text-[#c0ccda]">{d.title}</span>
-                  <span className="text-xs text-[#6b7a8d]">{d.dueDate.split('T')[0]}</span>
+                  <span className={`text-xs ${d.status === 'completed' ? 'text-green-400' : 'text-[#6b7a8d]'}`}>{d.dueDate.split('T')[0]}</span>
                 </div>
               ))}
             </div>
