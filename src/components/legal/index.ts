@@ -67,3 +67,5 @@ export type { PetitionTemplateSelectorProps } from './PetitionTemplateSelector';
 export type { PetitionTemplateEditorProps } from './PetitionTemplateEditor';
 export { CourtIntegration } from './CourtIntegration';
 export type { CourtIntegrationProps, CourtIntegrationState } from './CourtIntegration';
+export { PaginationControls } from './PaginationControls';
+export type { PaginationControlsProps } from './PaginationControls';
