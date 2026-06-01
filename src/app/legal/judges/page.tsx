@@ -10,7 +10,12 @@ import {
   BarChart3,
   TrendingUp,
   ArrowRight,
+  Sparkles,
+  Loader2,
+  AlertCircle,
+  Brain,
 } from 'lucide-react';
+import type { MagistrateProfile } from '@/lib/legal-intelligence';
 
 interface JudgeProfile {
   id: string;
@@ -82,13 +87,172 @@ const MOCK_JUDGES: JudgeProfile[] = [
   },
 ];
 
-const TRIBUNALS = ['Todos', 'TJSP', 'TJRJ', 'TRF3', 'TRT2'];
+const TRIBUNALS = ['Todos', 'TJSP', 'TJRJ', 'TRF3', 'TRT2', 'STJ', 'STF', 'TST'];
 const JUDGE_AREAS = ['Todas', 'Civil', 'Consumidor', 'Familia', 'Empresarial', 'Tributario', 'Trabalhista', 'Digital', 'Administrativo', 'Previdenciario'];
+
+function SkeletonProfileCard() {
+  return (
+    <div className="rounded-xl border border-amber-500/10 bg-[#0d1320] p-5 animate-pulse">
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <div className="h-4 w-48 rounded bg-[#1a2332] mb-2" />
+          <div className="h-3 w-32 rounded bg-[#1a2332] mb-1" />
+          <div className="h-3 w-16 rounded-full bg-[#1a2332]" />
+        </div>
+      </div>
+      <div className="flex gap-1.5 mb-4">
+        {[1, 2, 3].map((i) => <div key={i} className="h-4 w-16 rounded-full bg-[#1a2332]" />)}
+      </div>
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        {[1, 2, 3].map((i) => <div key={i} className="h-12 rounded bg-[#1a2332]" />)}
+      </div>
+      <div className="h-1.5 rounded-full bg-[#1a2332]" />
+    </div>
+  );
+}
+
+function AiProfileModal({ profile, onClose }: { profile: MagistrateProfile; onClose: () => void }) {
+  const sentimentColor = profile.sentimentScore >= 75 ? 'text-green-400' : profile.sentimentScore >= 50 ? 'text-amber-400' : 'text-red-400';
+  const sentimentBar = profile.sentimentScore >= 75 ? 'bg-green-500' : profile.sentimentScore >= 50 ? 'bg-amber-500' : 'bg-red-500';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-amber-500/20 bg-[#0d1320] p-6 space-y-5">
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Brain className="h-5 w-5 text-amber-400" />
+              <span className="text-xs text-amber-400 font-medium uppercase tracking-wider">Perfil por IA</span>
+            </div>
+            <h2 className="text-lg font-bold text-white">{profile.name}</h2>
+            <p className="text-sm text-[#6b7a8d]">{profile.vara || profile.position} — {profile.tribunal}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg bg-[#1a2332] px-3 py-1.5 text-xs text-[#6b7a8d] hover:text-white transition-colors"
+          >
+            Fechar
+          </button>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="rounded-xl border border-[#1a2332] bg-[#0a0f1a] p-3 text-center">
+            <p className="text-lg font-bold text-white">{profile.totalDecisions.toLocaleString('pt-BR')}</p>
+            <p className="text-[10px] text-[#6b7a8d]">Decisoes</p>
+          </div>
+          <div className="rounded-xl border border-[#1a2332] bg-[#0a0f1a] p-3 text-center">
+            <p className="text-lg font-bold text-white">{profile.overallFavorabilityRate}%</p>
+            <p className="text-[10px] text-[#6b7a8d]">Taxa Favoravel</p>
+          </div>
+          <div className="rounded-xl border border-[#1a2332] bg-[#0a0f1a] p-3 text-center">
+            <p className="text-lg font-bold text-white">{profile.averageDecisionTimeDays}d</p>
+            <p className="text-[10px] text-[#6b7a8d]">Duracao Media</p>
+          </div>
+          <div className="rounded-xl border border-[#1a2332] bg-[#0a0f1a] p-3 text-center">
+            <p className={`text-lg font-bold ${sentimentColor}`}>{profile.sentimentScore}</p>
+            <p className="text-[10px] text-[#6b7a8d]">Sentimento</p>
+          </div>
+        </div>
+
+        {/* Sentiment bar */}
+        <div>
+          <div className="flex justify-between mb-1.5">
+            <span className="text-xs text-[#6b7a8d]">Score de Sentimento</span>
+            <span className={`text-xs font-medium ${sentimentColor}`}>{profile.sentimentScore}/100</span>
+          </div>
+          <div className="h-2 rounded-full bg-[#1a2332]">
+            <div className={`h-2 rounded-full ${sentimentBar} transition-all`} style={{ width: `${profile.sentimentScore}%` }} />
+          </div>
+        </div>
+
+        {/* Tendencies */}
+        {profile.tendencies && profile.tendencies.length > 0 && (
+          <div>
+            <h3 className="text-sm font-semibold text-white mb-3">Tendencias por Area</h3>
+            <div className="space-y-3">
+              {profile.tendencies.map((t) => (
+                <div key={t.area}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-white">{t.area}</span>
+                    <span className="text-xs text-[#6b7a8d]">{t.totalDecisions} decisoes</span>
+                  </div>
+                  <div className="flex h-5 rounded-lg overflow-hidden bg-[#0a0f1a]">
+                    <div className="bg-green-500 flex items-center justify-center" style={{ width: `${t.favorableRate}%` }}>
+                      {t.favorableRate > 15 && <span className="text-[9px] font-bold text-white">{t.favorableRate}%</span>}
+                    </div>
+                    <div className="bg-red-500 flex items-center justify-center" style={{ width: `${100 - t.favorableRate}%` }}>
+                      {(100 - t.favorableRate) > 15 && <span className="text-[9px] font-bold text-white">{100 - t.favorableRate}%</span>}
+                    </div>
+                  </div>
+                  {t.commonPatterns && t.commonPatterns.length > 0 && (
+                    <ul className="mt-1.5 space-y-0.5">
+                      {t.commonPatterns.slice(0, 2).map((p, i) => (
+                        <li key={i} className="text-[11px] text-[#6b7a8d] flex items-start gap-1.5">
+                          <span className="text-amber-500 mt-0.5">•</span>
+                          <span>{p}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recommendations */}
+        {profile.strategicRecommendations && profile.strategicRecommendations.length > 0 && (
+          <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+            <h3 className="text-sm font-semibold text-amber-400 mb-3 flex items-center gap-2">
+              <Brain className="h-4 w-4" />
+              Recomendacoes Estrategicas
+            </h3>
+            <ul className="space-y-2">
+              {profile.strategicRecommendations.map((rec, i) => (
+                <li key={i} className="text-sm text-[#c0c8d4] flex items-start gap-2">
+                  <span className="text-amber-400 font-bold mt-0.5">{i + 1}.</span>
+                  <span>{rec}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Key Topics */}
+        {profile.keyTopics && profile.keyTopics.length > 0 && (
+          <div>
+            <h3 className="text-sm font-semibold text-white mb-2">Topicos-Chave</h3>
+            <div className="flex flex-wrap gap-2">
+              {profile.keyTopics.map((topic) => (
+                <span key={topic} className="rounded-lg bg-[#1a2332] border border-[#2a3342] px-3 py-1 text-xs text-white">
+                  {topic}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <p className="text-[10px] text-[#6b7a8d] border-t border-[#1a2332] pt-3">
+          Perfil gerado por IA com base em dados historicos. Use como referencia estrategica, nao como garantia de resultado.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export default function JudgesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [tribunalFilter, setTribunalFilter] = useState('Todos');
   const [areaFilter, setAreaFilter] = useState('Todas');
+
+  // AI profiling state
+  const [aiJudgeName, setAiJudgeName] = useState('');
+  const [aiTribunal, setAiTribunal] = useState('');
+  const [aiLoading, setAiLoading] = useState<string | null>(null); // stores judge name being profiled
+  const [aiProfile, setAiProfile] = useState<MagistrateProfile | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     let results = MOCK_JUDGES;
@@ -99,7 +263,7 @@ export default function JudgesPage() {
         (j) =>
           j.name.toLowerCase().includes(q) ||
           j.vara.toLowerCase().includes(q) ||
-          j.tribunal.toLowerCase().includes(q)
+          j.tribunal.toLowerCase().includes(q),
       );
     }
 
@@ -109,12 +273,42 @@ export default function JudgesPage() {
 
     if (areaFilter !== 'Todas') {
       results = results.filter((j) =>
-        j.areas.some((a) => a.toLowerCase().includes(areaFilter.toLowerCase()))
+        j.areas.some((a) => a.toLowerCase().includes(areaFilter.toLowerCase())),
       );
     }
 
     return results;
   }, [searchQuery, tribunalFilter, areaFilter]);
+
+  async function profileJudgeWithAI(name: string, tribunal?: string) {
+    setAiLoading(name);
+    setAiError(null);
+
+    try {
+      const response = await fetch('/api/legal/intelligence', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'profile-magistrate', judge: name, tribunal }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || `Erro ${response.status}`);
+      }
+
+      const profile: MagistrateProfile = await response.json();
+      setAiProfile(profile);
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : 'Erro ao gerar perfil');
+    } finally {
+      setAiLoading(null);
+    }
+  }
+
+  async function handleCustomAiProfile() {
+    if (!aiJudgeName.trim()) return;
+    await profileJudgeWithAI(aiJudgeName, aiTribunal || undefined);
+  }
 
   function getSentimentColor(score: number) {
     if (score >= 75) return 'text-green-400';
@@ -136,6 +330,9 @@ export default function JudgesPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
+      {/* AI Profile Modal */}
+      {aiProfile && <AiProfileModal profile={aiProfile} onClose={() => setAiProfile(null)} />}
+
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-white flex items-center gap-3">
@@ -145,6 +342,54 @@ export default function JudgesPage() {
         <p className="text-sm text-[#6b7a8d] mt-1">
           Perfis, padroes de decisao e analise de magistrados
         </p>
+      </div>
+
+      {/* AI Profile by Name */}
+      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Brain className="h-4 w-4 text-amber-400" />
+          <span className="text-sm font-semibold text-amber-400">Perfil de Magistrado por IA</span>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <div className="relative flex-1 min-w-[200px]">
+            <Gavel className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b7a8d]" />
+            <input
+              value={aiJudgeName}
+              onChange={(e) => setAiJudgeName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleCustomAiProfile()}
+              placeholder="Nome do magistrado (ex: Min. Nancy Andrighi)"
+              className="w-full rounded-lg bg-[#0a0f1a] border border-amber-500/30 pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-[#6b7a8d] focus:outline-none focus:border-amber-500/60"
+            />
+          </div>
+          <div className="relative">
+            <Scale className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b7a8d]" />
+            <input
+              value={aiTribunal}
+              onChange={(e) => setAiTribunal(e.target.value)}
+              placeholder="Tribunal (opcional)"
+              className="rounded-lg bg-[#0a0f1a] border border-amber-500/30 pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-[#6b7a8d] focus:outline-none focus:border-amber-500/60 w-48"
+            />
+          </div>
+          <button
+            onClick={handleCustomAiProfile}
+            disabled={!!aiLoading || !aiJudgeName.trim()}
+            className="flex items-center gap-2 rounded-lg bg-amber-500/10 border border-amber-500/30 px-4 py-2.5 text-sm font-medium text-amber-400 hover:bg-amber-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {aiLoading === aiJudgeName ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
+            )}
+            Gerar Perfil
+          </button>
+        </div>
+
+        {aiError && (
+          <div className="mt-3 flex items-center gap-2 rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3">
+            <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0" />
+            <p className="text-sm text-red-400">{aiError}</p>
+          </div>
+        )}
       </div>
 
       {/* Search & Filters */}
@@ -219,22 +464,39 @@ export default function JudgesPage() {
       {/* Judge Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {filtered.map((judge) => (
-          <Link
+          <div
             key={judge.id}
-            href={`/legal/judges/${judge.id}`}
-            className="group rounded-xl border border-[#1a2332] bg-[#0d1320] p-5 hover:border-amber-500/20 transition-all"
+            className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-5 hover:border-amber-500/10 transition-all"
           >
             <div className="flex items-start justify-between mb-4">
-              <div>
-                <h3 className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
-                  {judge.name}
-                </h3>
-                <p className="text-xs text-[#6b7a8d] mt-0.5">{judge.vara}</p>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-semibold text-white truncate">{judge.name}</h3>
+                <p className="text-xs text-[#6b7a8d] mt-0.5 truncate">{judge.vara}</p>
                 <span className="inline-block rounded-full bg-[#1a2332] px-2.5 py-0.5 text-[10px] text-[#6b7a8d] mt-1">
                   {judge.tribunal}
                 </span>
               </div>
-              <ArrowRight className="h-4 w-4 text-[#6b7a8d] group-hover:text-amber-400 transition-colors" />
+              <div className="flex items-center gap-1.5 ml-2">
+                <button
+                  onClick={() => profileJudgeWithAI(judge.name, judge.tribunal)}
+                  disabled={!!aiLoading}
+                  title="Gerar perfil com IA"
+                  className="flex items-center gap-1 rounded-lg bg-amber-500/10 border border-amber-500/20 px-2 py-1.5 text-amber-400 hover:bg-amber-500/20 transition-colors disabled:opacity-50"
+                >
+                  {aiLoading === judge.name ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Brain className="h-3.5 w-3.5" />
+                  )}
+                  <span className="text-[10px] font-medium">IA</span>
+                </button>
+                <Link
+                  href={`/legal/judges/${judge.id}`}
+                  className="rounded-lg bg-[#1a2332] p-1.5 text-[#6b7a8d] hover:text-amber-400 transition-colors"
+                >
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-1.5 mb-4">
@@ -280,7 +542,7 @@ export default function JudgesPage() {
                 />
               </div>
             </div>
-          </Link>
+          </div>
         ))}
 
         {filtered.length === 0 && (
@@ -290,6 +552,14 @@ export default function JudgesPage() {
           </div>
         )}
       </div>
+
+      {/* Skeleton loading cards while AI is processing */}
+      {aiLoading && (
+        <div className="fixed bottom-6 right-6 flex items-center gap-3 rounded-xl border border-amber-500/20 bg-[#0d1320] px-4 py-3 shadow-xl">
+          <Loader2 className="h-4 w-4 text-amber-400 animate-spin" />
+          <p className="text-sm text-amber-400">Gerando perfil com IA...</p>
+        </div>
+      )}
     </div>
   );
 }
