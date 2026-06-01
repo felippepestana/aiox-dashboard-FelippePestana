@@ -10,6 +10,9 @@ import { useLegalStrategyStore } from '@/stores/legal-strategy-store';
 import { useDeadlineAlerts } from '@/hooks/useDeadlineAlerts';
 import { DeadlineAlerts } from '@/components/legal/DeadlineAlerts';
 import { DeadlineToast } from '@/components/legal/DeadlineToast';
+import { MobileBottomNav } from '@/components/legal/MobileBottomNav';
+import { PWAInstallPrompt } from '@/components/legal/PWAInstallPrompt';
+import { OfflineIndicator } from '@/components/legal/OfflineIndicator';
 import {
   Scale,
   Briefcase,
@@ -351,12 +354,21 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto pt-14 lg:pt-0">
+      <main className="flex-1 overflow-auto pt-14 pb-16 lg:pt-0 lg:pb-0">
         {children}
       </main>
 
       {/* Session toast for critical deadlines */}
       <DeadlineToast />
+
+      {/* Mobile bottom navigation */}
+      <MobileBottomNav onOpenSidebar={() => setMobileOpen(true)} />
+
+      {/* PWA install prompt */}
+      <PWAInstallPrompt />
+
+      {/* Offline indicator */}
+      <OfflineIndicator />
     </div>
   );
 }
