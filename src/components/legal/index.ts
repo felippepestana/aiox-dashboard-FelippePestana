@@ -61,3 +61,7 @@ export { DocumentVersionHistory } from './DocumentVersionHistory';
 export { ApprovalWorkflow } from './ApprovalWorkflow';
 export type { DocumentVersionHistoryProps } from './DocumentVersionHistory';
 export type { ApprovalWorkflowProps } from './ApprovalWorkflow';
+export { PetitionTemplateSelector } from './PetitionTemplateSelector';
+export { PetitionTemplateEditor } from './PetitionTemplateEditor';
+export type { PetitionTemplateSelectorProps } from './PetitionTemplateSelector';
+export type { PetitionTemplateEditorProps } from './PetitionTemplateEditor';

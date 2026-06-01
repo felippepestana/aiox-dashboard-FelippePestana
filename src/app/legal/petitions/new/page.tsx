@@ -3,9 +3,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Save, Sparkles } from 'lucide-react';
+import { ArrowLeft, Save, Sparkles, LayoutTemplate, PenLine } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
+import { PetitionTemplateSelector } from '@/components/legal/PetitionTemplateSelector';
+import { PetitionTemplateEditor } from '@/components/legal/PetitionTemplateEditor';
 import type { PetitionType } from '@/types/legal';
+import type { PetitionTemplate } from '@/lib/petition-templates';
+
+type NewPetitionMode = 'choose' | 'template-select' | 'template-edit' | 'scratch';
 
 const PETITION_TYPES: { value: PetitionType; label: string }[] = [
   { value: 'inicial', label: 'Petição Inicial' },
@@ -25,8 +30,12 @@ const PETITION_TYPES: { value: PetitionType; label: string }[] = [
 
 export default function NewPetitionPage() {
   const router = useRouter();
-  const { addPetition, processes } = useLegalStore();
+  const { addPetition, processes, clients, getClientById } = useLegalStore();
 
+  const [mode, setMode] = useState<NewPetitionMode>('choose');
+  const [selectedTemplate, setSelectedTemplate] = useState<PetitionTemplate | null>(null);
+
+  // Scratch form state
   const [form, setForm] = useState({
     processId: '',
     type: 'inicial' as PetitionType,
@@ -34,7 +43,16 @@ export default function NewPetitionPage() {
     content: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Template-based form state (processId selected before editor opens)
+  const [templateProcessId, setTemplateProcessId] = useState('');
+
+  const fieldClass =
+    'w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] py-2 px-3 text-sm text-white placeholder-[#4a5568] focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/20';
+  const labelClass = 'block text-xs font-medium text-[#8899aa] mb-1';
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
+  const handleScratchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     addPetition({
       ...form,
@@ -44,18 +62,194 @@ export default function NewPetitionPage() {
     router.push('/legal/petitions');
   };
 
-  const fieldClass = "w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] py-2 px-3 text-sm text-white placeholder-[#4a5568] focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/20";
-  const labelClass = "block text-xs font-medium text-[#8899aa] mb-1";
+  const handleTemplateSelect = (template: PetitionTemplate) => {
+    setSelectedTemplate(template);
+    setMode('template-edit');
+  };
+
+  const handleTemplateSave = (content: string, title: string) => {
+    const linkedProcess = processes.find((p) => p.id === templateProcessId);
+
+    addPetition({
+      processId: templateProcessId,
+      type: (selectedTemplate?.petitionType as PetitionType) ?? 'outro',
+      title,
+      content,
+      status: 'draft',
+      documentIds: [],
+      templateId: selectedTemplate?.id,
+    });
+    router.push('/legal/petitions');
+  };
+
+  // Get linked process/client for the template editor auto-fill
+  const linkedProcess = processes.find((p) => p.id === templateProcessId);
+  const linkedClient = linkedProcess ? getClientById(linkedProcess.clientId) : undefined;
+
+  // ── Mode: Choose ──────────────────────────────────────────────────────────
+
+  if (mode === 'choose') {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center gap-4">
+          <Link href="/legal/petitions" className="text-[#6b7a8d] hover:text-white transition-colors">
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold text-white">Nova Peça Processual</h1>
+            <p className="text-sm text-[#6b7a8d] mt-1">
+              Escolha como deseja criar a nova peça
+            </p>
+          </div>
+        </div>
+
+        {/* Option cards */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 max-w-2xl">
+          {/* Template */}
+          <button
+            type="button"
+            onClick={() => setMode('template-select')}
+            className="group rounded-xl border border-[#1a2332] bg-[#0d1320] p-6 text-left hover:border-amber-500/30 hover:bg-amber-500/5 transition-all"
+          >
+            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 mb-4 group-hover:bg-amber-500/20 transition-colors">
+              <LayoutTemplate className="h-6 w-6 text-amber-400" />
+            </div>
+            <h2 className="text-base font-semibold text-white mb-2">Usar Template</h2>
+            <p className="text-sm text-[#6b7a8d] leading-relaxed">
+              Escolha entre 10 modelos prontos de peças brasileiras com estrutura legal completa e
+              preenchimento automático de variáveis.
+            </p>
+            <div className="mt-4 flex items-center gap-1.5 text-xs text-amber-400">
+              <Sparkles className="h-3 w-3" />
+              <span>Recomendado — mais rápido</span>
+            </div>
+          </button>
+
+          {/* Scratch */}
+          <button
+            type="button"
+            onClick={() => setMode('scratch')}
+            className="group rounded-xl border border-[#1a2332] bg-[#0d1320] p-6 text-left hover:border-[#2a3342] transition-all"
+          >
+            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#0a0f1a] border border-[#1a2332] mb-4 group-hover:border-[#2a3342] transition-colors">
+              <PenLine className="h-6 w-6 text-[#6b7a8d]" />
+            </div>
+            <h2 className="text-base font-semibold text-white mb-2">Em Branco</h2>
+            <p className="text-sm text-[#6b7a8d] leading-relaxed">
+              Comece com uma folha em branco e redija a peça livremente, sem estrutura
+              pré-definida.
+            </p>
+            <div className="mt-4 flex items-center gap-1.5 text-xs text-[#6b7a8d]">
+              <PenLine className="h-3 w-3" />
+              <span>Controle total do conteúdo</span>
+            </div>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Mode: Template Select ─────────────────────────────────────────────────
+
+  if (mode === 'template-select') {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => setMode('choose')}
+            className="text-[#6b7a8d] hover:text-white transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-white">Selecionar Template</h1>
+            <p className="text-sm text-[#6b7a8d] mt-1">
+              Escolha o modelo de peça processual
+            </p>
+          </div>
+        </div>
+
+        {/* Optional: link a process before selecting template */}
+        {processes.length > 0 && (
+          <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-4">
+            <label className={labelClass}>
+              Vincular a um Processo (opcional — melhora o preenchimento automático)
+            </label>
+            <select
+              className={fieldClass}
+              value={templateProcessId}
+              onChange={(e) => setTemplateProcessId(e.target.value)}
+            >
+              <option value="">Sem processo vinculado</option>
+              {processes.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.cnj} — {p.title}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6">
+          <PetitionTemplateSelector
+            onSelect={handleTemplateSelect}
+            selectedTemplateId={selectedTemplate?.id}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // ── Mode: Template Edit ───────────────────────────────────────────────────
+
+  if (mode === 'template-edit' && selectedTemplate) {
+    return (
+      <div className="p-6 space-y-6">
+        {/* Squad Integration Banner */}
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+          <div className="flex items-start gap-3">
+            <Sparkles className="h-5 w-5 text-amber-400 mt-0.5 flex-shrink-0" />
+            <div>
+              <h3 className="text-sm font-medium text-amber-400">Assistência por IA</h3>
+              <p className="text-xs text-[#8899aa] mt-1">
+                Ao salvar o rascunho, o squad <strong>case-analysis</strong> pode ser acionado
+                para auxiliar na fundamentação, pesquisa jurisprudencial e revisão da peça.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6">
+          <PetitionTemplateEditor
+            template={selectedTemplate}
+            process={linkedProcess}
+            client={linkedClient}
+            onBack={() => setMode('template-select')}
+            onSave={handleTemplateSave}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // ── Mode: Scratch ─────────────────────────────────────────────────────────
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/legal/petitions" className="text-[#6b7a8d] hover:text-white transition-colors">
+        <button
+          type="button"
+          onClick={() => setMode('choose')}
+          className="text-[#6b7a8d] hover:text-white transition-colors"
+        >
           <ArrowLeft className="h-5 w-5" />
-        </Link>
+        </button>
         <div>
-          <h1 className="text-2xl font-bold text-white">Nova Peça Processual</h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">Elabore uma nova peça com assistência do squad de análise</p>
+          <h1 className="text-2xl font-bold text-white">Nova Peça — Em Branco</h1>
+          <p className="text-sm text-[#6b7a8d] mt-1">
+            Elabore uma nova peça com assistência do squad de análise
+          </p>
         </div>
       </div>
 
@@ -66,37 +260,59 @@ export default function NewPetitionPage() {
           <div>
             <h3 className="text-sm font-medium text-amber-400">Assistência por IA</h3>
             <p className="text-xs text-[#8899aa] mt-1">
-              Ao salvar o rascunho, o squad <strong>case-analysis</strong> pode ser acionado para auxiliar na
-              fundamentação, pesquisa jurisprudencial e revisão da peça. Selecione o tipo de peça e o processo
-              vinculado para ativar os templates disponíveis.
+              Ao salvar o rascunho, o squad <strong>case-analysis</strong> pode ser acionado para
+              auxiliar na fundamentação, pesquisa jurisprudencial e revisão da peça. Selecione o
+              tipo de peça e o processo vinculado para ativar os templates disponíveis.
             </p>
           </div>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6 space-y-6">
+      <form
+        onSubmit={handleScratchSubmit}
+        className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6 space-y-6"
+      >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
             <label className={labelClass}>Processo Vinculado *</label>
-            <select className={fieldClass} value={form.processId} onChange={(e) => setForm({ ...form, processId: e.target.value })} required>
+            <select
+              className={fieldClass}
+              value={form.processId}
+              onChange={(e) => setForm({ ...form, processId: e.target.value })}
+              required
+            >
               <option value="">Selecione um processo</option>
               {processes.map((p) => (
-                <option key={p.id} value={p.id}>{p.cnj} — {p.title}</option>
+                <option key={p.id} value={p.id}>
+                  {p.cnj} — {p.title}
+                </option>
               ))}
             </select>
           </div>
           <div>
             <label className={labelClass}>Tipo de Peça *</label>
-            <select className={fieldClass} value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as PetitionType })}>
+            <select
+              className={fieldClass}
+              value={form.type}
+              onChange={(e) => setForm({ ...form, type: e.target.value as PetitionType })}
+            >
               {PETITION_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>{t.label}</option>
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
               ))}
             </select>
           </div>
           <div>
             <label className={labelClass}>Título *</label>
-            <input type="text" placeholder="Título da peça" className={fieldClass}
-              value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+            <input
+              type="text"
+              placeholder="Título da peça"
+              className={fieldClass}
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              required
+            />
           </div>
         </div>
 
@@ -113,15 +329,25 @@ export default function NewPetitionPage() {
 
         {/* Actions */}
         <div className="flex justify-between pt-4 border-t border-[#1a2332]">
-          <button type="button" className="flex items-center gap-2 rounded-lg border border-amber-500/20 px-4 py-2 text-sm text-amber-400 hover:bg-amber-500/10 transition-colors">
+          <button
+            type="button"
+            className="flex items-center gap-2 rounded-lg border border-amber-500/20 px-4 py-2 text-sm text-amber-400 hover:bg-amber-500/10 transition-colors"
+          >
             <Sparkles className="h-4 w-4" />
             Acionar Squad
           </button>
           <div className="flex gap-3">
-            <Link href="/legal/petitions" className="rounded-lg border border-[#1a2332] px-4 py-2 text-sm text-[#8899aa] hover:text-white transition-colors">
+            <button
+              type="button"
+              onClick={() => setMode('choose')}
+              className="rounded-lg border border-[#1a2332] px-4 py-2 text-sm text-[#8899aa] hover:text-white transition-colors"
+            >
               Cancelar
-            </Link>
-            <button type="submit" className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors">
+            </button>
+            <button
+              type="submit"
+              className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
+            >
               <Save className="h-4 w-4" />
               Salvar Rascunho
             </button>
