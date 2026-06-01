@@ -66,17 +66,22 @@ describe('query-cache', () => {
   // ─── LRU eviction ────────────────────────────────────────────────────────
 
   describe('Evicção LRU', () => {
-    it('ao exceder maxSize, remove a entrada menos recentemente usada', () => {
+    it('ao exceder maxSize, remove a entrada menos recentemente usada', async () => {
       const smallCache = new QueryCache({ maxSize: 3, defaultTtl: 10000 });
       smallCache.set('a', 1);
+      await new Promise((r) => setTimeout(r, 2));
       smallCache.set('b', 2);
+      await new Promise((r) => setTimeout(r, 2));
       smallCache.set('c', 3);
 
-      // Acessa 'a' e 'b' para torná-los mais recentes
+      // Acessa 'a' e 'b' para torná-los mais recentes (após pequena pausa para garantir timestamp diferente)
+      await new Promise((r) => setTimeout(r, 2));
       smallCache.get('a');
+      await new Promise((r) => setTimeout(r, 2));
       smallCache.get('b');
 
-      // Adiciona 'd' — deve evictar 'c' (LRU)
+      // Adiciona 'd' — deve evictar 'c' (LRU, acessado pela última vez antes de 'a' e 'b')
+      await new Promise((r) => setTimeout(r, 2));
       smallCache.set('d', 4);
 
       expect(smallCache.get('a')).toBe(1);
