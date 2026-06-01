@@ -6,7 +6,11 @@
 
 import { NATIONAL_HOLIDAYS } from './deadline-calculator';
 import type { TaxObligation, Deadline, DeadlineType } from '@/types/legal';
-import type { TaxRegime } from './tax-calculator';
+import {
+  calculateTaxes,
+  calculateQuarterlyIRPJ,
+  type TaxRegime,
+} from './tax-calculator';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -408,8 +412,6 @@ export function generateYearlyTaxObligations(
   monthlyRevenue: number = 0,
   monthlyExpenses: number = 0
 ): Omit<TaxObligation, 'id'>[] {
-  const { calculateTaxes, calculateQuarterlyIRPJ } = require('./tax-calculator') as typeof import('./tax-calculator');
-
   if (regime === 'simples') {
     const taxes = calculateTaxes('simples', monthlyRevenue, 0);
     return generateSimplesDAS(year, taxes.total);
