@@ -13,10 +13,12 @@ import {
   Plus,
   X,
   Save,
+  Activity,
 } from 'lucide-react';
 import { useLegalFinancialStore } from '@/stores/legal-financial-store';
 import { useLegalStore } from '@/stores/legal-store';
 import type { LegalTransactionType, LegalTransactionCategory } from '@/types/legal';
+import { CashFlowForecast } from '@/components/legal/CashFlowForecast';
 
 const CATEGORIES: { value: LegalTransactionCategory; label: string; type: LegalTransactionType }[] = [
   { value: 'honorario_contratual', label: 'Honorário Contratual', type: 'income' },
@@ -32,9 +34,13 @@ const CATEGORIES: { value: LegalTransactionCategory; label: string; type: LegalT
   { value: 'outro', label: 'Outro', type: 'income' },
 ];
 
+type ActiveTab = 'overview' | 'forecast';
+
 export default function FinancialPage() {
   const {
     transactions,
+    honorarios,
+    invoices,
     getTotalRevenue,
     getTotalExpenses,
     getProfit,
@@ -44,6 +50,7 @@ export default function FinancialPage() {
 
   const { getClientById, getProcessById } = useLegalStore();
 
+  const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
   const [showForm, setShowForm] = useState(false);
   const [txnForm, setTxnForm] = useState({
     type: 'income' as LegalTransactionType,
@@ -150,8 +157,34 @@ export default function FinancialPage() {
         </button>
       </div>
 
-      {/* Transaction Form */}
-      {showForm && (
+      {/* Tab Navigation */}
+      <div className="flex gap-1 rounded-lg border border-[#1a2332] bg-[#0d1320] p-1 w-fit">
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+            activeTab === 'overview'
+              ? 'bg-amber-500 text-black'
+              : 'text-[#6b7a8d] hover:text-white'
+          }`}
+        >
+          <CreditCard className="h-4 w-4" />
+          Visão Geral
+        </button>
+        <button
+          onClick={() => setActiveTab('forecast')}
+          className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+            activeTab === 'forecast'
+              ? 'bg-amber-500 text-black'
+              : 'text-[#6b7a8d] hover:text-white'
+          }`}
+        >
+          <Activity className="h-4 w-4" />
+          Projeção de Fluxo de Caixa
+        </button>
+      </div>
+
+      {/* Transaction Form — only in overview tab */}
+      {showForm && activeTab === 'overview' && (
         <div className="rounded-xl border border-amber-500/20 bg-[#0d1320] p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-white">Nova Transação</h2>
@@ -222,107 +255,121 @@ export default function FinancialPage() {
         </div>
       )}
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-[#6b7a8d] uppercase tracking-wider">
-                  {stat.label}
-                </p>
-                <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
+      {/* ── Overview Tab ───────────────────────────────────────────────────── */}
+      {activeTab === 'overview' && (
+        <>
+          {/* Stat Cards */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {stats.map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-[#6b7a8d] uppercase tracking-wider">
+                      {stat.label}
+                    </p>
+                    <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
+                  </div>
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${stat.iconBg}`}>
+                    <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
+                  </div>
+                </div>
               </div>
-              <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${stat.iconBg}`}>
-                <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
+            ))}
+          </div>
+
+          {/* Recent Transactions */}
+          <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6">
+            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-amber-400" />
+              Ultimas Transacoes
+            </h2>
+
+            {recentTransactions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-[#6b7a8d]">
+                <DollarSign className="h-8 w-8 mb-2" />
+                <p className="text-sm">Nenhuma transacao registrada</p>
               </div>
-            </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-[#1a2332]">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
+                        Data
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
+                        Tipo
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
+                        Categoria
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
+                        Descricao
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
+                        Valor
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#1a2332]">
+                    {recentTransactions.map((txn) => (
+                      <tr key={txn.id} className="hover:bg-[#0a0f1a] transition-colors">
+                        <td className="px-4 py-3 text-sm text-[#6b7a8d]">
+                          {formatDate(txn.date)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                              txn.type === 'income'
+                                ? 'bg-green-500/10 text-green-400'
+                                : 'bg-red-500/10 text-red-400'
+                            }`}
+                          >
+                            {txn.type === 'income' ? (
+                              <ArrowUpRight className="h-3 w-3" />
+                            ) : (
+                              <ArrowDownRight className="h-3 w-3" />
+                            )}
+                            {txn.type === 'income' ? 'Receita' : 'Despesa'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-amber-500/10 text-amber-400">
+                            {categoryLabels[txn.category] || txn.category}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-white max-w-[200px] truncate">
+                          {txn.description}
+                        </td>
+                        <td
+                          className={`px-4 py-3 text-sm text-right font-medium ${
+                            txn.type === 'income' ? 'text-green-400' : 'text-red-400'
+                          }`}
+                        >
+                          {txn.type === 'income' ? '+' : '-'}
+                          {formatCurrency(txn.amount)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-        ))}
-      </div>
+        </>
+      )}
 
-      {/* Recent Transactions */}
-      <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6">
-        <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-          <CreditCard className="h-5 w-5 text-amber-400" />
-          Ultimas Transacoes
-        </h2>
-
-        {recentTransactions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-[#6b7a8d]">
-            <DollarSign className="h-8 w-8 mb-2" />
-            <p className="text-sm">Nenhuma transacao registrada</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[#1a2332]">
-                  <th className="px-4 py-3 text-left text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
-                    Data
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
-                    Tipo
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
-                    Categoria
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
-                    Descricao
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
-                    Valor
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#1a2332]">
-                {recentTransactions.map((txn) => (
-                  <tr key={txn.id} className="hover:bg-[#0a0f1a] transition-colors">
-                    <td className="px-4 py-3 text-sm text-[#6b7a8d]">
-                      {formatDate(txn.date)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-                          txn.type === 'income'
-                            ? 'bg-green-500/10 text-green-400'
-                            : 'bg-red-500/10 text-red-400'
-                        }`}
-                      >
-                        {txn.type === 'income' ? (
-                          <ArrowUpRight className="h-3 w-3" />
-                        ) : (
-                          <ArrowDownRight className="h-3 w-3" />
-                        )}
-                        {txn.type === 'income' ? 'Receita' : 'Despesa'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-amber-500/10 text-amber-400">
-                        {categoryLabels[txn.category] || txn.category}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-white max-w-[200px] truncate">
-                      {txn.description}
-                    </td>
-                    <td
-                      className={`px-4 py-3 text-sm text-right font-medium ${
-                        txn.type === 'income' ? 'text-green-400' : 'text-red-400'
-                      }`}
-                    >
-                      {txn.type === 'income' ? '+' : '-'}
-                      {formatCurrency(txn.amount)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      {/* ── Forecast Tab ───────────────────────────────────────────────────── */}
+      {activeTab === 'forecast' && (
+        <CashFlowForecast
+          transactions={transactions}
+          honorarios={honorarios}
+          invoices={invoices}
+        />
+      )}
     </div>
   );
 }
