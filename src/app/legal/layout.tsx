@@ -7,6 +7,9 @@ import { useLegalStore } from '@/stores/legal-store';
 import { useLegalFinancialStore } from '@/stores/legal-financial-store';
 import { useLegalMarketingStore } from '@/stores/legal-marketing-store';
 import { useLegalStrategyStore } from '@/stores/legal-strategy-store';
+import { useDeadlineAlerts } from '@/hooks/useDeadlineAlerts';
+import { DeadlineAlerts } from '@/components/legal/DeadlineAlerts';
+import { DeadlineToast } from '@/components/legal/DeadlineToast';
 import {
   Scale,
   Briefcase,
@@ -123,6 +126,7 @@ const NAV_SECTIONS = [
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [alertsOpen, setAlertsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const hydrated = useRef(false);
@@ -135,6 +139,9 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
   const pendingDeadlines = useLegalStore((s) => s.deadlines.filter((d) => d.status === 'pending').length);
   const unreadMovements = useLegalStore((s) => s.movements.filter((m) => !m.isRead).length);
   const activeProcesses = useLegalStore((s) => s.processes.filter((p) => p.status === 'active').length);
+
+  // Alert counts for bell badge (overdue + today only)
+  const { counts: alertCounts } = useDeadlineAlerts();
 
   useEffect(() => {
     setMounted(true);
@@ -244,6 +251,13 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
         ))}
       </nav>
 
+      {/* Deadline Alerts Panel (sidebar, expanded only) */}
+      {(!collapsed || mobileOpen) && (
+        <div className="px-3 pb-2">
+          <DeadlineAlerts previewCount={4} />
+        </div>
+      )}
+
       {/* Footer */}
       {(!collapsed || mobileOpen) && (
         <div className="border-t border-[#1a2332] p-4 space-y-2">
@@ -282,12 +296,19 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
           <span className="text-sm font-semibold text-white">AIOX LEGAL</span>
         </div>
         <div className="flex items-center gap-2">
-          {pendingDeadlines > 0 && (
-            <Link href="/legal/deadlines" className="relative">
-              <Clock className="h-4 w-4 text-[#6b7a8d]" />
-              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-amber-400" />
-            </Link>
-          )}
+          {/* Alert bell button */}
+          <button
+            onClick={() => setAlertsOpen((v) => !v)}
+            className="relative text-[#6b7a8d] hover:text-white transition-colors"
+            aria-label="Alertas de prazos"
+          >
+            <Bell className="h-4 w-4" />
+            {alertCounts.total > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white leading-none">
+                {alertCounts.total > 9 ? '9+' : alertCounts.total}
+              </span>
+            )}
+          </button>
           {unreadMovements > 0 && (
             <Link href="/legal/publications" className="relative">
               <Bell className="h-4 w-4 text-[#6b7a8d]" />
@@ -296,6 +317,19 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
           )}
         </div>
       </div>
+
+      {/* Mobile Alerts Flyout */}
+      {alertsOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setAlertsOpen(false)}>
+          <div className="absolute inset-0 bg-black/40" />
+          <div
+            className="absolute top-14 right-0 w-80 max-h-[calc(100vh-56px)] overflow-y-auto bg-[#0d1320] border-l border-b border-[#1a2332] p-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <DeadlineAlerts />
+          </div>
+        </div>
+      )}
 
       {/* Mobile Overlay */}
       {mobileOpen && (
@@ -320,6 +354,9 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       <main className="flex-1 overflow-auto pt-14 lg:pt-0">
         {children}
       </main>
+
+      {/* Session toast for critical deadlines */}
+      <DeadlineToast />
     </div>
   );
 }

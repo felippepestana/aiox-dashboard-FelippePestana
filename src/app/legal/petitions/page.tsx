@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
 import type { PetitionStatus, PetitionType } from '@/types/legal';
+import { ExportPDFButton } from '@/components/legal/ExportPDFButton';
 
 const petitionStatusConfig: Record<
   PetitionStatus,
@@ -53,7 +54,7 @@ const STATUS_FILTERS: { value: PetitionStatus | ''; label: string }[] = [
 ];
 
 export default function PetitionsPage() {
-  const { petitions, getProcessById, updatePetitionStatus } = useLegalStore();
+  const { petitions, processes, getProcessById, updatePetitionStatus } = useLegalStore();
 
   const [filterStatus, setFilterStatus] = useState<PetitionStatus | ''>('');
 
@@ -61,6 +62,12 @@ export default function PetitionsPage() {
     if (!filterStatus) return petitions;
     return petitions.filter((p) => p.status === filterStatus);
   }, [petitions, filterStatus]);
+
+  const processMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    processes.forEach((p) => { map[p.id] = p.cnj; });
+    return map;
+  }, [processes]);
 
   function formatDate(dateStr: string): string {
     return new Date(dateStr).toLocaleDateString('pt-BR', {
@@ -83,13 +90,20 @@ export default function PetitionsPage() {
             {petitions.length} pecas cadastradas
           </p>
         </div>
-        <Link
-          href="/legal/petitions/new"
-          className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          Nova Peca
-        </Link>
+        <div className="flex items-center gap-2">
+          <ExportPDFButton
+            type="petitions"
+            data={{ petitions: filteredPetitions, processMap, title: 'Peças Processuais' }}
+            label="Exportar PDF"
+          />
+          <Link
+            href="/legal/petitions/new"
+            className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Nova Peca
+          </Link>
+        </div>
       </div>
 
       {/* Status Filter */}

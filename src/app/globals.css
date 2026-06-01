@@ -4,6 +4,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Deadline toast progress bar animation */
+@keyframes aiox-deadline-shrink {
+  from { width: 100%; }
+  to   { width: 0%;   }
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    AIOS DASHBOARD - DESIGN TOKENS v2.0
    Consolidated token system for Tech Refined theme
