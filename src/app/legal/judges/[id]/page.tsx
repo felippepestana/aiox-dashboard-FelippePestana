@@ -1,6 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
+import { useState } from 'react';
 import Link from 'next/link';
 import {
   Gavel,
@@ -14,7 +15,14 @@ import {
   Tag,
   ThumbsUp,
   ThumbsDown,
+  Brain,
+  Sparkles,
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
+  Target,
 } from 'lucide-react';
+import type { MagistrateProfile } from '@/lib/legal-intelligence';
 
 interface VotingPattern {
   area: string;
@@ -177,7 +185,41 @@ export default function JudgeDetailPage() {
   const params = useParams();
   const judgeId = params.id as string;
 
+  const [aiProfile, setAiProfile] = useState<MagistrateProfile | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
   const judge = JUDGES_DB[judgeId];
+
+  async function generateAiProfile() {
+    if (!judge) return;
+    setAiLoading(true);
+    setAiError(null);
+
+    try {
+      const response = await fetch('/api/legal/intelligence', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'profile-magistrate',
+          judge: judge.name,
+          tribunal: judge.tribunal,
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || `Erro ${response.status}`);
+      }
+
+      const profile: MagistrateProfile = await response.json();
+      setAiProfile(profile);
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : 'Erro ao gerar perfil');
+    } finally {
+      setAiLoading(false);
+    }
+  }
 
   if (!judge) {
     return (
@@ -221,14 +263,144 @@ export default function JudgeDetailPage() {
           <ArrowLeft className="h-4 w-4" />
           Voltar para Magistrados
         </Link>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-          <Gavel className="h-7 w-7 text-amber-400" />
-          {judge.name}
-        </h1>
-        <p className="text-sm text-[#6b7a8d] mt-1">
-          Perfil detalhado e padroes de decisao
-        </p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+              <Gavel className="h-7 w-7 text-amber-400" />
+              {judge.name}
+            </h1>
+            <p className="text-sm text-[#6b7a8d] mt-1">
+              Perfil detalhado e padroes de decisao
+            </p>
+          </div>
+          <button
+            onClick={generateAiProfile}
+            disabled={aiLoading}
+            className="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-2.5 text-sm font-medium text-amber-400 hover:bg-amber-500/20 transition-colors disabled:opacity-50 flex-shrink-0"
+          >
+            {aiLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
+            )}
+            {aiLoading ? 'Analisando...' : 'Perfil por IA'}
+          </button>
+        </div>
       </div>
+
+      {aiError && (
+        <div className="flex items-center gap-2 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3">
+          <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0" />
+          <p className="text-sm text-red-400">{aiError}</p>
+        </div>
+      )}
+
+      {/* AI Profile Section */}
+      {aiProfile && (
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-6 space-y-5">
+          <div className="flex items-center gap-2">
+            <Brain className="h-5 w-5 text-amber-400" />
+            <h2 className="text-lg font-semibold text-amber-400">Analise de Inteligencia Artificial</h2>
+          </div>
+
+          {/* AI Stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="rounded-xl border border-amber-500/10 bg-[#0a0f1a] p-3 text-center">
+              <p className="text-lg font-bold text-white">{aiProfile.totalDecisions.toLocaleString('pt-BR')}</p>
+              <p className="text-[10px] text-[#6b7a8d]">Decisoes Analisadas</p>
+            </div>
+            <div className="rounded-xl border border-amber-500/10 bg-[#0a0f1a] p-3 text-center">
+              <p className="text-lg font-bold text-white">{aiProfile.overallFavorabilityRate}%</p>
+              <p className="text-[10px] text-[#6b7a8d]">Taxa Favoravel</p>
+            </div>
+            <div className="rounded-xl border border-amber-500/10 bg-[#0a0f1a] p-3 text-center">
+              <p className="text-lg font-bold text-white">{aiProfile.averageDecisionTimeDays}d</p>
+              <p className="text-[10px] text-[#6b7a8d]">Duracao Media</p>
+            </div>
+            <div className="rounded-xl border border-amber-500/10 bg-[#0a0f1a] p-3 text-center">
+              <p className={`text-lg font-bold ${getSentimentColor(aiProfile.sentimentScore)}`}>{aiProfile.sentimentScore}</p>
+              <p className="text-[10px] text-[#6b7a8d]">Score Sentimento</p>
+            </div>
+          </div>
+
+          {/* AI Tendencies */}
+          {aiProfile.tendencies && aiProfile.tendencies.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-amber-400" />
+                Tendencias por Area (IA)
+              </h3>
+              <div className="space-y-3">
+                {aiProfile.tendencies.map((t) => (
+                  <div key={t.area}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm text-white">{t.area}</span>
+                      <span className="text-xs text-[#6b7a8d]">{t.totalDecisions} decisoes</span>
+                    </div>
+                    <div className="flex h-5 rounded-lg overflow-hidden bg-[#0a0f1a]">
+                      <div className="bg-green-500 flex items-center justify-center" style={{ width: `${t.favorableRate}%` }}>
+                        {t.favorableRate > 15 && <span className="text-[9px] font-bold text-white">{t.favorableRate}%</span>}
+                      </div>
+                      <div className="bg-red-500 flex items-center justify-center" style={{ width: `${100 - t.favorableRate}%` }}>
+                        {(100 - t.favorableRate) > 15 && <span className="text-[9px] font-bold text-white">{100 - t.favorableRate}%</span>}
+                      </div>
+                    </div>
+                    {t.commonPatterns && t.commonPatterns.slice(0, 2).map((p, i) => (
+                      <p key={i} className="text-[11px] text-[#6b7a8d] mt-1 flex items-start gap-1">
+                        <span className="text-amber-500">•</span> {p}
+                      </p>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* AI Recommendations */}
+          {aiProfile.strategicRecommendations && aiProfile.strategicRecommendations.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                <Target className="h-4 w-4 text-amber-400" />
+                Recomendacoes Estrategicas para este Magistrado
+              </h3>
+              <div className="space-y-2">
+                {aiProfile.strategicRecommendations.map((rec, i) => (
+                  <div key={i} className="flex items-start gap-3 rounded-lg bg-[#0a0f1a] border border-[#1a2332] p-3">
+                    <CheckCircle2 className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-[#c0c8d4]">{rec}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* AI Notable Decisions */}
+          {aiProfile.notableDecisions && aiProfile.notableDecisions.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                <FileText className="h-4 w-4 text-amber-400" />
+                Decisoes Notaveis (IA)
+              </h3>
+              <div className="space-y-2">
+                {aiProfile.notableDecisions.map((d, i) => (
+                  <div key={i} className="rounded-lg border border-[#1a2332] bg-[#0a0f1a] p-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-medium text-white">{d.caseNumber}</span>
+                      <span className="text-[10px] text-[#6b7a8d]">{new Date(d.date).toLocaleDateString('pt-BR')}</span>
+                    </div>
+                    <p className="text-xs text-[#c0c8d4]">{d.summary}</p>
+                    <p className="text-[10px] text-amber-400 mt-1">{d.outcome}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <p className="text-[10px] text-[#6b7a8d]">
+            Analise gerada por IA. Use como referencia estrategica, nao como garantia de resultado.
+          </p>
+        </div>
+      )}
 
       {/* Profile Card */}
       <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6">
