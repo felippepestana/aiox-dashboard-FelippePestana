@@ -51,6 +51,7 @@ import {
   Menu,
   X,
   LogOut,
+  ShieldCheck,
 } from 'lucide-react';
 
 const NAV_SECTIONS = [
@@ -122,6 +123,12 @@ const NAV_SECTIONS = [
       { id: 'analyze', label: 'Análise de Docs', icon: FileSearch, href: '/legal/analyze' },
       { id: 'bi', label: 'Business Intel.', icon: LineChart, href: '/legal/bi' },
       { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, href: '/legal/whatsapp' },
+    ],
+  },
+  {
+    title: 'Segurança & LGPD',
+    items: [
+      { id: 'audit', label: 'Log de Auditoria', icon: ShieldCheck, href: '/legal/audit' },
     ],
   },
 ];

@@ -69,3 +69,5 @@ export { CourtIntegration } from './CourtIntegration';
 export type { CourtIntegrationProps, CourtIntegrationState } from './CourtIntegration';
 export { PaginationControls } from './PaginationControls';
 export type { PaginationControlsProps } from './PaginationControls';
+export { AuditLogViewer } from './AuditLogViewer';
+export { LGPDPanel } from './LGPDPanel';
