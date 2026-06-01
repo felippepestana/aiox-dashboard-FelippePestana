@@ -30,7 +30,7 @@ const PETITION_TYPES: { value: PetitionType; label: string }[] = [
 
 export default function NewPetitionPage() {
   const router = useRouter();
-  const { addPetition, processes, clients, getClientById } = useLegalStore();
+  const { addPetition, processes, getClientById } = useLegalStore();
 
   const [mode, setMode] = useState<NewPetitionMode>('choose');
   const [selectedTemplate, setSelectedTemplate] = useState<PetitionTemplate | null>(null);
