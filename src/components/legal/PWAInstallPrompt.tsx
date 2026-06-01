@@ -1,7 +1,7 @@
 'use client';
 
 // =============================================================================
-// PWAInstallPrompt – Dismissible install banner for AIOX Legal PWA
+// PWAInstallPrompt – Dismissible install banner for FP Legal PWA
 // =============================================================================
 
 import { useEffect, useState } from 'react';
@@ -54,17 +54,17 @@ export function PWAInstallPrompt() {
   return (
     <div
       role="banner"
-      className="fixed bottom-16 left-0 right-0 z-50 mx-3 mb-1 flex items-center gap-3 rounded-xl border border-amber-500/20 bg-[#0d1320] px-4 py-3 shadow-lg shadow-black/40 sm:bottom-4 sm:left-auto sm:right-4 sm:mx-0 sm:w-80"
+      className="fixed bottom-16 left-0 right-0 z-50 mx-3 mb-1 flex items-center gap-3 rounded-xl border border-[#C0C0C0]/20 bg-[#0a1628] px-4 py-3 shadow-lg shadow-black/50 sm:bottom-4 sm:left-auto sm:right-4 sm:mx-0 sm:w-80"
     >
       {/* Icon */}
-      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
-        <Download className="h-4 w-4 text-amber-400" />
+      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[#C0C0C0]/10">
+        <Download className="h-4 w-4 text-[#C0C0C0]" />
       </div>
 
       {/* Text */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-white">Instalar AIOX Legal</p>
-        <p className="text-xs text-[#8899aa] mt-0.5">
+        <p className="text-sm font-semibold text-white">Instalar FP Legal</p>
+        <p className="text-xs text-[#4A5568] mt-0.5">
           Instale no seu dispositivo para acesso rápido
         </p>
       </div>
@@ -72,7 +72,7 @@ export function PWAInstallPrompt() {
       {/* Install button */}
       <button
         onClick={handleInstall}
-        className="flex-shrink-0 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-black transition-colors hover:bg-amber-400 active:bg-amber-600"
+        className="flex-shrink-0 rounded-lg bg-[#D4AF37] px-3 py-1.5 text-xs font-semibold text-[#0a1628] transition-colors hover:bg-[#E8D070] active:bg-[#C9A84C]"
       >
         Instalar
       </button>
@@ -81,7 +81,7 @@ export function PWAInstallPrompt() {
       <button
         onClick={handleDismiss}
         aria-label="Fechar"
-        className="flex-shrink-0 text-[#4a5568] transition-colors hover:text-white"
+        className="flex-shrink-0 text-[#4A5568] transition-colors hover:text-white"
       >
         <X className="h-4 w-4" />
       </button>

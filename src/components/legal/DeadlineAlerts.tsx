@@ -69,11 +69,11 @@ function getUrgencyStyle(d: DeadlineWithProcess): UrgencyStyle {
     };
   }
   return {
-    border: 'border-[#1a2332]',
-    bg: 'bg-[#0d1320] hover:bg-[#0f1929]',
-    dot: 'bg-[#4a5568]',
+    border: 'border-[#1a2d52]/60',
+    bg: 'bg-[#0d1f3c] hover:bg-[#121f36]',
+    dot: 'bg-[#2D3748]',
     label: `${d.daysUntil}d`,
-    labelClass: 'text-[#8899aa]',
+    labelClass: 'text-[#4A5568]',
   };
 }
 
@@ -110,7 +110,7 @@ function AlertRow({ deadline }: { deadline: DeadlineWithProcess }) {
 
         {/* Process CNJ */}
         {deadline.process && (
-          <p className="text-[10px] font-mono text-[#4a5568] mt-0.5 truncate">
+          <p className="text-[10px] font-mono text-[#2D3748] mt-0.5 truncate">
             {deadline.process.cnj}
           </p>
         )}
@@ -154,11 +154,11 @@ export function DeadlineAlerts({ previewCount = 5, className }: DeadlineAlertsPr
   const hasMore = allAlerts.length > previewCount;
 
   return (
-    <div className={cn('rounded-xl border border-[#1a2332] bg-[#0d1320] overflow-hidden', className)}>
+    <div className={cn('rounded-xl border border-[#1a2d52]/60 bg-[#0d1f3c] overflow-hidden', className)}>
       {/* Panel header */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-3 px-4 py-3 hover:bg-[#0f1929] transition-colors"
+        className="flex w-full items-center gap-3 px-4 py-3 hover:bg-[#121f36] transition-colors"
         aria-expanded={open}
       >
         <div className="relative flex-shrink-0">
@@ -199,7 +199,7 @@ export function DeadlineAlerts({ previewCount = 5, className }: DeadlineAlertsPr
 
       {/* Body */}
       {open && (
-        <div className="px-3 pb-3 space-y-3 border-t border-[#1a2332] pt-3">
+        <div className="px-3 pb-3 space-y-3 border-t border-[#1a2d52]/60 pt-3">
           {/* Overdue section */}
           {counts.overdue > 0 && (
             <div>
@@ -260,7 +260,7 @@ export function DeadlineAlerts({ previewCount = 5, className }: DeadlineAlertsPr
           {hasMore && (
             <button
               onClick={() => setExpanded((v) => !v)}
-              className="w-full rounded-lg border border-[#1a2332] py-1.5 text-[11px] text-[#6b7a8d] hover:text-white hover:bg-[#0f1929] transition-colors"
+              className="w-full rounded-lg border border-[#1a2d52]/60 py-1.5 text-[11px] text-[#4A5568] hover:text-white hover:bg-[#121f36] transition-colors"
             >
               {expanded
                 ? 'Mostrar menos'
@@ -271,7 +271,7 @@ export function DeadlineAlerts({ previewCount = 5, className }: DeadlineAlertsPr
           {/* Quick link */}
           <Link
             href="/legal/deadlines"
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-amber-500/20 bg-amber-500/5 py-1.5 text-[11px] font-medium text-amber-400 hover:bg-amber-500/10 transition-colors"
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-[#C0C0C0]/20 bg-[#C0C0C0]/5 py-1.5 text-[11px] font-medium text-[#C0C0C0] hover:bg-[#C0C0C0]/10 transition-colors"
           >
             Gerenciar todos os prazos
           </Link>

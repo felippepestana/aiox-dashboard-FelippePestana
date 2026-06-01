@@ -33,7 +33,6 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   MapPin,
-  Gavel,
   Mic,
   Search,
   Upload,
@@ -182,7 +181,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
 
   if (!mounted) {
     return (
-      <div className="flex h-screen bg-[#0a0f1a] text-white">
+      <div className="flex h-screen bg-[#060d1a] text-white">
         <div className="flex-1" />
       </div>
     );
@@ -191,24 +190,24 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
   const sidebarContent = (
     <>
       {/* Brand Header */}
-      <div className="flex h-16 items-center border-b border-[#1a2332] px-4">
+      <div className="flex h-16 items-center border-b border-[#1a2d52]/60 px-4">
         {collapsed && !mobileOpen ? (
-          <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-amber-700">
-            <Gavel className="h-4 w-4 text-white" />
+          <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#C0C0C0] to-[#718096] shadow-lg shadow-[#C0C0C0]/10">
+            <span className="text-[11px] font-black text-[#0a1628] tracking-tight">FP</span>
           </div>
         ) : (
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 shadow-lg shadow-amber-500/20">
-                <Gavel className="h-5 w-5 text-white" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-[#C0C0C0] to-[#718096] shadow-lg shadow-[#C0C0C0]/15">
+                <span className="text-[13px] font-black text-[#0a1628] tracking-tight">FP</span>
               </div>
               <div>
-                <h1 className="text-sm font-semibold text-white tracking-wide">AIOX LEGAL</h1>
-                <p className="text-[10px] text-amber-400 tracking-widest">ADVOCACIA INTELIGENTE</p>
+                <h1 className="text-sm font-semibold text-white tracking-wide">FP LEGAL</h1>
+                <p className="text-[9px] text-[#A0AEC0] tracking-widest uppercase leading-tight">SOLUÇÕES JURÍDICAS COM LEGAL PERFORMANCE</p>
               </div>
             </div>
             {mobileOpen && (
-              <button onClick={() => setMobileOpen(false)} className="lg:hidden text-[#6b7a8d] hover:text-white">
+              <button onClick={() => setMobileOpen(false)} className="lg:hidden text-[#4A5568] hover:text-white">
                 <X className="h-5 w-5" />
               </button>
             )}
@@ -217,11 +216,11 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-3 scrollbar-thin scrollbar-thumb-[#1a2332]">
+      <nav className="flex-1 overflow-y-auto py-3 scrollbar-thin scrollbar-thumb-[#1a2d52]">
         {NAV_SECTIONS.map((section) => (
           <div key={section.title} className="mb-4">
             {(!collapsed || mobileOpen) && (
-              <p className="px-4 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[#4a5568]">
+              <p className="px-4 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[#2D3748]">
                 {section.title}
               </p>
             )}
@@ -237,20 +236,20 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
                       href={item.href}
                       className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200 ${
                         active
-                          ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                          : 'text-[#8899aa] hover:bg-[#1a2332] hover:text-white border border-transparent'
+                          ? 'bg-[#C0C0C0]/10 text-[#C0C0C0] border border-[#C0C0C0]/20'
+                          : 'text-[#4A5568] hover:bg-[#0d1f3c] hover:text-[#A0AEC0] border border-transparent'
                       } ${!showLabel ? 'justify-center px-2' : ''}`}
                       title={!showLabel ? item.label : undefined}
                     >
-                      <Icon className={`h-4 w-4 flex-shrink-0 ${active ? 'text-amber-400' : ''}`} />
+                      <Icon className={`h-4 w-4 flex-shrink-0 ${active ? 'text-[#C0C0C0]' : ''}`} />
                       {showLabel && <span className="truncate flex-1">{item.label}</span>}
                       {showLabel && badge > 0 && (
-                        <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-bold px-1">
+                        <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-[#C0C0C0]/15 text-[#C0C0C0] text-[10px] font-bold px-1">
                           {badge > 99 ? '99+' : badge}
                         </span>
                       )}
                       {!showLabel && badge > 0 && (
-                        <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-amber-400" />
+                        <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-[#C0C0C0]" />
                       )}
                     </Link>
                   </li>
@@ -270,13 +269,16 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
 
       {/* Footer */}
       {(!collapsed || mobileOpen) && (
-        <div className="border-t border-[#1a2332] p-4 space-y-2">
+        <div className="border-t border-[#1a2d52]/60 p-4 space-y-2">
+          <div className="text-[9px] text-[#2D3748] text-center tracking-widest uppercase pb-1">
+            OAB/RO 5077
+          </div>
           <button
             onClick={async () => {
               await fetch('/api/auth/logout', { method: 'POST' });
               window.location.href = '/login';
             }}
-            className="flex items-center gap-2 text-[11px] text-[#6b7a8d] hover:text-red-400 transition-colors w-full"
+            className="flex items-center gap-2 text-[11px] text-[#4A5568] hover:text-red-400 transition-colors w-full"
           >
             <LogOut className="h-3 w-3" />
             <span>Sair</span>
@@ -287,7 +289,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       {/* Collapse Toggle (desktop only) */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="hidden lg:flex h-10 items-center justify-center border-t border-[#1a2332] text-[#6b7a8d] hover:text-white hover:bg-[#1a2332] transition-colors"
+        className="hidden lg:flex h-10 items-center justify-center border-t border-[#1a2d52]/60 text-[#4A5568] hover:text-white hover:bg-[#0d1f3c] transition-colors"
       >
         {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
       </button>
@@ -295,21 +297,21 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
   );
 
   return (
-    <div className="flex h-screen bg-[#0a0f1a] text-white overflow-hidden">
+    <div className="flex h-screen bg-[#060d1a] text-white overflow-hidden">
       {/* Mobile Header */}
-      <div className="fixed top-0 left-0 right-0 z-40 flex h-14 items-center justify-between border-b border-[#1a2332] bg-[#0d1320] px-4 lg:hidden">
-        <button onClick={() => setMobileOpen(true)} className="text-[#6b7a8d] hover:text-white">
+      <div className="fixed top-0 left-0 right-0 z-40 flex h-14 items-center justify-between border-b border-[#1a2d52]/60 bg-[#0a1628] px-4 lg:hidden">
+        <button onClick={() => setMobileOpen(true)} className="text-[#4A5568] hover:text-white">
           <Menu className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-2">
-          <Gavel className="h-4 w-4 text-amber-400" />
-          <span className="text-sm font-semibold text-white">AIOX LEGAL</span>
+          <span className="flex h-6 w-6 items-center justify-center rounded bg-gradient-to-br from-[#C0C0C0] to-[#718096] text-[10px] font-black text-[#0a1628]">FP</span>
+          <span className="text-sm font-semibold text-white">FP LEGAL</span>
         </div>
         <div className="flex items-center gap-2">
           {/* Alert bell button */}
           <button
             onClick={() => setAlertsOpen((v) => !v)}
-            className="relative text-[#6b7a8d] hover:text-white transition-colors"
+            className="relative text-[#4A5568] hover:text-white transition-colors"
             aria-label="Alertas de prazos"
           >
             <Bell className="h-4 w-4" />
@@ -321,8 +323,8 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
           </button>
           {unreadMovements > 0 && (
             <Link href="/legal/publications" className="relative">
-              <Bell className="h-4 w-4 text-[#6b7a8d]" />
-              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-amber-400" />
+              <Bell className="h-4 w-4 text-[#4A5568]" />
+              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-[#C0C0C0]" />
             </Link>
           )}
         </div>
@@ -331,9 +333,9 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       {/* Mobile Alerts Flyout */}
       {alertsOpen && (
         <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setAlertsOpen(false)}>
-          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-0 bg-black/50" />
           <div
-            className="absolute top-14 right-0 w-80 max-h-[calc(100vh-56px)] overflow-y-auto bg-[#0d1320] border-l border-b border-[#1a2332] p-3"
+            className="absolute top-14 right-0 w-80 max-h-[calc(100vh-56px)] overflow-y-auto bg-[#0a1628] border-l border-b border-[#1a2d52]/60 p-3"
             onClick={(e) => e.stopPropagation()}
           >
             <DeadlineAlerts />
@@ -345,7 +347,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
-          <aside className="relative flex flex-col w-72 h-full bg-[#0d1320] border-r border-[#1a2332] overflow-y-auto">
+          <aside className="relative flex flex-col w-72 h-full bg-[#0a1628] border-r border-[#1a2d52]/60 overflow-y-auto">
             {sidebarContent}
           </aside>
         </div>
@@ -353,7 +355,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
 
       {/* Desktop Sidebar */}
       <aside
-        className={`hidden lg:flex flex-col border-r border-[#1a2332] bg-[#0d1320] transition-all duration-300 ${
+        className={`hidden lg:flex flex-col border-r border-[#1a2d52]/60 bg-[#0a1628] transition-all duration-300 ${
           collapsed ? 'w-16' : 'w-64'
         }`}
       >
@@ -361,7 +363,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto pt-14 pb-16 lg:pt-0 lg:pb-0">
+      <main className="flex-1 overflow-auto pt-14 pb-16 lg:pt-0 lg:pb-0 bg-[#060d1a]">
         {children}
       </main>
 

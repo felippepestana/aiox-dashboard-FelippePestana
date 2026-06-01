@@ -100,24 +100,24 @@ export default function LegalDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
+    <div className="min-h-screen bg-[#060d1a] p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Scale className="h-7 w-7 text-amber-400" />
+            <Scale className="h-7 w-7 text-[#C0C0C0]" />
             Painel Juridico
           </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">
-            Visao geral da sua pratica juridica
+          <p className="text-sm text-[#4A5568] mt-1">
+            Visao geral da sua pratica juridica · OAB/RO 5077
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {quickActions.map((action) => (
             <Link
               key={action.label}
               href={action.href}
-              className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-400 hover:bg-amber-500/20 transition-colors border border-amber-500/20"
+              className="flex items-center gap-2 rounded-lg bg-[#D4AF37]/10 px-4 py-2 text-sm font-medium text-[#D4AF37] hover:bg-[#D4AF37]/20 transition-colors border border-[#D4AF37]/20"
             >
               <action.icon className="h-4 w-4" />
               {action.label}
@@ -131,17 +131,17 @@ export default function LegalDashboardPage() {
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6"
+            className="rounded-xl border border-[#1a2d52]/60 bg-[#0d1f3c] p-6 hover:border-[#C0C0C0]/20 transition-colors"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-[#6b7a8d] uppercase tracking-wider">
+                <p className="text-xs text-[#4A5568] uppercase tracking-wider">
                   {stat.label}
                 </p>
                 <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10">
-                <stat.icon className="h-5 w-5 text-amber-400" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#C0C0C0]/10">
+                <stat.icon className="h-5 w-5 text-[#C0C0C0]" />
               </div>
             </div>
           </div>
@@ -151,22 +151,22 @@ export default function LegalDashboardPage() {
       {/* Two Column: Deadlines + Movements */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Upcoming Deadlines */}
-        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6">
+        <div className="rounded-xl border border-[#1a2d52]/60 bg-[#0d1f3c] p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              <CalendarClock className="h-5 w-5 text-amber-400" />
+              <CalendarClock className="h-5 w-5 text-[#C0C0C0]" />
               Prazos Proximos (7 dias)
             </h2>
             <Link
               href="/legal/deadlines"
-              className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1"
+              className="text-xs text-[#A0AEC0] hover:text-white flex items-center gap-1 transition-colors"
             >
               Ver todos <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
 
           {upcomingDeadlines.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-[#6b7a8d]">
+            <div className="flex flex-col items-center justify-center py-8 text-[#4A5568]">
               <Clock className="h-8 w-8 mb-2" />
               <p className="text-sm">Nenhum prazo nos proximos 7 dias</p>
             </div>
@@ -178,7 +178,7 @@ export default function LegalDashboardPage() {
                 return (
                   <div
                     key={deadline.id}
-                    className="flex items-center justify-between rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-4 py-3"
+                    className="flex items-center justify-between rounded-lg border border-[#1a2d52]/60 bg-[#060d1a] px-4 py-3 hover:border-[#C0C0C0]/15 transition-colors"
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-white truncate">
@@ -186,7 +186,7 @@ export default function LegalDashboardPage() {
                       </p>
                       <div className="flex items-center gap-2 mt-1">
                         {process && (
-                          <span className="text-xs text-[#6b7a8d]">{process.cnj}</span>
+                          <span className="text-xs text-[#4A5568]">{process.cnj}</span>
                         )}
                         <span
                           className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -201,7 +201,7 @@ export default function LegalDashboardPage() {
                       <p className={`text-sm font-medium ${getDeadlineColor(deadline.dueDate)}`}>
                         {formatDate(deadline.dueDate)}
                       </p>
-                      <p className="text-xs text-[#6b7a8d]">
+                      <p className="text-xs text-[#4A5568]">
                         {days === 0
                           ? 'Hoje'
                           : days === 1
@@ -217,22 +217,22 @@ export default function LegalDashboardPage() {
         </div>
 
         {/* Recent Movements */}
-        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6">
+        <div className="rounded-xl border border-[#1a2d52]/60 bg-[#0d1f3c] p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Bell className="h-5 w-5 text-amber-400" />
+              <Bell className="h-5 w-5 text-[#C0C0C0]" />
               Movimentacoes Recentes
             </h2>
             <Link
               href="/legal/publications"
-              className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1"
+              className="text-xs text-[#A0AEC0] hover:text-white flex items-center gap-1 transition-colors"
             >
               Ver todas <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
 
           {unreadMovements.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-[#6b7a8d]">
+            <div className="flex flex-col items-center justify-center py-8 text-[#4A5568]">
               <Bell className="h-8 w-8 mb-2" />
               <p className="text-sm">Nenhuma movimentacao nao lida</p>
             </div>
@@ -243,10 +243,10 @@ export default function LegalDashboardPage() {
                 return (
                   <div
                     key={movement.id}
-                    className="flex items-start gap-3 rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-4 py-3"
+                    className="flex items-start gap-3 rounded-lg border border-[#1a2d52]/60 bg-[#060d1a] px-4 py-3 hover:border-[#C0C0C0]/15 transition-colors"
                   >
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500/10 mt-0.5 flex-shrink-0">
-                      <AlertTriangle className="h-4 w-4 text-amber-400" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#C0C0C0]/10 mt-0.5 flex-shrink-0">
+                      <AlertTriangle className="h-4 w-4 text-[#C0C0C0]" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-white truncate">
@@ -254,12 +254,12 @@ export default function LegalDashboardPage() {
                       </p>
                       <div className="flex items-center gap-2 mt-1">
                         {process && (
-                          <span className="text-xs text-[#6b7a8d]">{process.cnj}</span>
+                          <span className="text-xs text-[#4A5568]">{process.cnj}</span>
                         )}
-                        <span className="text-xs text-[#6b7a8d]">
+                        <span className="text-xs text-[#4A5568]">
                           {formatDate(movement.date)}
                         </span>
-                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-amber-500/10 text-amber-400">
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-[#C0C0C0]/10 text-[#A0AEC0]">
                           {movement.source}
                         </span>
                       </div>

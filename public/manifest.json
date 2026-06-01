@@ -1,11 +1,11 @@
 {
-  "name": "AIOX Legal",
-  "short_name": "AIOX",
-  "description": "Plataforma de gestão jurídica inteligente",
+  "name": "FP Legal Performance",
+  "short_name": "FP Legal",
+  "description": "Felippe Pestana – Soluções Jurídicas Especializadas com Legal Performance",
   "start_url": "/legal",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#f59e0b",
+  "background_color": "#060d1a",
+  "theme_color": "#0a1628",
   "orientation": "portrait-primary",
   "categories": ["business", "productivity"],
   "icons": [

@@ -56,7 +56,7 @@ export function MobileBottomNav({ onOpenSidebar }: MobileBottomNavProps) {
   return (
     <nav
       aria-label="Navegação principal"
-      className="fixed bottom-0 left-0 right-0 z-40 flex h-16 items-stretch border-t border-[#1a2332] bg-[#0d1320] md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-40 flex h-16 items-stretch border-t border-[#1a2d52]/60 bg-[#0a1628] md:hidden"
     >
       {NAV_ITEMS.map(({ label, icon: Icon, href }) => {
         const active = isActive(href);
@@ -66,8 +66,8 @@ export function MobileBottomNav({ onOpenSidebar }: MobileBottomNavProps) {
             href={href}
             className={`flex flex-1 flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors ${
               active
-                ? 'text-amber-400'
-                : 'text-[#6b7a8d] hover:text-white active:text-white'
+                ? 'text-[#C0C0C0]'
+                : 'text-[#4A5568] hover:text-[#A0AEC0] active:text-white'
             }`}
             aria-current={active ? 'page' : undefined}
           >
@@ -77,7 +77,7 @@ export function MobileBottomNav({ onOpenSidebar }: MobileBottomNavProps) {
             />
             <span>{label}</span>
             {active && (
-              <span className="absolute bottom-0 h-0.5 w-8 rounded-full bg-amber-400" />
+              <span className="absolute bottom-0 h-0.5 w-8 rounded-full bg-[#C0C0C0]" />
             )}
           </Link>
         );
@@ -87,7 +87,7 @@ export function MobileBottomNav({ onOpenSidebar }: MobileBottomNavProps) {
       <button
         onClick={onOpenSidebar}
         aria-label="Abrir menu completo"
-        className="flex flex-1 flex-col items-center justify-center gap-1 text-[10px] font-medium text-[#6b7a8d] transition-colors hover:text-white active:text-white"
+        className="flex flex-1 flex-col items-center justify-center gap-1 text-[10px] font-medium text-[#4A5568] transition-colors hover:text-[#A0AEC0] active:text-white"
       >
         <Menu className="h-5 w-5" strokeWidth={1.75} />
         <span>Mais</span>
