@@ -57,3 +57,7 @@ export type { TribunalStats, JurimetriaPanelProps } from './JurimetriaPanel';
 export type { FlowchartStep, ProcessFlowchartProps } from './ProcessFlowchart';
 export type { ChatMessage, LegalChatPanelProps } from './LegalChatPanel';
 export { ExportPDFButton } from './ExportPDFButton';
+export { DocumentVersionHistory } from './DocumentVersionHistory';
+export { ApprovalWorkflow } from './ApprovalWorkflow';
+export type { DocumentVersionHistoryProps } from './DocumentVersionHistory';
+export type { ApprovalWorkflowProps } from './ApprovalWorkflow';
