@@ -2,9 +2,9 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'FP Legal Performance',
-    short_name: 'FP Legal',
-    description: 'Felippe Pestana – Soluções Jurídicas Especializadas com Legal Performance',
+    name: 'APEX Legal Performance',
+    short_name: 'APEX Legal',
+    description: 'APEX Legal Performance — Solução Jurídica Tecnológica de Alta Performance',
     start_url: '/legal',
     display: 'standalone',
     background_color: '#060d1a',

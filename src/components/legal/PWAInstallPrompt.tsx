@@ -1,7 +1,7 @@
 'use client';
 
 // =============================================================================
-// PWAInstallPrompt – Dismissible install banner for FP Legal PWA
+// PWAInstallPrompt – Dismissible install banner for APEX Legal PWA
 // =============================================================================
 
 import { useEffect, useState } from 'react';
@@ -63,7 +63,7 @@ export function PWAInstallPrompt() {
 
       {/* Text */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-white">Instalar FP Legal</p>
+        <p className="text-sm font-semibold text-white">Instalar APEX Legal</p>
         <p className="text-xs text-[#4A5568] mt-0.5">
           Instale no seu dispositivo para acesso rápido
         </p>

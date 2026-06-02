@@ -1,5 +1,5 @@
 // =============================================================================
-// Reporting Engine - AIOX Legal
+// Reporting Engine - APEX Legal
 // Generates structured report data from Zustand stores (no side effects)
 // =============================================================================
 

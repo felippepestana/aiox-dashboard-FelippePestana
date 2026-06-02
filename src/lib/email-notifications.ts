@@ -1,5 +1,5 @@
 // =============================================================================
-// Email Notification System — AIOX Legal Dashboard
+// Email Notification System — APEX Legal Performance
 // Provider-agnostic: Resend (preferred) or SMTP fallback
 // =============================================================================
 
@@ -101,9 +101,9 @@ function htmlHeader(title: string): string {
           <table width="100%" cellpadding="0" cellspacing="0">
             <tr>
               <td>
-                <span style="color:#ffffff;font-size:22px;font-weight:bold;letter-spacing:-0.5px;">AIOX Legal</span>
+                <span style="color:#ffffff;font-size:22px;font-weight:bold;letter-spacing:-0.5px;">APEX Legal Performance</span>
                 <br/>
-                <span style="color:#93c5fd;font-size:13px;">Sistema de Gestão Jurídica</span>
+                <span style="color:#93c5fd;font-size:13px;">Solução Jurídica Tecnológica de Alta Performance</span>
               </td>
             </tr>
           </table>
@@ -122,7 +122,7 @@ function htmlFooter(): string {
       <tr>
         <td style="background:#f8fafc;padding:20px 32px;border-top:1px solid #e2e8f0;">
           <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">
-            AIOX Legal Dashboard &mdash; ${year}<br/>
+            APEX Legal Performance — ${year}<br/>
             Este é um email automático. Não responda a este endereço.<br/>
             <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}" style="color:#2563eb;">Acessar o Dashboard</a>
           </p>
@@ -145,7 +145,7 @@ export function buildDeadlineAlertEmail(
   recipientEmail: string
 ): EmailTemplate {
   const count = deadlines.length;
-  const subject = `AIOX Legal — ${count} prazo${count !== 1 ? 's' : ''} vence${count !== 1 ? 'm' : ''} em breve`;
+  const subject = `APEX Legal —${count} prazo${count !== 1 ? 's' : ''} vence${count !== 1 ? 'm' : ''} em breve`;
 
   // HTML body
   const rows = deadlines
@@ -205,7 +205,7 @@ ${htmlFooter()}
     .join('\n');
 
   const textBody = `
-AIOX Legal — Alerta de Prazos
+APEX Legal —Alerta de Prazos
 
 Você tem ${count} prazo(s) que vence(m) em breve:
 
@@ -214,7 +214,7 @@ ${textRows}
 Acesse o dashboard para mais detalhes: ${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}
 
 ---
-AIOX Legal Dashboard — Email automático.
+APEX Legal Performance — Email automático.
 `.trim();
 
   return { subject, htmlBody, textBody, to: recipientEmail, from: FROM_ADDRESS };
@@ -229,7 +229,7 @@ export function buildMovementAlertEmail(
   recipientEmail: string
 ): EmailTemplate {
   const count = movements.length;
-  const subject = `AIOX Legal — ${count} nova${count !== 1 ? 's' : ''} movimentaç${count !== 1 ? 'ões' : 'ão'} processual${count !== 1 ? 'is' : ''}`;
+  const subject = `APEX Legal —${count} nova${count !== 1 ? 's' : ''} movimentaç${count !== 1 ? 'ões' : 'ão'} processual${count !== 1 ? 'is' : ''}`;
 
   const rows = movements
     .map(
@@ -276,7 +276,7 @@ ${htmlFooter()}
     .join('\n');
 
   const textBody = `
-AIOX Legal — Novas Movimentações Processuais
+APEX Legal —Novas Movimentações Processuais
 
 Foram detectadas ${count} nova(s) movimentação(ões) em seus processos:
 
@@ -285,7 +285,7 @@ ${textRows}
 Acesse o dashboard para mais detalhes: ${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}
 
 ---
-AIOX Legal Dashboard — Email automático.
+APEX Legal Performance — Email automático.
 `.trim();
 
   return { subject, htmlBody, textBody, to: recipientEmail, from: FROM_ADDRESS };
@@ -299,7 +299,7 @@ export function buildWeeklyDigestEmail(
   summary: WeeklyDigestSummary,
   recipientEmail: string
 ): EmailTemplate {
-  const subject = 'AIOX Legal — Resumo Semanal';
+  const subject = 'APEX Legal —Resumo Semanal';
 
   const statCard = (label: string, value: string, color: string) => `
     <td style="padding:16px;text-align:center;border-right:1px solid #e2e8f0;">
@@ -311,7 +311,7 @@ export function buildWeeklyDigestEmail(
 ${htmlHeader(subject)}
 <h2 style="margin:0 0 8px;font-size:20px;color:#1e293b;">Resumo Semanal</h2>
 <p style="margin:0 0 24px;color:#64748b;font-size:14px;">
-  Confira o resumo das atividades da semana no AIOX Legal Dashboard.
+  Confira o resumo das atividades da semana no APEX Legal Dashboard.
 </p>
 
 <!-- Stats grid -->
@@ -354,7 +354,7 @@ ${htmlFooter()}
 `;
 
   const textBody = `
-AIOX Legal — Resumo Semanal
+APEX Legal —Resumo Semanal
 
 PRAZOS & ATIVIDADES
 - Prazos próximos: ${summary.deadlinesDueSoon}
@@ -371,7 +371,7 @@ FINANCEIRO
 Acesse o dashboard: ${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}
 
 ---
-AIOX Legal Dashboard — Email automático.
+APEX Legal Performance — Email automático.
 `.trim();
 
   return { subject, htmlBody, textBody, to: recipientEmail, from: FROM_ADDRESS };

@@ -22,10 +22,11 @@ import {
 } from "lucide-react";
 
 /* ════════════════════════════════════════════════════════════════════════
-   FP MONOGRAM — interlocking F + P sharing a vertical stroke.
+   APEX MARK — abstract upward-pointing triangle (mountain peak / apex shape)
+   with a horizontal crossbar, representing the pinnacle of legal performance.
    Metallic gradient: silver at top → chrome → gold shimmer at the base.
    ════════════════════════════════════════════════════════════════════════ */
-function FPMonogram({
+function ApexMark({
   size = 160,
   variant = "metallic",
   className,
@@ -34,7 +35,7 @@ function FPMonogram({
   variant?: "metallic" | "navy" | "gold" | "silver" | "mono-light" | "mono-dark";
   className?: string;
 }) {
-  const id = `fp-${variant}`;
+  const id = `apex-${variant}`;
   const fills: Record<string, string> = {
     metallic: `url(#${id})`,
     navy: "#0a1628",
@@ -44,6 +45,13 @@ function FPMonogram({
     "mono-dark": "#060d1a",
   };
   const fill = fills[variant];
+  // Crossbar stroke color — contrasts with fill for non-metallic variants
+  const crossbarFill = variant === "mono-light" ? "#060d1a"
+    : variant === "mono-dark" ? "#FAFAFA"
+    : variant === "navy" ? "#C0C0C0"
+    : variant === "gold" ? "#0a1628"
+    : variant === "silver" ? "#0a1628"
+    : `url(#${id}-cross)`;
 
   return (
     <svg
@@ -54,10 +62,10 @@ function FPMonogram({
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       role="img"
-      aria-label="Monograma FP — FP Legal Performance"
+      aria-label="APEX — APEX Legal Performance"
     >
       <defs>
-        <linearGradient id={id} x1="60" y1="20" x2="140" y2="185" gradientUnits="userSpaceOnUse">
+        <linearGradient id={id} x1="100" y1="20" x2="100" y2="185" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#E8E8ED" />
           <stop offset="28%" stopColor="#C0C0C0" />
           <stop offset="50%" stopColor="#A0AEC0" />
@@ -65,36 +73,33 @@ function FPMonogram({
           <stop offset="86%" stopColor="#D4AF37" />
           <stop offset="100%" stopColor="#B8941F" />
         </linearGradient>
+        <linearGradient id={`${id}-cross`} x1="60" y1="130" x2="140" y2="130" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#B8941F" />
+          <stop offset="50%" stopColor="#D4AF37" />
+          <stop offset="100%" stopColor="#E5C667" />
+        </linearGradient>
         <linearGradient id={`${id}-sheen`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.55" />
           <stop offset="35%" stopColor="#ffffff" stopOpacity="0" />
         </linearGradient>
       </defs>
 
-      {/* Shared vertical stroke */}
-      <rect x="54" y="22" width="20" height="156" rx="3" fill={fill} />
-      {/* F top arm */}
-      <rect x="54" y="22" width="74" height="20" rx="3" fill={fill} />
-      {/* F middle arm */}
-      <rect x="54" y="90" width="56" height="20" rx="3" fill={fill} />
-      {/* P bowl — offset right, interlocking off the shared stem */}
-      <path
-        d="M74 50 H120 a34 34 0 0 1 0 68 H94 v-20 h26 a14 14 0 0 0 0 -28 H74 Z"
-        fill={fill}
-      />
+      {/* Triangle body — the APEX peak */}
+      <path d="M100 22 L176 170 L24 170 Z" fill={fill} />
+      {/* Horizontal crossbar — the 'A' bar, positioned at ~60% height */}
+      <rect x="62" y="126" width="76" height="16" rx="4" fill={crossbarFill} />
+      {/* Center cutout to make it an open "A" shape */}
+      <path d="M100 50 L145 155 L55 155 Z" fill={variant === "metallic" ? "#060d1a" : variant === "mono-light" ? "#FAFAFA" : variant === "mono-dark" ? "#060d1a" : "none"} opacity={variant === "metallic" || variant === "navy" ? "1" : "0"} />
       {/* subtle sheen on metallic only */}
       {variant === "metallic" && (
-        <>
-          <rect x="54" y="22" width="20" height="156" rx="3" fill={`url(#${id}-sheen)`} />
-          <path
-            d="M74 50 H120 a34 34 0 0 1 0 68 H94 v-20 h26 a14 14 0 0 0 0 -28 H74 Z"
-            fill={`url(#${id}-sheen)`}
-          />
-        </>
+        <path d="M100 22 L176 170 L24 170 Z" fill={`url(#${id}-sheen)`} />
       )}
     </svg>
   );
 }
+
+// Keep backward compat alias so any remaining JSX refs still render
+const FPMonogram = ApexMark;
 
 /* ── Scroll reveal helper ─────────────────────────────────────────────── */
 function Reveal({ children, className = "", style }: { children: ReactNode; className?: string; style?: CSSProperties }) {
@@ -242,19 +247,19 @@ export default function BrandbookPage() {
           </div>
           <p className="bb-mono mb-4 text-xs uppercase tracking-[0.5em] text-[#A0AEC0]">Brand Guidelines</p>
           <h1 className="text-5xl font-bold leading-[0.95] sm:text-7xl">
-            <span className="bb-silver-text">FP</span>{" "}
-            <span className="bb-gold-text">Legal</span>
+            <span className="bb-silver-text">APEX</span>
             <br />
+            <span className="bb-gold-text">Legal</span>{" "}
             <span className="bb-silver-text">Performance</span>
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-lg text-[#A0AEC0]">
-            Soluções Jurídicas com <span className="text-[#E5C667]">Legal Performance</span>
+            Solução Jurídica Tecnológica de <span className="text-[#E5C667]">Alta Performance</span>
           </p>
           <div className="mt-8 flex items-center justify-center gap-4 text-sm text-[#A0AEC0]">
             <span className="bb-mono rounded-full border border-[#D4AF37]/40 px-4 py-1.5 text-[#E5C667]">
-              OAB/RO 5077
+              APEX LEGAL
             </span>
-            <span className="bb-mono">Felippe Pestana</span>
+            <span className="bb-mono">Alta Performance</span>
           </div>
         </Reveal>
 
@@ -272,7 +277,7 @@ export default function BrandbookPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-4">
           <a href="#top" className="flex items-center gap-2.5">
             <FPMonogram size={28} />
-            <span className="text-sm font-semibold tracking-wide">FP Legal Performance</span>
+            <span className="text-sm font-semibold tracking-wide">APEX Legal Performance</span>
           </a>
           <div className="hidden gap-7 text-sm md:flex">
             {NAV.map((n) => (
@@ -320,8 +325,8 @@ export default function BrandbookPage() {
       <Section
         id="logo"
         eyebrow="O Símbolo"
-        title={<>O monograma <span className="bb-gold-text">FP</span></>}
-        intro="Um F e um P entrelaçados que compartilham a haste vertical — geometria firme, equilíbrio e movimento ascendente. O gradiente metálico evolui do prata cromado ao brilho dourado."
+        title={<>A marca <span className="bb-gold-text">APEX</span></>}
+        intro="Um triângulo ascendente — a forma geométrica do pico, do ápice. A barra horizontal que cruza a figura evoca a letra A e o equilíbrio. O gradiente metálico evolui do prata cromado ao brilho dourado, simbolizando sofisticação tecnológica e performance."
       >
         {/* Primary */}
         <Reveal>
@@ -331,7 +336,7 @@ export default function BrandbookPage() {
             </div>
             <div className="max-w-sm text-center sm:text-left">
               <p className="bb-mono text-xs uppercase tracking-[0.3em] text-[#D4AF37]">Assinatura principal</p>
-              <h3 className="mt-3 text-2xl font-semibold">FP Legal Performance</h3>
+              <h3 className="mt-3 text-2xl font-semibold">APEX Legal Performance</h3>
               <p className="mt-3 text-sm leading-relaxed text-[#A0AEC0]">
                 Versão preferencial, com gradiente metálico navy → prata → ouro. Use sobre fundos escuros sempre
                 que possível para máximo contraste e sofisticação.
@@ -402,7 +407,7 @@ export default function BrandbookPage() {
                 </div>
               </div>
               <p className="text-sm text-[#A0AEC0]">
-                Abaixo desses limites o entrelaçamento do F e do P perde legibilidade. Prefira a versão monocromática
+                Abaixo desses limites o detalhe da marca APEX perde legibilidade. Prefira a versão monocromática
                 em tamanhos muito reduzidos.
               </p>
             </div>
@@ -715,10 +720,10 @@ export default function BrandbookPage() {
                       <div className="h-[2px] w-16 bg-gradient-to-r from-transparent to-[#D4AF37]" />
                     </div>
                     <div>
-                      <p className="text-lg font-semibold">Felippe Pestana</p>
-                      <p className="text-xs text-[#A0AEC0]">Advogado · OAB/RO 5077</p>
+                      <p className="text-lg font-semibold">APEX Legal Performance</p>
+                      <p className="text-xs text-[#A0AEC0]">Solução Jurídica de Alta Performance</p>
                       <p className="bb-mono mt-2 text-[10px] uppercase tracking-[0.25em] text-[#E5C667]">
-                        FP Legal Performance
+                        APEX LEGAL PERFORMANCE
                       </p>
                     </div>
                   </div>
@@ -727,9 +732,9 @@ export default function BrandbookPage() {
                 <div className="bb-card3d-back bb-card3d-face flex flex-col items-center justify-center gap-3 border border-[#D4AF37]/30 bg-[#060d1a]">
                   <FPMonogram size={64} />
                   <p className="bb-mono text-[10px] uppercase tracking-[0.3em] text-[#A0AEC0]">
-                    Soluções Jurídicas
+                    Alta Performance Jurídica
                   </p>
-                  <p className="text-xs text-[#A0AEC0]">felippepestana.com.br</p>
+                  <p className="text-xs text-[#A0AEC0]">apexlegal.com.br</p>
                 </div>
               </div>
             </div>
@@ -742,11 +747,11 @@ export default function BrandbookPage() {
               <div className="flex items-center gap-4 rounded-lg bg-white/[0.03] p-4">
                 <FPMonogram size={56} />
                 <div className="border-l-2 border-[#D4AF37] pl-4">
-                  <p className="font-semibold">Felippe Pestana</p>
-                  <p className="text-xs text-[#A0AEC0]">Advogado — OAB/RO 5077</p>
-                  <p className="text-xs text-[#E5C667]">FP Legal Performance</p>
+                  <p className="font-semibold">APEX Legal Performance</p>
+                  <p className="text-xs text-[#A0AEC0]">Plataforma Jurídica de Alta Performance</p>
+                  <p className="text-xs text-[#E5C667]">APEX Legal Performance</p>
                   <p className="bb-mono mt-1 text-[11px] text-[#A0AEC0]">
-                    felippe@felippepestana.com.br
+                    contato@apexlegal.com.br
                   </p>
                 </div>
               </div>
@@ -763,8 +768,8 @@ export default function BrandbookPage() {
               <div className="flex items-center justify-between border-b border-[#0a1628]/15 pb-3">
                 <FPMonogram size={40} variant="navy" />
                 <div className="text-right">
-                  <p className="text-[11px] font-semibold">FP Legal Performance</p>
-                  <p className="bb-mono text-[8px] text-[#0a1628]/60">OAB/RO 5077</p>
+                  <p className="text-[11px] font-semibold">APEX Legal Performance</p>
+                  <p className="bb-mono text-[8px] text-[#0a1628]/60">Alta Performance</p>
                 </div>
               </div>
               <div className="mt-4 space-y-1.5">
@@ -774,7 +779,7 @@ export default function BrandbookPage() {
               </div>
               <div className="mt-auto border-t border-[#D4AF37] pt-2">
                 <p className="bb-mono text-[7px] text-[#0a1628]/60">
-                  felippepestana.com.br · Soluções Jurídicas com Legal Performance
+                  apexlegal.com.br · Solução Jurídica Tecnológica de Alta Performance
                 </p>
               </div>
             </div>
@@ -790,13 +795,13 @@ export default function BrandbookPage() {
               <div className="bb-banner flex aspect-square w-40 flex-col items-center justify-center gap-2 p-4 text-center">
                 <span className="bb-banner-sweep absolute inset-0" />
                 <FPMonogram size={46} />
-                <p className="bb-gold-text text-xs font-semibold">Direito que performa</p>
+                <p className="bb-gold-text text-xs font-semibold">Alta Performance Jurídica</p>
                 <p className="bb-mono text-[8px] text-[#A0AEC0]">post · 1:1</p>
               </div>
               {/* Story */}
               <div className="bb-banner flex aspect-[9/16] w-24 flex-col items-center justify-between p-3 text-center">
                 <FPMonogram size={30} />
-                <p className="bb-gold-text text-[10px] font-semibold leading-tight">Legal Performance</p>
+                <p className="bb-gold-text text-[10px] font-semibold leading-tight">APEX Performance</p>
                 <p className="bb-mono text-[7px] text-[#A0AEC0]">story · 9:16</p>
               </div>
             </div>
@@ -831,7 +836,7 @@ export default function BrandbookPage() {
                 </div>
               </div>
             </div>
-            <p className="mt-3 text-sm text-[#A0AEC0]">Dashboard FP Legal — navy, prata e acentos de ouro.</p>
+            <p className="mt-3 text-sm text-[#A0AEC0]">Dashboard APEX Legal — navy, prata e acentos de ouro.</p>
           </Reveal>
         </div>
 
@@ -909,7 +914,7 @@ export default function BrandbookPage() {
         id="banners"
         eyebrow="Movimento"
         title={<>Banners <span className="bb-gold-text">animados</span></>}
-        intro="Peças vivas para web e mídia — partículas de ouro, varreduras de brilho e gradientes em movimento com o monograma FP. O equivalente em movimento dos banners de campanha."
+        intro="Peças vivas para web e mídia — partículas de ouro, varreduras de brilho e gradientes em movimento com a marca APEX. O equivalente em movimento dos banners de campanha."
       >
         {/* Hero 16:9 */}
         <Reveal>
@@ -933,10 +938,10 @@ export default function BrandbookPage() {
                 <FPMonogram size={92} />
               </div>
               <h3 className="text-2xl font-bold sm:text-4xl">
-                <span className="bb-silver-text">Soluções Jurídicas com</span>{" "}
-                <span className="bb-gold-text">Legal Performance</span>
+                <span className="bb-silver-text">Solução Jurídica Tecnológica de</span>{" "}
+                <span className="bb-gold-text">Alta Performance</span>
               </h3>
-              <p className="bb-mono mt-3 text-xs uppercase tracking-[0.3em] text-[#A0AEC0]">OAB/RO 5077</p>
+              <p className="bb-mono mt-3 text-xs uppercase tracking-[0.3em] text-[#A0AEC0]">APEX LEGAL PERFORMANCE</p>
             </div>
           </div>
         </Reveal>
@@ -961,7 +966,7 @@ export default function BrandbookPage() {
               </div>
               <div className="relative z-10 flex items-center gap-3">
                 <FPMonogram size={40} />
-                <span className="bb-gold-text font-semibold">FP Legal Performance</span>
+                <span className="bb-gold-text font-semibold">APEX Legal Performance</span>
               </div>
               <span className="relative z-10 rounded-full border border-[#D4AF37]/50 px-4 py-1.5 text-xs text-[#E5C667]">
                 Fale agora →
@@ -991,7 +996,7 @@ export default function BrandbookPage() {
               </div>
               <p className="bb-gold-text relative z-10 text-lg font-bold">Direito que performa</p>
               <p className="bb-mono relative z-10 text-[10px] uppercase tracking-[0.25em] text-[#A0AEC0]">
-                OAB/RO 5077
+                APEX LEGAL
               </p>
             </div>
           </Reveal>
@@ -1047,14 +1052,14 @@ export default function BrandbookPage() {
         <div className="bb-geo absolute inset-0 -z-10 opacity-30" />
         <Reveal>
           <FPMonogram size={72} className="mx-auto mb-6" />
-          <p className="text-xl font-semibold">FP Legal Performance</p>
-          <p className="mt-2 text-[#A0AEC0]">Soluções Jurídicas com Legal Performance</p>
+          <p className="text-xl font-semibold">APEX Legal Performance</p>
+          <p className="mt-2 text-[#A0AEC0]">Solução Jurídica Tecnológica de Alta Performance</p>
           <div className="bb-shimmer-line mx-auto my-6 max-w-[160px]" />
           <p className="bb-mono text-xs uppercase tracking-[0.3em] text-[#E5C667]">
-            Felippe Pestana · OAB/RO 5077
+            APEX Legal Performance
           </p>
           <p className="bb-mono mt-6 text-xs text-[#A0AEC0]/60">
-            © {new Date().getFullYear()} FP Legal Performance. Todos os direitos reservados. · Brandbook v1.0
+            © {new Date().getFullYear()} APEX Legal Performance. Todos os direitos reservados. · Brandbook v1.0
           </p>
         </Reveal>
       </footer>

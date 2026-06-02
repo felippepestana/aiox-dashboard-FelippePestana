@@ -138,7 +138,7 @@ export default function LoginPage() {
                 Plataforma Juridica Full-Service
               </p>
               <p className="text-xs text-[#4a5568] mt-1">
-                AIOX Legal &copy; {new Date().getFullYear()}
+                APEX Legal &copy; {new Date().getFullYear()}
               </p>
             </div>
           </div>

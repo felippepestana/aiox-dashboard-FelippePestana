@@ -26,7 +26,7 @@ const MOCK_MESSAGES = [
   {
     id: 2,
     sender: 'bot',
-    text: 'Olá! Bem-vindo ao escritório AIOX Legal. Posso ajudar com o agendamento. Qual horário seria melhor para você?\n\n1. Manhã (9h - 12h)\n2. Tarde (14h - 18h)\n3. Noite (18h - 20h)',
+    text: 'Olá! Bem-vindo ao escritório APEX Legal. Posso ajudar com o agendamento. Qual horário seria melhor para você?\n\n1. Manhã (9h - 12h)\n2. Tarde (14h - 18h)\n3. Noite (18h - 20h)',
     time: '10:32',
   },
   {
@@ -85,7 +85,7 @@ const FEATURES = [
 export default function WhatsAppPage() {
   const [apiNumber] = useState('+55 11 9999-8888');
   const [welcomeMsg] = useState(
-    'Olá! Bem-vindo ao escritório AIOX Legal. Como posso ajudá-lo hoje?'
+    'Olá! Bem-vindo ao escritório APEX Legal. Como posso ajudá-lo hoje?'
   );
 
   return (
@@ -222,7 +222,7 @@ export default function WhatsAppPage() {
                 <MessageCircle className="h-4 w-4 text-green-400" />
               </div>
               <div>
-                <p className="text-sm font-medium text-white">AIOX Legal Bot</p>
+                <p className="text-sm font-medium text-white">APEX Legal Bot</p>
                 <p className="text-[10px] text-green-400">Online</p>
               </div>
             </div>

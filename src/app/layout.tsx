@@ -3,8 +3,8 @@ import "./globals.css";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 
 export const metadata: Metadata = {
-  title: "FP Legal Performance – Felippe Pestana | Soluções Jurídicas Especializadas",
-  description: "Felippe Pestana – Soluções Jurídicas Especializadas com Legal Performance. Gestão jurídica full-service com IA: processos, peças, prazos, tribunais, precedentes, marketing e estratégia. OAB/RO 5077.",
+  title: "APEX Legal Performance | Solução Jurídica Tecnológica de Alta Performance",
+  description: "APEX Legal Performance — Solução Jurídica Tecnológica de Alta Performance. Gestão jurídica full-service com IA: processos, peças, prazos, tribunais, precedentes, marketing e estratégia.",
 };
 
 export default function RootLayout({
@@ -21,7 +21,7 @@ export default function RootLayout({
         {/* PWA iOS / mobile meta tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="FP Legal" />
+        <meta name="apple-mobile-web-app-title" content="APEX Legal" />
         <meta name="theme-color" content="#0a1628" />
 
         {/* Apple touch icon */}

@@ -1,7 +1,7 @@
 'use client';
 
 // =============================================================================
-// ReportCharts - Pure SVG chart components for AIOX Legal reporting
+// ReportCharts - Pure SVG chart components for APEX Legal reporting
 // No external chart libraries. All values in raw numbers (not cents).
 // =============================================================================
 

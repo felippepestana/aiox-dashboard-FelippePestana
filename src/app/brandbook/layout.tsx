@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./brandbook.css";
 
 export const metadata: Metadata = {
-  title: "Brandbook — FP Legal Performance",
+  title: "Brandbook — APEX Legal Performance",
   description:
-    "Manual de marca da FP Legal Performance — Soluções Jurídicas com Legal Performance. Identidade visual, cores, tipografia e aplicações. OAB/RO 5077.",
+    "Manual de marca da APEX Legal Performance — Solução Jurídica Tecnológica de Alta Performance. Identidade visual, cores, tipografia e aplicações.",
 };
 
 export default function BrandbookLayout({

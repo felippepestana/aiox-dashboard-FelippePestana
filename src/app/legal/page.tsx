@@ -109,7 +109,7 @@ export default function LegalDashboardPage() {
             Painel Juridico
           </h1>
           <p className="text-sm text-[#4A5568] mt-1">
-            Visao geral da sua pratica juridica · OAB/RO 5077
+            Visao geral da sua pratica juridica · APEX Legal Performance
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">

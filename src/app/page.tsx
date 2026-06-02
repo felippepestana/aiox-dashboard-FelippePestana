@@ -89,11 +89,22 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#C0C0C0] to-[#718096] shadow-lg shadow-[#C0C0C0]/15">
-              <span className="text-[14px] font-black text-[#0a1628] tracking-tight">FP</span>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="APEX">
+                <defs>
+                  <linearGradient id="apex-header" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#E8E8ED" />
+                    <stop offset="45%" stopColor="#C0C0C0" />
+                    <stop offset="75%" stopColor="#D4AF37" />
+                    <stop offset="100%" stopColor="#B8941F" />
+                  </linearGradient>
+                </defs>
+                <path d="M12 2L22 20H2L12 2Z" fill="url(#apex-header)" />
+                <rect x="7" y="13.5" width="10" height="2" rx="1" fill="#0a1628" />
+              </svg>
             </div>
             <div>
-              <h1 className="text-lg font-bold tracking-wide">FP <span className="text-[#C0C0C0]">LEGAL</span></h1>
-              <p className="text-[9px] text-[#4A5568] tracking-widest uppercase">SOLUÇÕES JURÍDICAS COM LEGAL PERFORMANCE</p>
+              <h1 className="text-lg font-bold tracking-wide">APEX <span className="text-[#C0C0C0]">LEGAL</span></h1>
+              <p className="text-[9px] text-[#4A5568] tracking-widest uppercase">SOLUÇÃO JURÍDICA TECNOLÓGICA DE ALTA PERFORMANCE</p>
             </div>
           </div>
           <div className="flex items-center gap-4">

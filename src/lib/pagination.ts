@@ -1,5 +1,5 @@
 // =============================================================================
-// Pagination Utility - AIOX Legal Dashboard
+// Pagination Utility - APEX Legal Dashboard
 // Supabase-backed offset and cursor pagination with typed results
 // =============================================================================
 

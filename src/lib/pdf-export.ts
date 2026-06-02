@@ -1,5 +1,5 @@
 // =============================================================================
-// PDF Export Utility - AIOX Legal
+// PDF Export Utility - APEX Legal
 // Generates professional PDF documents for processes, deadlines, petitions
 // =============================================================================
 
@@ -128,11 +128,11 @@ function buildHeader(doc: JsPDFInstance, title: string, subtitle?: string): numb
   doc.setFillColor(...AMBER);
   doc.rect(0, 0, 5, 40, 'F');
 
-  // AIOX Legal brand
+  // APEX Legal Performance brand
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
   doc.setTextColor(...WHITE);
-  doc.text('AIOX Legal', 14, 16);
+  doc.text('APEX Legal Performance', 14, 16);
 
   // Subtitle/tagline
   doc.setFont('helvetica', 'normal');
@@ -177,7 +177,7 @@ function buildFooter(doc: JsPDFInstance): void {
     doc.setTextColor(...TEXT_MUTED);
     doc.text(`Gerado em: ${now()}`, 14, pageHeight - 8);
     doc.text(`Página ${i} de ${pageCount}`, pageWidth - 14, pageHeight - 8, { align: 'right' });
-    doc.text('AIOX Legal — Confidencial', pageWidth / 2, pageHeight - 8, { align: 'center' });
+    doc.text('APEX Legal Performance — Confidencial', pageWidth / 2, pageHeight - 8, { align: 'center' });
   }
 }
 

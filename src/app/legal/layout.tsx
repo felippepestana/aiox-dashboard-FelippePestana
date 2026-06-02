@@ -193,17 +193,39 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       <div className="flex h-16 items-center border-b border-[#1a2d52]/60 px-4">
         {collapsed && !mobileOpen ? (
           <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#C0C0C0] to-[#718096] shadow-lg shadow-[#C0C0C0]/10">
-            <span className="text-[11px] font-black text-[#0a1628] tracking-tight">FP</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="APEX">
+              <defs>
+                <linearGradient id="apex-logo-sm" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#E8E8ED" />
+                  <stop offset="45%" stopColor="#C0C0C0" />
+                  <stop offset="75%" stopColor="#D4AF37" />
+                  <stop offset="100%" stopColor="#B8941F" />
+                </linearGradient>
+              </defs>
+              <path d="M12 2L22 20H2L12 2Z" fill="url(#apex-logo-sm)" />
+              <rect x="7" y="13.5" width="10" height="2" rx="1" fill="#0a1628" />
+            </svg>
           </div>
         ) : (
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-[#C0C0C0] to-[#718096] shadow-lg shadow-[#C0C0C0]/15">
-                <span className="text-[13px] font-black text-[#0a1628] tracking-tight">FP</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="APEX">
+                  <defs>
+                    <linearGradient id="apex-logo-md" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse">
+                      <stop offset="0%" stopColor="#E8E8ED" />
+                      <stop offset="45%" stopColor="#C0C0C0" />
+                      <stop offset="75%" stopColor="#D4AF37" />
+                      <stop offset="100%" stopColor="#B8941F" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M12 2L22 20H2L12 2Z" fill="url(#apex-logo-md)" />
+                  <rect x="7" y="13.5" width="10" height="2" rx="1" fill="#0a1628" />
+                </svg>
               </div>
               <div>
-                <h1 className="text-sm font-semibold text-white tracking-wide">FP LEGAL</h1>
-                <p className="text-[9px] text-[#A0AEC0] tracking-widest uppercase leading-tight">SOLUÇÕES JURÍDICAS COM LEGAL PERFORMANCE</p>
+                <h1 className="text-sm font-semibold text-white tracking-wide">APEX</h1>
+                <p className="text-[9px] text-[#A0AEC0] tracking-widest uppercase leading-tight">SOLUÇÃO JURÍDICA TECNOLÓGICA DE ALTA PERFORMANCE</p>
               </div>
             </div>
             {mobileOpen && (
@@ -270,9 +292,6 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       {/* Footer */}
       {(!collapsed || mobileOpen) && (
         <div className="border-t border-[#1a2d52]/60 p-4 space-y-2">
-          <div className="text-[9px] text-[#2D3748] text-center tracking-widest uppercase pb-1">
-            OAB/RO 5077
-          </div>
           <button
             onClick={async () => {
               await fetch('/api/auth/logout', { method: 'POST' });
@@ -304,8 +323,13 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
           <Menu className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-2">
-          <span className="flex h-6 w-6 items-center justify-center rounded bg-gradient-to-br from-[#C0C0C0] to-[#718096] text-[10px] font-black text-[#0a1628]">FP</span>
-          <span className="text-sm font-semibold text-white">FP LEGAL</span>
+          <span className="flex h-6 w-6 items-center justify-center rounded bg-gradient-to-br from-[#C0C0C0] to-[#718096]">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="APEX">
+              <path d="M12 2L22 20H2L12 2Z" fill="#0a1628" />
+              <rect x="7" y="13.5" width="10" height="2" rx="1" fill="#0a1628" opacity="0.5" />
+            </svg>
+          </span>
+          <span className="text-sm font-semibold text-white">APEX</span>
         </div>
         <div className="flex items-center gap-2">
           {/* Alert bell button */}

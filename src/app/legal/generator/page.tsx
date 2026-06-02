@@ -104,7 +104,7 @@ _____________________________
 Advogado(a) - OAB/__ n. ______
 
 ---
-Documento gerado por AIOX Legal - Assistente Juridico com IA
+Documento gerado por APEX Legal - Assistente Juridico com IA
 Nota: Este documento e um rascunho e deve ser revisado por um advogado habilitado antes de seu protocolo.`;
 }
 

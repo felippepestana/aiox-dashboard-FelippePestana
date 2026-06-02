@@ -123,7 +123,7 @@ export async function callAI(
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
       'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-      'X-Title': 'AIOX Legal Performance',
+      'X-Title': 'APEX Legal Performance',
     },
     body: JSON.stringify({
       model: model.id,
