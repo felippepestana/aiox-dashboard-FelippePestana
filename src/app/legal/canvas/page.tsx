@@ -234,7 +234,7 @@ function CanvasBlockCard({ block, notes, onAdd, onRemove, onDragStart, onDrop, d
 
   return (
     <div
-      className={`rounded-xl border p-3 flex flex-col min-h-[160px] transition-all ${block.colorClass} ${
+      className={`rounded-xl border p-3 flex flex-col h-full min-h-[160px] transition-all ${block.colorClass} ${
         dragOver ? 'ring-2 ring-amber-500/50 scale-[1.01]' : ''
       }`}
       onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -505,104 +505,119 @@ export default function CanvasPage() {
         )}
       </div>
 
-      {/* Canvas Board — Business Model Canvas Layout */}
-      {/* Classic BMC layout: 5 cols × 2 rows + bottom cost/revenue row */}
-      <div id="legal-canvas-board" className="space-y-2">
-        {/* Row 1: Partners | Activities | Value | Relationship | Segments */}
-        <div className="grid grid-cols-5 gap-2">
-          {/* Partners — spans 2 rows */}
-          <div className="row-span-2">
-            <CanvasBlockCard
-              block={CANVAS_BLOCKS.find((b) => b.key === 'parceriasEstrategicas')!}
-              notes={canvasData.parceriasEstrategicas}
-              onAdd={handleAdd}
-              onRemove={handleRemove}
-              onDragStart={handleDragStart}
-              onDrop={handleDrop}
-              dragging={dragging}
-            />
-          </div>
-          {/* Activities */}
-          <div>
-            <CanvasBlockCard
-              block={CANVAS_BLOCKS.find((b) => b.key === 'atividadesChave')!}
-              notes={canvasData.atividadesChave}
-              onAdd={handleAdd}
-              onRemove={handleRemove}
-              onDragStart={handleDragStart}
-              onDrop={handleDrop}
-              dragging={dragging}
-            />
-          </div>
-          {/* Value Proposition — spans 2 rows */}
-          <div className="row-span-2">
-            <CanvasBlockCard
-              block={CANVAS_BLOCKS.find((b) => b.key === 'valorJuridica')!}
-              notes={canvasData.valorJuridica}
-              onAdd={handleAdd}
-              onRemove={handleRemove}
-              onDragStart={handleDragStart}
-              onDrop={handleDrop}
-              dragging={dragging}
-            />
-          </div>
-          {/* Relationship */}
-          <div>
-            <CanvasBlockCard
-              block={CANVAS_BLOCKS.find((b) => b.key === 'relacionamentoClientes')!}
-              notes={canvasData.relacionamentoClientes}
-              onAdd={handleAdd}
-              onRemove={handleRemove}
-              onDragStart={handleDragStart}
-              onDrop={handleDrop}
-              dragging={dragging}
-            />
-          </div>
-          {/* Segments — spans 2 rows */}
-          <div className="row-span-2">
-            <CanvasBlockCard
-              block={CANVAS_BLOCKS.find((b) => b.key === 'segmentosClientes')!}
-              notes={canvasData.segmentosClientes}
-              onAdd={handleAdd}
-              onRemove={handleRemove}
-              onDragStart={handleDragStart}
-              onDrop={handleDrop}
-              dragging={dragging}
-            />
-          </div>
+      {/* Canvas Board — Classic Business Model Canvas Layout */}
+      {/*
+        Grid areas (5 cols × 3 rows):
+          Row 1+2: partners | activities+resources | value | relationship+channels | segments
+          Row 3:   costs (2.5 cols)                          | revenue (2.5 cols)
+      */}
+      <div
+        id="legal-canvas-board"
+        style={{
+          display: 'grid',
+          gap: '8px',
+          gridTemplateColumns: 'repeat(5, 1fr)',
+          gridTemplateRows: 'auto auto auto',
+          gridTemplateAreas: `
+            "partners activities value relationship segments"
+            "partners resources  value channels    segments"
+            "costs    costs      costs revenue     revenue"
+          `,
+        }}
+      >
+        {/* Parcerias — col 1, row 1+2 */}
+        <div style={{ gridArea: 'partners', height: '100%' }}>
+          <CanvasBlockCard
+            block={CANVAS_BLOCKS.find((b) => b.key === 'parceriasEstrategicas')!}
+            notes={canvasData.parceriasEstrategicas}
+            onAdd={handleAdd}
+            onRemove={handleRemove}
+            onDragStart={handleDragStart}
+            onDrop={handleDrop}
+            dragging={dragging}
+          />
         </div>
 
-        {/* Row 2: (Partners cont.) | Resources | (Value cont.) | Channels | (Segments cont.) */}
-        <div className="grid grid-cols-5 gap-2" style={{ marginTop: 0 }}>
-          <div className="invisible" /> {/* partners placeholder */}
-          <div>
-            <CanvasBlockCard
-              block={CANVAS_BLOCKS.find((b) => b.key === 'recursosChave')!}
-              notes={canvasData.recursosChave}
-              onAdd={handleAdd}
-              onRemove={handleRemove}
-              onDragStart={handleDragStart}
-              onDrop={handleDrop}
-              dragging={dragging}
-            />
-          </div>
-          <div className="invisible" /> {/* value placeholder */}
-          <div>
-            <CanvasBlockCard
-              block={CANVAS_BLOCKS.find((b) => b.key === 'canaisAtendimento')!}
-              notes={canvasData.canaisAtendimento}
-              onAdd={handleAdd}
-              onRemove={handleRemove}
-              onDragStart={handleDragStart}
-              onDrop={handleDrop}
-              dragging={dragging}
-            />
-          </div>
-          <div className="invisible" /> {/* segments placeholder */}
+        {/* Atividades — col 2, row 1 */}
+        <div style={{ gridArea: 'activities' }}>
+          <CanvasBlockCard
+            block={CANVAS_BLOCKS.find((b) => b.key === 'atividadesChave')!}
+            notes={canvasData.atividadesChave}
+            onAdd={handleAdd}
+            onRemove={handleRemove}
+            onDragStart={handleDragStart}
+            onDrop={handleDrop}
+            dragging={dragging}
+          />
         </div>
 
-        {/* Row 3: Costs | Revenue */}
-        <div className="grid grid-cols-2 gap-2">
+        {/* Recursos — col 2, row 2 */}
+        <div style={{ gridArea: 'resources' }}>
+          <CanvasBlockCard
+            block={CANVAS_BLOCKS.find((b) => b.key === 'recursosChave')!}
+            notes={canvasData.recursosChave}
+            onAdd={handleAdd}
+            onRemove={handleRemove}
+            onDragStart={handleDragStart}
+            onDrop={handleDrop}
+            dragging={dragging}
+          />
+        </div>
+
+        {/* Proposta de Valor — col 3, row 1+2 */}
+        <div style={{ gridArea: 'value', height: '100%' }}>
+          <CanvasBlockCard
+            block={CANVAS_BLOCKS.find((b) => b.key === 'valorJuridica')!}
+            notes={canvasData.valorJuridica}
+            onAdd={handleAdd}
+            onRemove={handleRemove}
+            onDragStart={handleDragStart}
+            onDrop={handleDrop}
+            dragging={dragging}
+          />
+        </div>
+
+        {/* Relacionamento — col 4, row 1 */}
+        <div style={{ gridArea: 'relationship' }}>
+          <CanvasBlockCard
+            block={CANVAS_BLOCKS.find((b) => b.key === 'relacionamentoClientes')!}
+            notes={canvasData.relacionamentoClientes}
+            onAdd={handleAdd}
+            onRemove={handleRemove}
+            onDragStart={handleDragStart}
+            onDrop={handleDrop}
+            dragging={dragging}
+          />
+        </div>
+
+        {/* Canais — col 4, row 2 */}
+        <div style={{ gridArea: 'channels' }}>
+          <CanvasBlockCard
+            block={CANVAS_BLOCKS.find((b) => b.key === 'canaisAtendimento')!}
+            notes={canvasData.canaisAtendimento}
+            onAdd={handleAdd}
+            onRemove={handleRemove}
+            onDragStart={handleDragStart}
+            onDrop={handleDrop}
+            dragging={dragging}
+          />
+        </div>
+
+        {/* Segmentos — col 5, row 1+2 */}
+        <div style={{ gridArea: 'segments', height: '100%' }}>
+          <CanvasBlockCard
+            block={CANVAS_BLOCKS.find((b) => b.key === 'segmentosClientes')!}
+            notes={canvasData.segmentosClientes}
+            onAdd={handleAdd}
+            onRemove={handleRemove}
+            onDragStart={handleDragStart}
+            onDrop={handleDrop}
+            dragging={dragging}
+          />
+        </div>
+
+        {/* Estrutura de Custos — row 3, cols 1–3 */}
+        <div style={{ gridArea: 'costs' }}>
           <CanvasBlockCard
             block={CANVAS_BLOCKS.find((b) => b.key === 'estruturaCustos')!}
             notes={canvasData.estruturaCustos}
@@ -612,6 +627,10 @@ export default function CanvasPage() {
             onDrop={handleDrop}
             dragging={dragging}
           />
+        </div>
+
+        {/* Fontes de Receita — row 3, cols 4–5 */}
+        <div style={{ gridArea: 'revenue' }}>
           <CanvasBlockCard
             block={CANVAS_BLOCKS.find((b) => b.key === 'fontesReceita')!}
             notes={canvasData.fontesReceita}
