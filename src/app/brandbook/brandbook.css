@@ -1,0 +1,356 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   FP LEGAL PERFORMANCE — BRANDBOOK
+   Self-contained styling + animations for the /brandbook showcase page.
+   Navy + Silver Chrome + Gold metallic system.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.bb-root {
+  /* Brand tokens (scoped to the brandbook so it never leaks into the app) */
+  --bb-navy-950: #060d1a;
+  --bb-navy-900: #0a1628;
+  --bb-navy-800: #0d1f3c;
+  --bb-navy-700: #1a2d52;
+
+  --bb-silver-100: #E8E8ED;
+  --bb-silver-200: #D4D4D8;
+  --bb-silver-300: #C0C0C0;
+  --bb-silver-400: #A0AEC0;
+
+  --bb-gold-light: #E5C667;
+  --bb-gold: #D4AF37;
+  --bb-gold-mid: #C9A84C;
+  --bb-gold-deep: #B8941F;
+
+  --bb-text: #FAFAFA;
+  --bb-text-dim: #A0AEC0;
+
+  --bb-radius: 18px;
+  --bb-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  background: var(--bb-navy-950);
+  color: var(--bb-text);
+  font-family: var(--font-geist-sans), var(--font-sans), "Geist", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.bb-root *,
+.bb-root *::before,
+.bb-root *::after { box-sizing: border-box; }
+
+html:has(.bb-root) { scroll-behavior: smooth; }
+
+.bb-mono { font-family: var(--font-geist-mono), "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+/* ── Gold metallic text ─────────────────────────────────────────────────── */
+.bb-gold-text {
+  background: linear-gradient(100deg, var(--bb-gold-deep) 0%, var(--bb-gold) 30%, var(--bb-gold-light) 50%, var(--bb-gold) 70%, var(--bb-gold-deep) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: bb-gold-flow 6s linear infinite;
+}
+.bb-silver-text {
+  background: linear-gradient(100deg, var(--bb-silver-400), var(--bb-silver-100) 50%, var(--bb-silver-300));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@keyframes bb-gold-flow {
+  to { background-position: 200% center; }
+}
+
+/* ── Hero animated banner ───────────────────────────────────────────────── */
+.bb-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.bb-hero-grad {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  background:
+    radial-gradient(120% 90% at 50% -10%, rgba(212,175,55,0.16), transparent 55%),
+    radial-gradient(90% 70% at 80% 110%, rgba(26,45,82,0.9), transparent 60%),
+    linear-gradient(160deg, var(--bb-navy-900) 0%, var(--bb-navy-950) 55%, var(--bb-navy-800) 100%);
+  background-size: 200% 200%, 200% 200%, 100% 100%;
+  animation: bb-bg-shift 18s ease-in-out infinite alternate;
+}
+@keyframes bb-bg-shift {
+  0%   { background-position: 0% 0%, 100% 100%, 0 0; }
+  100% { background-position: 100% 100%, 0% 0%, 0 0; }
+}
+
+/* shimmering silver lines */
+.bb-hero-lines {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  opacity: 0.5;
+  -webkit-mask-image: radial-gradient(70% 70% at 50% 50%, #000 30%, transparent 80%);
+  mask-image: radial-gradient(70% 70% at 50% 50%, #000 30%, transparent 80%);
+}
+.bb-hero-lines span {
+  position: absolute;
+  left: 0;
+  width: 200%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(192,192,192,0.55), rgba(212,175,55,0.7), transparent);
+  animation: bb-line-slide 7s linear infinite;
+}
+.bb-hero-lines span:nth-child(1) { top: 22%; animation-duration: 9s;  }
+.bb-hero-lines span:nth-child(2) { top: 42%; animation-duration: 12s; animation-delay: -3s; }
+.bb-hero-lines span:nth-child(3) { top: 61%; animation-duration: 8s;  animation-delay: -5s; }
+.bb-hero-lines span:nth-child(4) { top: 78%; animation-duration: 14s; animation-delay: -2s; }
+@keyframes bb-line-slide {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0%); }
+}
+
+/* floating gold particles */
+.bb-particles { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.bb-particles i {
+  position: absolute;
+  bottom: -10px;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, var(--bb-gold-light), var(--bb-gold) 45%, transparent 70%);
+  box-shadow: 0 0 8px 1px rgba(212,175,55,0.6);
+  animation: bb-float linear infinite;
+  opacity: 0;
+}
+@keyframes bb-float {
+  0%   { transform: translateY(0) scale(0.6); opacity: 0; }
+  10%  { opacity: 0.9; }
+  90%  { opacity: 0.7; }
+  100% { transform: translateY(-105vh) scale(1.1); opacity: 0; }
+}
+
+/* ── Animated shimmer line motif ────────────────────────────────────────── */
+.bb-shimmer-line {
+  position: relative;
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, rgba(212,175,55,0.25), transparent);
+  overflow: hidden;
+}
+.bb-shimmer-line::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--bb-gold-light), transparent);
+  transform: translateX(-100%);
+  animation: bb-shimmer 3.2s var(--bb-ease) infinite;
+}
+@keyframes bb-shimmer {
+  0%   { transform: translateX(-100%); }
+  60%, 100% { transform: translateX(100%); }
+}
+
+/* ── Reveal on scroll ───────────────────────────────────────────────────── */
+.bb-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.8s var(--bb-ease), transform 0.8s var(--bb-ease);
+}
+.bb-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Cards / surfaces ───────────────────────────────────────────────────── */
+.bb-card {
+  background: linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012));
+  border: 1px solid rgba(192,192,192,0.14);
+  border-radius: var(--bb-radius);
+  backdrop-filter: blur(8px);
+  transition: transform 0.45s var(--bb-ease), border-color 0.45s var(--bb-ease), box-shadow 0.45s var(--bb-ease);
+}
+.bb-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(212,175,55,0.5);
+  box-shadow: 0 24px 60px -28px rgba(212,175,55,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.bb-gold-edge {
+  position: relative;
+}
+.bb-gold-edge::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 14%; bottom: 14%;
+  width: 3px;
+  border-radius: 3px;
+  background: linear-gradient(var(--bb-gold-light), var(--bb-gold), var(--bb-gold-deep));
+  box-shadow: 0 0 12px rgba(212,175,55,0.6);
+}
+
+/* ── Sticky nav ─────────────────────────────────────────────────────────── */
+.bb-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(14px);
+  background: rgba(6,13,26,0.72);
+  border-bottom: 1px solid rgba(192,192,192,0.1);
+}
+.bb-nav a {
+  position: relative;
+  color: var(--bb-text-dim);
+  transition: color 0.3s var(--bb-ease);
+}
+.bb-nav a::after {
+  content: "";
+  position: absolute;
+  left: 0; bottom: -6px;
+  height: 2px; width: 0;
+  background: linear-gradient(90deg, var(--bb-gold), var(--bb-gold-light));
+  transition: width 0.35s var(--bb-ease);
+}
+.bb-nav a:hover { color: var(--bb-text); }
+.bb-nav a:hover::after { width: 100%; }
+
+/* ── Metallic swatch chrome bar ─────────────────────────────────────────── */
+.bb-chrome-bar {
+  background: linear-gradient(100deg, #6b7280 0%, #E8E8ED 20%, #9aa3b2 40%, #FAFAFA 55%, #A0AEC0 75%, #D4D4D8 100%);
+  background-size: 200% auto;
+  animation: bb-gold-flow 8s linear infinite;
+}
+.bb-gold-bar {
+  background: linear-gradient(100deg, var(--bb-gold-deep) 0%, var(--bb-gold) 25%, var(--bb-gold-light) 50%, var(--bb-gold) 72%, var(--bb-gold-deep) 100%);
+  background-size: 200% auto;
+  animation: bb-gold-flow 6s linear infinite;
+}
+
+/* ── Geometric pattern ──────────────────────────────────────────────────── */
+.bb-geo {
+  background-color: var(--bb-navy-900);
+  background-image:
+    linear-gradient(rgba(212,175,55,0.10) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(192,192,192,0.06) 1px, transparent 1px);
+  background-size: 28px 28px, 28px 28px;
+}
+
+/* ── Animated banner blocks (section 10) ────────────────────────────────── */
+.bb-banner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(212,175,55,0.28);
+  background: linear-gradient(135deg, var(--bb-navy-800), var(--bb-navy-950));
+  isolation: isolate;
+}
+.bb-banner::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  background:
+    radial-gradient(60% 80% at 20% 20%, rgba(212,175,55,0.22), transparent 60%),
+    radial-gradient(60% 80% at 90% 90%, rgba(26,45,82,0.9), transparent 60%);
+  background-size: 200% 200%;
+  animation: bb-bg-shift 12s ease-in-out infinite alternate;
+}
+.bb-banner-sweep::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 40%; height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(229,198,103,0.28), transparent);
+  transform: skewX(-18deg) translateX(-200%);
+  animation: bb-sweep 4.5s var(--bb-ease) infinite;
+}
+@keyframes bb-sweep {
+  0%   { transform: skewX(-18deg) translateX(-250%); }
+  55%, 100% { transform: skewX(-18deg) translateX(450%); }
+}
+.bb-banner-particles i {
+  position: absolute;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--bb-gold-light), transparent 70%);
+  box-shadow: 0 0 8px rgba(212,175,55,0.7);
+  animation: bb-drift linear infinite;
+}
+@keyframes bb-drift {
+  0%   { transform: translate(0,0); opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 0.8; }
+  100% { transform: translate(60px,-60px); opacity: 0; }
+}
+
+/* rotating logo glow */
+.bb-logo-glow { position: relative; }
+.bb-logo-glow::before {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  z-index: -1;
+  background: conic-gradient(from 0deg, transparent, rgba(212,175,55,0.35), transparent 40%, rgba(192,192,192,0.25), transparent 70%, rgba(212,175,55,0.35));
+  border-radius: 50%;
+  filter: blur(22px);
+  animation: bb-spin 14s linear infinite;
+}
+@keyframes bb-spin { to { transform: rotate(360deg); } }
+
+/* photography placeholder */
+.bb-photo {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(192,192,192,0.16);
+  background:
+    radial-gradient(120% 80% at 30% 0%, rgba(212,175,55,0.14), transparent 55%),
+    linear-gradient(150deg, var(--bb-navy-700), var(--bb-navy-950));
+}
+.bb-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.06) 50%, transparent 60%);
+  background-size: 250% 250%;
+  animation: bb-gold-flow 7s linear infinite;
+}
+
+/* business card flip */
+.bb-card3d { perspective: 1600px; }
+.bb-card3d-inner {
+  position: relative;
+  transition: transform 0.9s var(--bb-ease);
+  transform-style: preserve-3d;
+}
+.bb-card3d:hover .bb-card3d-inner { transform: rotateY(180deg); }
+.bb-card3d-face {
+  position: absolute;
+  inset: 0;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: 14px;
+}
+.bb-card3d-back { transform: rotateY(180deg); }
+
+/* misuse red overlay */
+.bb-dont::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(45deg,  transparent 47.5%, rgba(239,68,68,0.85) 48%, rgba(239,68,68,0.85) 52%, transparent 52.5%),
+    linear-gradient(-45deg, transparent 47.5%, rgba(239,68,68,0.85) 48%, rgba(239,68,68,0.85) 52%, transparent 52.5%);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bb-root *,
+  .bb-root *::before,
+  .bb-root *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
