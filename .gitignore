@@ -47,3 +47,4 @@ uploads/
 *.db
 .open-next
 cloudflare-env.d.ts
+.wrangler
