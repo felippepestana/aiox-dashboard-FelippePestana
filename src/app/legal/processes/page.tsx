@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
 import type { LegalArea, ProcessStatus, UrgencyLevel } from '@/types/legal';
+import { ExportPDFButton } from '@/components/legal/ExportPDFButton';
 
 const AREAS: { value: LegalArea | ''; label: string }[] = [
   { value: '', label: 'Todas as Areas' },
@@ -153,13 +154,20 @@ export default function ProcessesPage() {
             {processes.length} processos cadastrados
           </p>
         </div>
-        <Link
-          href="/legal/processes/new"
-          className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          Novo Processo
-        </Link>
+        <div className="flex items-center gap-2">
+          <ExportPDFButton
+            type="processes"
+            data={{ processes: filteredProcesses, title: 'Lista de Processos' }}
+            label="Exportar PDF"
+          />
+          <Link
+            href="/legal/processes/new"
+            className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Novo Processo
+          </Link>
+        </div>
       </div>
 
       {/* Filter Bar */}

@@ -1,0 +1,94 @@
+name: "Security Scan"
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    # Every Monday at 09:00 UTC
+    - cron: "0 9 * * 1"
+
+jobs:
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Full history so git log can scan all tracked files
+          fetch-depth: 0
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit dependencies (high severity)
+        run: npm audit --audit-level=high
+
+      - name: Check for accidentally committed .env files
+        run: |
+          echo "Checking for .env files tracked in git..."
+          # List all files currently tracked by git that match .env patterns
+          FOUND=$(git ls-files | grep -E '(^|/)\.env(\.[^/]+)?$' || true)
+          if [ -n "$FOUND" ]; then
+            echo "ERROR: The following .env file(s) are tracked in git:"
+            echo "$FOUND"
+            echo ""
+            echo "Remove them with: git rm --cached <file>"
+            echo "Then add to .gitignore."
+            exit 1
+          fi
+          echo "No .env files found in git index."
+
+      - name: Check for hardcoded secret patterns
+        run: |
+          echo "Scanning for hardcoded secret patterns..."
+          # Patterns: API keys, passwords, tokens, secrets in source files
+          # Excludes node_modules, .next, .git, and test/example files
+          PATTERNS=(
+            'PRIVATE_KEY\s*=\s*["\x27][A-Za-z0-9+/]{20,}'
+            'api[_-]?key\s*[:=]\s*["\x27][A-Za-z0-9_\-]{20,}'
+            'password\s*[:=]\s*["\x27][^"\x27\s]{8,}'
+            'secret\s*[:=]\s*["\x27][A-Za-z0-9_\-]{16,}'
+            'Authorization:\s*Bearer\s+[A-Za-z0-9\-_.~+/]+=*'
+            'sk-[A-Za-z0-9]{20,}'
+            'sk-or-v1-[A-Za-z0-9]{20,}'
+            'eyJ[A-Za-z0-9_\-]{50,}'
+          )
+
+          EXCLUDE_DIRS='node_modules|\.next|\.git'
+          EXCLUDE_FILES='\.example$|\.md$|\.test\.|\.spec\.|vitest\.config'
+
+          FOUND_SECRETS=0
+          for PATTERN in "${PATTERNS[@]}"; do
+            MATCHES=$(grep -rEi "$PATTERN" \
+              --include="*.ts" --include="*.tsx" --include="*.js" --include="*.env*" \
+              . \
+              | grep -vE "$EXCLUDE_DIRS" \
+              | grep -vE "$EXCLUDE_FILES" \
+              | grep -v "your-.*-here" \
+              | grep -v "placeholder" \
+              | grep -v "your-key" \
+              | grep -v "change-this" \
+              || true)
+            if [ -n "$MATCHES" ]; then
+              echo "WARNING: Potential hardcoded secret found matching pattern: $PATTERN"
+              echo "$MATCHES"
+              FOUND_SECRETS=1
+            fi
+          done
+
+          if [ "$FOUND_SECRETS" -eq 1 ]; then
+            echo ""
+            echo "ERROR: Potential hardcoded secrets detected. Review the output above."
+            echo "Move secrets to environment variables and ensure .env files are gitignored."
+            exit 1
+          fi
+          echo "No hardcoded secret patterns found."

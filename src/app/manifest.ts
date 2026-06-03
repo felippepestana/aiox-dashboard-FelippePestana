@@ -2,13 +2,13 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'AIOX Legal Performance',
-    short_name: 'AIOX Legal',
-    description: 'Plataforma Juridica Full-Service com IA',
+    name: 'APEX Legal Performance',
+    short_name: 'APEX Legal',
+    description: 'APEX Legal Performance — Solução Jurídica Tecnológica de Alta Performance',
     start_url: '/legal',
     display: 'standalone',
-    background_color: '#0a0f1a',
-    theme_color: '#f59e0b',
+    background_color: '#060d1a',
+    theme_color: '#0a1628',
     icons: [
       {
         src: '/icon-192.png',

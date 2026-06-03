@@ -4,9 +4,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Deadline toast progress bar animation */
+@keyframes aiox-deadline-shrink {
+  from { width: 100%; }
+  to   { width: 0%;   }
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
-   AIOS DASHBOARD - DESIGN TOKENS v2.0
-   Consolidated token system for Tech Refined theme
+   APEX LEGAL PERFORMANCE - DESIGN TOKENS v3.0
+   Solução Jurídica Tecnológica de Alta Performance
+   Deep Navy + Silver Chrome + Gold accent theme
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
@@ -14,26 +21,26 @@
      CORE TOKENS - Light mode (fallback)
      ───────────────────────────────────────────────────────────────────────── */
   --background: #ffffff;
-  --foreground: #0a0a0f;
+  --foreground: #0a1628;
   --card: #ffffff;
-  --card-hover: #f4f4f5;
-  --card-foreground: #0a0a0f;
+  --card-hover: #f0f4f8;
+  --card-foreground: #0a1628;
   --popover: #ffffff;
-  --popover-foreground: #0a0a0f;
-  --border: #e4e4e7;
-  --border-subtle: rgba(0, 0, 0, 0.06);
-  --border-medium: rgba(0, 0, 0, 0.12);
-  --primary: #C9B298;
-  --primary-foreground: #0a0a0a;
-  --secondary: #f4f4f5;
-  --secondary-foreground: #0a0a0f;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --accent: rgba(201, 178, 152, 0.15);
-  --accent-foreground: #C9B298;
+  --popover-foreground: #0a1628;
+  --border: #cbd5e0;
+  --border-subtle: rgba(10, 22, 40, 0.08);
+  --border-medium: rgba(10, 22, 40, 0.16);
+  --primary: #C0C0C0;
+  --primary-foreground: #0a1628;
+  --secondary: #f0f4f8;
+  --secondary-foreground: #0a1628;
+  --muted: #f0f4f8;
+  --muted-foreground: #64748b;
+  --accent: rgba(192, 192, 192, 0.15);
+  --accent-foreground: #C0C0C0;
   --destructive: #ef4444;
-  --input: rgba(0, 0, 0, 0.06);
-  --ring: rgba(201, 178, 152, 0.5);
+  --input: rgba(10, 22, 40, 0.08);
+  --ring: rgba(192, 192, 192, 0.5);
 
   /* ─────────────────────────────────────────────────────────────────────────
      SEMANTIC TOKENS - Status System
@@ -98,16 +105,27 @@
   --agent-sm-border: rgba(244, 114, 182, 0.3);
 
   /* ─────────────────────────────────────────────────────────────────────────
-     GOLD ACCENT SYSTEM
+     SILVER CHROME ACCENT SYSTEM (primary)
+     GOLD ACCENT SYSTEM (secondary/premium)
      ───────────────────────────────────────────────────────────────────────── */
-  --accent-gold: #C9B298;
-  --accent-gold-light: #E4D8CA;
-  --accent-gold-dim: rgba(201, 178, 152, 0.25);
+  /* Silver/Chrome primary accent */
+  --accent-silver: #C0C0C0;
+  --accent-silver-light: #E8E8ED;
+  --accent-silver-dim: rgba(192, 192, 192, 0.25);
+  --accent-silver-bg: rgba(192, 192, 192, 0.08);
+  --accent-silver-bg-hover: rgba(192, 192, 192, 0.13);
+  --border-silver: rgba(192, 192, 192, 0.25);
+  --border-silver-strong: rgba(192, 192, 192, 0.5);
+
+  /* Gold secondary/premium accent */
+  --accent-gold: #D4AF37;
+  --accent-gold-light: #E8D070;
+  --accent-gold-dim: rgba(212, 175, 55, 0.25);
   --accent-purple: rgb(147, 51, 234);
-  --accent-gold-bg: rgba(201, 178, 152, 0.08);
-  --accent-gold-bg-hover: rgba(201, 178, 152, 0.12);
-  --border-gold: rgba(201, 178, 152, 0.25);
-  --border-gold-strong: rgba(201, 178, 152, 0.5);
+  --accent-gold-bg: rgba(212, 175, 55, 0.08);
+  --accent-gold-bg-hover: rgba(212, 175, 55, 0.13);
+  --border-gold: rgba(212, 175, 55, 0.25);
+  --border-gold-strong: rgba(212, 175, 55, 0.5);
 
   /* ─────────────────────────────────────────────────────────────────────────
      PRIORITY TOKENS - MoSCoW colors
@@ -216,7 +234,7 @@
   /* ─────────────────────────────────────────────────────────────────────────
      FOCUS TOKENS
      ───────────────────────────────────────────────────────────────────────── */
-  --ring-color: rgba(201, 178, 152, 0.5);
+  --ring-color: rgba(192, 192, 192, 0.5);
   --ring-width: 2px;
 
   /* Chart colors */
@@ -227,87 +245,87 @@
   --chart-5: #F87171;
 
   /* Sidebar */
-  --sidebar: #fafafa;
-  --sidebar-foreground: #0a0a0f;
-  --sidebar-primary: #C9B298;
-  --sidebar-primary-foreground: #0a0a0a;
-  --sidebar-accent: rgba(201, 178, 152, 0.1);
-  --sidebar-accent-foreground: #0a0a0f;
-  --sidebar-border: #e4e4e7;
-  --sidebar-ring: rgba(201, 178, 152, 0.5);
+  --sidebar: #f0f4f8;
+  --sidebar-foreground: #0a1628;
+  --sidebar-primary: #C0C0C0;
+  --sidebar-primary-foreground: #0a1628;
+  --sidebar-accent: rgba(192, 192, 192, 0.1);
+  --sidebar-accent-foreground: #0a1628;
+  --sidebar-border: #cbd5e0;
+  --sidebar-ring: rgba(192, 192, 192, 0.5);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   TECH REFINED - Dark Theme (Default)
-   Elegant, minimalist, premium dark experience
+   APEX LEGAL PERFORMANCE - Dark Theme (Default)
+   Deep Navy + Silver Chrome — sophisticated law firm aesthetic
    ═══════════════════════════════════════════════════════════════════════════ */
 .dark {
   /* ─────────────────────────────────────────────────────────────────────────
-     BACKGROUND SCALE - Pure black depth
+     BACKGROUND SCALE - Deep navy depth
      ───────────────────────────────────────────────────────────────────────── */
-  --bg-base: #000000;
-  --bg-elevated: #050505;
-  --bg-surface: #0a0a0a;
-  --bg-surface-hover: #0f0f0f;
-  --bg-overlay: #111111;
-  --bg-hover: rgba(255, 255, 255, 0.02);
+  --bg-base: #060d1a;
+  --bg-elevated: #0a1628;
+  --bg-surface: #0d1f3c;
+  --bg-surface-hover: #121f36;
+  --bg-overlay: #162545;
+  --bg-hover: rgba(192, 192, 192, 0.03);
 
   /* Core overrides */
   --background: var(--bg-base);
-  --foreground: #FAFAF8;
+  --foreground: #FAFAFA;
   --card: var(--bg-surface);
   --card-hover: var(--bg-surface-hover);
-  --card-foreground: #FAFAF8;
+  --card-foreground: #FAFAFA;
   --popover: var(--bg-surface);
-  --popover-foreground: #FAFAF8;
+  --popover-foreground: #FAFAFA;
 
   /* ─────────────────────────────────────────────────────────────────────────
-     BORDER SCALE - Subtle whites
+     BORDER SCALE - Navy-silver subtle borders
      ───────────────────────────────────────────────────────────────────────── */
-  --border: rgba(255, 255, 255, 0.06);
-  --border-subtle: rgba(255, 255, 255, 0.04);
-  --border-medium: rgba(255, 255, 255, 0.10);
-  --border-strong: rgba(255, 255, 255, 0.15);
+  --border: rgba(192, 192, 192, 0.10);
+  --border-subtle: rgba(192, 192, 192, 0.06);
+  --border-medium: rgba(192, 192, 192, 0.16);
+  --border-strong: rgba(192, 192, 192, 0.24);
 
   /* ─────────────────────────────────────────────────────────────────────────
      TEXT HIERARCHY (WCAG AA compliant - 4.5:1 min contrast)
      ───────────────────────────────────────────────────────────────────────── */
-  --text-primary: #FAFAF8;    /* 19.5:1 on #0a0a0a */
-  --text-secondary: #B8B8AC;  /* 8.2:1 on #0a0a0a - improved from #A8A89C */
-  --text-tertiary: #8A8A7F;   /* 4.8:1 on #0a0a0a - improved from #6B6B5F */
-  --text-muted: #6A6A5E;      /* 3.2:1 on #0a0a0a - decorative only */
-  --text-disabled: #3A3A32;   /* 1.8:1 on #0a0a0a - disabled state */
+  --text-primary: #FAFAFA;     /* white — high contrast on navy */
+  --text-secondary: #A0AEC0;   /* silver-blue — secondary info */
+  --text-tertiary: #718096;    /* muted silver */
+  --text-muted: #4A5568;       /* decorative only */
+  --text-disabled: #2D3748;    /* disabled state */
 
-  /* Primary - Gold accent */
-  --primary: #C9B298;
+  /* Primary - Silver/Chrome accent */
+  --primary: #C0C0C0;
   --primary-foreground: var(--bg-surface);
 
   /* Secondary */
-  --secondary: #141414;
+  --secondary: #0d1f3c;
   --secondary-foreground: var(--text-secondary);
 
   /* Muted */
-  --muted: #141414;
+  --muted: #0a1628;
   --muted-foreground: var(--text-tertiary);
 
-  /* Accent - Gold system */
-  --accent: var(--accent-gold-bg);
-  --accent-foreground: var(--accent-gold);
+  /* Accent - Silver system (primary) */
+  --accent: var(--accent-silver-bg);
+  --accent-foreground: var(--accent-silver);
 
   /* Destructive */
   --destructive: var(--status-error);
   --input: var(--border);
-  --ring: var(--border-gold-strong);
+  --ring: var(--border-silver-strong);
 
-  /* Sidebar - Deeper black */
+  /* Sidebar - Deeper navy */
   --sidebar: var(--bg-elevated);
   --sidebar-foreground: var(--text-secondary);
-  --sidebar-primary: var(--accent-gold);
+  --sidebar-primary: var(--accent-silver);
   --sidebar-primary-foreground: var(--bg-surface);
-  --sidebar-accent: var(--accent-gold-bg);
+  --sidebar-accent: var(--accent-silver-bg);
   --sidebar-accent-foreground: var(--text-primary);
   --sidebar-border: var(--border-subtle);
-  --sidebar-ring: var(--border-gold-strong);
+  --sidebar-ring: var(--border-silver-strong);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -344,7 +362,12 @@
   --color-text-muted: var(--text-muted);
   --color-text-disabled: var(--text-disabled);
 
-  /* Gold accent */
+  /* Silver/Chrome primary accent */
+  --color-silver: var(--accent-silver);
+  --color-silver-light: var(--accent-silver-light);
+  --color-silver-dim: var(--accent-silver-dim);
+
+  /* Gold secondary/premium accent */
   --color-gold: var(--accent-gold);
   --color-gold-light: var(--accent-gold-light);
   --color-gold-dim: var(--accent-gold-dim);
@@ -527,14 +550,29 @@ body {
   transform: translateY(-1px);
 }
 
-/* Gold accent utilities */
+/* Silver/Chrome accent utilities */
+.hover-silver:hover {
+  border-color: var(--border-silver);
+}
+
+.hover-silver-strong:hover {
+  border-color: var(--border-silver-strong);
+  box-shadow: 0 0 20px rgba(192, 192, 192, 0.12);
+}
+
+.active-silver {
+  border-color: var(--border-silver) !important;
+  background: var(--accent-silver-bg) !important;
+}
+
+/* Gold accent utilities (premium elements) */
 .hover-gold:hover {
   border-color: var(--border-gold);
 }
 
 .hover-gold-strong:hover {
   border-color: var(--border-gold-strong);
-  box-shadow: 0 0 20px rgba(201, 178, 152, 0.1);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.12);
 }
 
 .active-gold {
@@ -542,7 +580,20 @@ body {
   background: var(--accent-gold-bg) !important;
 }
 
-/* Gold gradient line */
+/* Silver chrome gradient line */
+.silver-line {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--accent-silver-dim) 20%,
+    var(--border-silver-strong) 50%,
+    var(--accent-silver-dim) 80%,
+    transparent 100%
+  );
+}
+
+/* Gold gradient line (premium) */
 .gold-line {
   height: 1px;
   background: linear-gradient(
@@ -556,15 +607,31 @@ body {
 }
 
 /* Glow backgrounds */
-.bg-glow-gold {
+.bg-glow-navy {
   background: radial-gradient(
     ellipse 80% 50% at 50% 0%,
-    rgba(201, 178, 152, 0.03),
+    rgba(26, 45, 82, 0.4),
     transparent
   );
 }
 
-/* Text gradient - gold shimmer */
+.bg-glow-silver {
+  background: radial-gradient(
+    ellipse 80% 50% at 50% 0%,
+    rgba(192, 192, 192, 0.04),
+    transparent
+  );
+}
+
+/* Text gradient - silver chrome shimmer */
+.text-silver-gradient {
+  background: linear-gradient(135deg, var(--accent-silver) 0%, var(--accent-silver-light) 50%, var(--accent-silver) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Text gradient - gold shimmer (premium) */
 .text-gold-gradient {
   background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-gold-light) 50%, var(--accent-gold) 100%);
   -webkit-background-clip: text;
@@ -578,7 +645,7 @@ body {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  color: var(--accent-gold);
+  color: var(--accent-silver);
 }
 
 /* Status dot with glow */
@@ -633,7 +700,7 @@ select:focus-visible,
 textarea:focus-visible,
 [role="button"]:focus-visible,
 [tabindex]:focus-visible {
-  outline: 2px solid var(--accent-gold);
+  outline: 2px solid var(--accent-silver);
   outline-offset: 2px;
 }
 
@@ -651,7 +718,7 @@ textarea:focus {
   position: absolute;
   top: -40px;
   left: 0;
-  background: var(--accent-gold);
+  background: var(--accent-silver);
   color: var(--bg-surface);
   padding: 8px 16px;
   z-index: 100;

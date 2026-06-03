@@ -7,6 +7,12 @@ import { useLegalStore } from '@/stores/legal-store';
 import { useLegalFinancialStore } from '@/stores/legal-financial-store';
 import { useLegalMarketingStore } from '@/stores/legal-marketing-store';
 import { useLegalStrategyStore } from '@/stores/legal-strategy-store';
+import { useDeadlineAlerts } from '@/hooks/useDeadlineAlerts';
+import { DeadlineAlerts } from '@/components/legal/DeadlineAlerts';
+import { DeadlineToast } from '@/components/legal/DeadlineToast';
+import { MobileBottomNav } from '@/components/legal/MobileBottomNav';
+import { PWAInstallPrompt } from '@/components/legal/PWAInstallPrompt';
+import { OfflineIndicator } from '@/components/legal/OfflineIndicator';
 import {
   Scale,
   Briefcase,
@@ -27,7 +33,6 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   MapPin,
-  Gavel,
   Mic,
   Search,
   Upload,
@@ -45,6 +50,7 @@ import {
   Menu,
   X,
   LogOut,
+  ShieldCheck,
 } from 'lucide-react';
 
 const NAV_SECTIONS = [
@@ -118,11 +124,18 @@ const NAV_SECTIONS = [
       { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, href: '/legal/whatsapp' },
     ],
   },
+  {
+    title: 'Segurança & LGPD',
+    items: [
+      { id: 'audit', label: 'Log de Auditoria', icon: ShieldCheck, href: '/legal/audit' },
+    ],
+  },
 ];
 
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [alertsOpen, setAlertsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const hydrated = useRef(false);
@@ -135,6 +148,9 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
   const pendingDeadlines = useLegalStore((s) => s.deadlines.filter((d) => d.status === 'pending').length);
   const unreadMovements = useLegalStore((s) => s.movements.filter((m) => !m.isRead).length);
   const activeProcesses = useLegalStore((s) => s.processes.filter((p) => p.status === 'active').length);
+
+  // Alert counts for bell badge (overdue + today only)
+  const { counts: alertCounts } = useDeadlineAlerts();
 
   useEffect(() => {
     setMounted(true);
@@ -165,7 +181,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
 
   if (!mounted) {
     return (
-      <div className="flex h-screen bg-[#0a0f1a] text-white">
+      <div className="flex h-screen bg-[#060d1a] text-white">
         <div className="flex-1" />
       </div>
     );
@@ -174,24 +190,46 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
   const sidebarContent = (
     <>
       {/* Brand Header */}
-      <div className="flex h-16 items-center border-b border-[#1a2332] px-4">
+      <div className="flex h-16 items-center border-b border-[#1a2d52]/60 px-4">
         {collapsed && !mobileOpen ? (
-          <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-amber-700">
-            <Gavel className="h-4 w-4 text-white" />
+          <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#C0C0C0] to-[#718096] shadow-lg shadow-[#C0C0C0]/10">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="APEX">
+              <defs>
+                <linearGradient id="apex-logo-sm" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#E8E8ED" />
+                  <stop offset="45%" stopColor="#C0C0C0" />
+                  <stop offset="75%" stopColor="#D4AF37" />
+                  <stop offset="100%" stopColor="#B8941F" />
+                </linearGradient>
+              </defs>
+              <path d="M12 2L22 20H2L12 2Z" fill="url(#apex-logo-sm)" />
+              <rect x="7" y="13.5" width="10" height="2" rx="1" fill="#0a1628" />
+            </svg>
           </div>
         ) : (
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 shadow-lg shadow-amber-500/20">
-                <Gavel className="h-5 w-5 text-white" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-[#C0C0C0] to-[#718096] shadow-lg shadow-[#C0C0C0]/15">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="APEX">
+                  <defs>
+                    <linearGradient id="apex-logo-md" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse">
+                      <stop offset="0%" stopColor="#E8E8ED" />
+                      <stop offset="45%" stopColor="#C0C0C0" />
+                      <stop offset="75%" stopColor="#D4AF37" />
+                      <stop offset="100%" stopColor="#B8941F" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M12 2L22 20H2L12 2Z" fill="url(#apex-logo-md)" />
+                  <rect x="7" y="13.5" width="10" height="2" rx="1" fill="#0a1628" />
+                </svg>
               </div>
               <div>
-                <h1 className="text-sm font-semibold text-white tracking-wide">AIOX LEGAL</h1>
-                <p className="text-[10px] text-amber-400 tracking-widest">ADVOCACIA INTELIGENTE</p>
+                <h1 className="text-sm font-semibold text-white tracking-wide">APEX</h1>
+                <p className="text-[9px] text-[#A0AEC0] tracking-widest uppercase leading-tight">SOLUÇÃO JURÍDICA TECNOLÓGICA DE ALTA PERFORMANCE</p>
               </div>
             </div>
             {mobileOpen && (
-              <button onClick={() => setMobileOpen(false)} className="lg:hidden text-[#6b7a8d] hover:text-white">
+              <button onClick={() => setMobileOpen(false)} className="lg:hidden text-[#4A5568] hover:text-white">
                 <X className="h-5 w-5" />
               </button>
             )}
@@ -200,11 +238,11 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-3 scrollbar-thin scrollbar-thumb-[#1a2332]">
+      <nav className="flex-1 overflow-y-auto py-3 scrollbar-thin scrollbar-thumb-[#1a2d52]">
         {NAV_SECTIONS.map((section) => (
           <div key={section.title} className="mb-4">
             {(!collapsed || mobileOpen) && (
-              <p className="px-4 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[#4a5568]">
+              <p className="px-4 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[#2D3748]">
                 {section.title}
               </p>
             )}
@@ -220,20 +258,20 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
                       href={item.href}
                       className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200 ${
                         active
-                          ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                          : 'text-[#8899aa] hover:bg-[#1a2332] hover:text-white border border-transparent'
+                          ? 'bg-[#C0C0C0]/10 text-[#C0C0C0] border border-[#C0C0C0]/20'
+                          : 'text-[#4A5568] hover:bg-[#0d1f3c] hover:text-[#A0AEC0] border border-transparent'
                       } ${!showLabel ? 'justify-center px-2' : ''}`}
                       title={!showLabel ? item.label : undefined}
                     >
-                      <Icon className={`h-4 w-4 flex-shrink-0 ${active ? 'text-amber-400' : ''}`} />
+                      <Icon className={`h-4 w-4 flex-shrink-0 ${active ? 'text-[#C0C0C0]' : ''}`} />
                       {showLabel && <span className="truncate flex-1">{item.label}</span>}
                       {showLabel && badge > 0 && (
-                        <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-bold px-1">
+                        <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-[#C0C0C0]/15 text-[#C0C0C0] text-[10px] font-bold px-1">
                           {badge > 99 ? '99+' : badge}
                         </span>
                       )}
                       {!showLabel && badge > 0 && (
-                        <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-amber-400" />
+                        <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-[#C0C0C0]" />
                       )}
                     </Link>
                   </li>
@@ -244,15 +282,22 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
         ))}
       </nav>
 
+      {/* Deadline Alerts Panel (sidebar, expanded only) */}
+      {(!collapsed || mobileOpen) && (
+        <div className="px-3 pb-2">
+          <DeadlineAlerts previewCount={4} />
+        </div>
+      )}
+
       {/* Footer */}
       {(!collapsed || mobileOpen) && (
-        <div className="border-t border-[#1a2332] p-4 space-y-2">
+        <div className="border-t border-[#1a2d52]/60 p-4 space-y-2">
           <button
             onClick={async () => {
               await fetch('/api/auth/logout', { method: 'POST' });
               window.location.href = '/login';
             }}
-            className="flex items-center gap-2 text-[11px] text-[#6b7a8d] hover:text-red-400 transition-colors w-full"
+            className="flex items-center gap-2 text-[11px] text-[#4A5568] hover:text-red-400 transition-colors w-full"
           >
             <LogOut className="h-3 w-3" />
             <span>Sair</span>
@@ -263,7 +308,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       {/* Collapse Toggle (desktop only) */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="hidden lg:flex h-10 items-center justify-center border-t border-[#1a2332] text-[#6b7a8d] hover:text-white hover:bg-[#1a2332] transition-colors"
+        className="hidden lg:flex h-10 items-center justify-center border-t border-[#1a2d52]/60 text-[#4A5568] hover:text-white hover:bg-[#0d1f3c] transition-colors"
       >
         {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
       </button>
@@ -271,37 +316,62 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
   );
 
   return (
-    <div className="flex h-screen bg-[#0a0f1a] text-white overflow-hidden">
+    <div className="flex h-screen bg-[#060d1a] text-white overflow-hidden">
       {/* Mobile Header */}
-      <div className="fixed top-0 left-0 right-0 z-40 flex h-14 items-center justify-between border-b border-[#1a2332] bg-[#0d1320] px-4 lg:hidden">
-        <button onClick={() => setMobileOpen(true)} className="text-[#6b7a8d] hover:text-white">
+      <div className="fixed top-0 left-0 right-0 z-40 flex h-14 items-center justify-between border-b border-[#1a2d52]/60 bg-[#0a1628] px-4 lg:hidden">
+        <button onClick={() => setMobileOpen(true)} className="text-[#4A5568] hover:text-white">
           <Menu className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-2">
-          <Gavel className="h-4 w-4 text-amber-400" />
-          <span className="text-sm font-semibold text-white">AIOX LEGAL</span>
+          <span className="flex h-6 w-6 items-center justify-center rounded bg-gradient-to-br from-[#C0C0C0] to-[#718096]">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="APEX">
+              <path d="M12 2L22 20H2L12 2Z" fill="#0a1628" />
+              <rect x="7" y="13.5" width="10" height="2" rx="1" fill="#0a1628" opacity="0.5" />
+            </svg>
+          </span>
+          <span className="text-sm font-semibold text-white">APEX</span>
         </div>
         <div className="flex items-center gap-2">
-          {pendingDeadlines > 0 && (
-            <Link href="/legal/deadlines" className="relative">
-              <Clock className="h-4 w-4 text-[#6b7a8d]" />
-              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-amber-400" />
-            </Link>
-          )}
+          {/* Alert bell button */}
+          <button
+            onClick={() => setAlertsOpen((v) => !v)}
+            className="relative text-[#4A5568] hover:text-white transition-colors"
+            aria-label="Alertas de prazos"
+          >
+            <Bell className="h-4 w-4" />
+            {alertCounts.total > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white leading-none">
+                {alertCounts.total > 9 ? '9+' : alertCounts.total}
+              </span>
+            )}
+          </button>
           {unreadMovements > 0 && (
             <Link href="/legal/publications" className="relative">
-              <Bell className="h-4 w-4 text-[#6b7a8d]" />
-              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-amber-400" />
+              <Bell className="h-4 w-4 text-[#4A5568]" />
+              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-[#C0C0C0]" />
             </Link>
           )}
         </div>
       </div>
 
+      {/* Mobile Alerts Flyout */}
+      {alertsOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setAlertsOpen(false)}>
+          <div className="absolute inset-0 bg-black/50" />
+          <div
+            className="absolute top-14 right-0 w-80 max-h-[calc(100vh-56px)] overflow-y-auto bg-[#0a1628] border-l border-b border-[#1a2d52]/60 p-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <DeadlineAlerts />
+          </div>
+        </div>
+      )}
+
       {/* Mobile Overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
-          <aside className="relative flex flex-col w-72 h-full bg-[#0d1320] border-r border-[#1a2332] overflow-y-auto">
+          <aside className="relative flex flex-col w-72 h-full bg-[#0a1628] border-r border-[#1a2d52]/60 overflow-y-auto">
             {sidebarContent}
           </aside>
         </div>
@@ -309,7 +379,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
 
       {/* Desktop Sidebar */}
       <aside
-        className={`hidden lg:flex flex-col border-r border-[#1a2332] bg-[#0d1320] transition-all duration-300 ${
+        className={`hidden lg:flex flex-col border-r border-[#1a2d52]/60 bg-[#0a1628] transition-all duration-300 ${
           collapsed ? 'w-16' : 'w-64'
         }`}
       >
@@ -317,9 +387,21 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto pt-14 lg:pt-0">
+      <main className="flex-1 overflow-auto pt-14 pb-16 lg:pt-0 lg:pb-0 bg-[#060d1a]">
         {children}
       </main>
+
+      {/* Session toast for critical deadlines */}
+      <DeadlineToast />
+
+      {/* Mobile bottom navigation */}
+      <MobileBottomNav onOpenSidebar={() => setMobileOpen(true)} />
+
+      {/* PWA install prompt */}
+      <PWAInstallPrompt />
+
+      {/* Offline indicator */}
+      <OfflineIndicator />
     </div>
   );
 }

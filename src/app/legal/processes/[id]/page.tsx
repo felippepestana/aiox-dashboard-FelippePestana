@@ -2,9 +2,10 @@
 
 import { use, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Briefcase, Clock, FileText, MessageSquare, RefreshCw, Edit3, Check, ChevronDown, Plus, Save, X, Wand2 } from 'lucide-react';
+import { ArrowLeft, Briefcase, Clock, FileText, MessageSquare, RefreshCw, Edit3, Check, ChevronDown, Plus, Save, X, Wand2, Globe } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
 import type { ProcessStatus, DeadlineType } from '@/types/legal';
+import { ExportPDFButton } from '@/components/legal/ExportPDFButton';
 
 const areaLabels: Record<string, string> = {
   civil: 'Cível', trabalhista: 'Trabalhista', tributario: 'Tributário', penal: 'Penal',
@@ -110,6 +111,17 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ id: st
           <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-amber-500/10 text-amber-400">
             {areaLabels[process.area] || process.area}
           </span>
+          <ExportPDFButton
+            type="process"
+            data={{
+              process,
+              clientName: client?.name,
+              movements,
+              deadlines,
+              petitions,
+            }}
+            label="Exportar PDF"
+          />
           {process.cnj && (
             <button
               onClick={async () => {
@@ -176,6 +188,12 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ id: st
           className="flex items-center gap-1.5 rounded-lg border border-[#1a2332] px-3 py-2 text-xs text-[#8899aa] hover:text-amber-400 hover:border-amber-500/20 transition-colors">
           <FileText className="h-3 w-3" /> Analisar Documento
         </Link>
+        {process.cnj && (
+          <Link href={`/legal/processes/${id}/court`}
+            className="flex items-center gap-1.5 rounded-lg border border-[#1a2332] px-3 py-2 text-xs text-[#8899aa] hover:text-amber-400 hover:border-amber-500/20 transition-colors">
+            <Globe className="h-3 w-3" /> Ver Tribunal
+          </Link>
+        )}
       </div>
 
       {/* Inline Add Deadline */}

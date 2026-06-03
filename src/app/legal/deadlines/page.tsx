@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
 import type { DeadlineType, DeadlineStatus } from '@/types/legal';
+import { ExportPDFButton } from '@/components/legal/ExportPDFButton';
 
 const deadlineTypeBadge: Record<DeadlineType, { className: string; label: string }> = {
   fatal: { className: 'bg-red-500/10 text-red-400', label: 'Fatal' },
@@ -42,6 +43,12 @@ const DEADLINE_TYPES: { value: DeadlineType; label: string }[] = [
 
 export default function DeadlinesPage() {
   const { deadlines, processes, getProcessById, completeDeadline, addDeadline } = useLegalStore();
+
+  const processMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    processes.forEach((p) => { map[p.id] = p.cnj; });
+    return map;
+  }, [processes]);
   const [view, setView] = useState<'list' | 'calendar'>('list');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
@@ -158,6 +165,11 @@ export default function DeadlinesPage() {
 
         {/* View Toggle */}
         <div className="flex items-center gap-2">
+          <ExportPDFButton
+            type="deadlines"
+            data={{ deadlines: sortedDeadlines, processMap, title: 'Agenda de Prazos' }}
+            label="Exportar PDF"
+          />
           <button
             onClick={() => setShowForm(true)}
             className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"

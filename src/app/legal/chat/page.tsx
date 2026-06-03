@@ -83,12 +83,12 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([{
     id: 'sys-1',
     role: 'system',
-    content: 'Assistente Jurídico AIOX Legal ativo. Você pode fazer perguntas jurídicas ou enviar documentos (PDF, DOC) para análise completa.',
+    content: 'Assistente Jurídico APEX Legal ativo. Você pode fazer perguntas jurídicas ou enviar documentos (PDF, DOC) para análise completa.',
     timestamp: new Date(),
   }, {
     id: 'assistant-1',
     role: 'assistant',
-    content: 'Olá! Sou o assistente jurídico da **AIOX Legal**. Posso ajudar com:\n\n• **Consultas jurídicas** sobre qualquer área do direito\n• **Análise de documentos** — envie PDFs ou DOCs pelo ícone de upload\n• **Estratégia processual** personalizada\n• **Cálculos** de prazos, verbas, correção\n• **Jurisprudência** do STF/STJ\n\nComo posso ajudar?',
+    content: 'Olá! Sou o assistente jurídico da **APEX Legal**. Posso ajudar com:\n\n• **Consultas jurídicas** sobre qualquer área do direito\n• **Análise de documentos** — envie PDFs ou DOCs pelo ícone de upload\n• **Estratégia processual** personalizada\n• **Cálculos** de prazos, verbas, correção\n• **Jurisprudência** do STF/STJ\n\nComo posso ajudar?',
     timestamp: new Date(),
   }]);
 
