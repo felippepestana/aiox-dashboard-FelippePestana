@@ -16,9 +16,15 @@ import {
   Activity,
 } from 'lucide-react';
 import { useLegalFinancialStore } from '@/stores/legal-financial-store';
-import { useLegalStore } from '@/stores/legal-store';
 import type { LegalTransactionType, LegalTransactionCategory } from '@/types/legal';
 import { CashFlowForecast } from '@/components/legal/CashFlowForecast';
+import {
+  PageHeader,
+  StatCardGrid,
+  DataTable,
+  EmptyState,
+} from '@/components/legal/shared';
+import type { ColumnDef } from '@/components/legal/shared';
 
 const CATEGORIES: { value: LegalTransactionCategory; label: string; type: LegalTransactionType }[] = [
   { value: 'honorario_contratual', label: 'Honorário Contratual', type: 'income' },
@@ -36,6 +42,49 @@ const CATEGORIES: { value: LegalTransactionCategory; label: string; type: LegalT
 
 type ActiveTab = 'overview' | 'forecast';
 
+type TransactionRow = {
+  id: string;
+  date: string;
+  type: LegalTransactionType;
+  category: string;
+  description: string;
+  amount: number;
+};
+
+const categoryLabels: Record<string, string> = {
+  honorario_contratual: 'Honorario Contratual',
+  honorario_sucumbencial: 'Honorario Sucumbencial',
+  honorario_exitum: 'Honorario Ad Exitum',
+  custas_judiciais: 'Custas Judiciais',
+  emolumentos: 'Emolumentos',
+  pericia: 'Pericia',
+  salario: 'Salario',
+  aluguel: 'Aluguel',
+  tecnologia: 'Tecnologia',
+  marketing_legal: 'Marketing',
+  imposto_irpj: 'IRPJ',
+  imposto_csll: 'CSLL',
+  imposto_iss: 'ISS',
+  imposto_pis_cofins: 'PIS/COFINS',
+  provisao: 'Provisao',
+  outro: 'Outro',
+};
+
+function formatCurrency(value: number): string {
+  return value.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  });
+}
+
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+}
+
 export default function FinancialPage() {
   const {
     transactions,
@@ -47,8 +96,6 @@ export default function FinancialPage() {
     getOutstandingHonorarios,
     addTransaction,
   } = useLegalFinancialStore();
-
-  const { getClientById, getProcessById } = useLegalStore();
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
   const [showForm, setShowForm] = useState(false);
@@ -71,91 +118,128 @@ export default function FinancialPage() {
       .slice(0, 10);
   }, [transactions]);
 
-  function formatCurrency(value: number): string {
-    return value.toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    });
-  }
+  const tableData: TransactionRow[] = useMemo(() => {
+    return recentTransactions.map((txn) => ({
+      id: txn.id,
+      date: txn.date,
+      type: txn.type,
+      category: txn.category,
+      description: txn.description || '',
+      amount: txn.amount,
+    }));
+  }, [recentTransactions]);
 
-  function formatDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-  }
-
-  const categoryLabels: Record<string, string> = {
-    honorario_contratual: 'Honorario Contratual',
-    honorario_sucumbencial: 'Honorario Sucumbencial',
-    honorario_exitum: 'Honorario Ad Exitum',
-    custas_judiciais: 'Custas Judiciais',
-    emolumentos: 'Emolumentos',
-    pericia: 'Pericia',
-    salario: 'Salario',
-    aluguel: 'Aluguel',
-    tecnologia: 'Tecnologia',
-    marketing_legal: 'Marketing',
-    imposto_irpj: 'IRPJ',
-    imposto_csll: 'CSLL',
-    imposto_iss: 'ISS',
-    imposto_pis_cofins: 'PIS/COFINS',
-    provisao: 'Provisao',
-    outro: 'Outro',
-  };
-
-  const stats = [
+  const statCards = [
     {
       label: 'Receita Total',
       value: formatCurrency(totalRevenue),
-      icon: TrendingUp,
-      iconBg: 'bg-green-500/10',
-      iconColor: 'text-green-400',
+      icon: <TrendingUp className="h-5 w-5" />,
+      color: '#4ADE80',
     },
     {
       label: 'Despesas',
       value: formatCurrency(totalExpenses),
-      icon: TrendingDown,
-      iconBg: 'bg-red-500/10',
-      iconColor: 'text-red-400',
+      icon: <TrendingDown className="h-5 w-5" />,
+      color: '#F87171',
     },
     {
       label: 'Lucro',
       value: formatCurrency(profit),
-      icon: Wallet,
-      iconBg: profit >= 0 ? 'bg-emerald-500/10' : 'bg-red-500/10',
-      iconColor: profit >= 0 ? 'text-emerald-400' : 'text-red-400',
+      icon: <Wallet className="h-5 w-5" />,
+      color: profit >= 0 ? '#34D399' : '#F87171',
     },
     {
       label: 'Honorarios Pendentes',
       value: formatCurrency(outstandingHonorarios),
-      icon: Receipt,
-      iconBg: 'bg-amber-500/10',
-      iconColor: 'text-amber-400',
+      icon: <Receipt className="h-5 w-5" />,
+      color: '#D4AF37',
+    },
+  ];
+
+  const transactionColumns: ColumnDef<TransactionRow>[] = [
+    {
+      key: 'date',
+      label: 'Data',
+      sortable: true,
+      render: (value) => (
+        <span className="text-sm text-[#6b7a8d]">{formatDate(String(value))}</span>
+      ),
+    },
+    {
+      key: 'type',
+      label: 'Tipo',
+      sortable: true,
+      render: (value) => (
+        <span
+          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+            value === 'income'
+              ? 'bg-green-500/10 text-green-400'
+              : 'bg-red-500/10 text-red-400'
+          }`}
+        >
+          {value === 'income' ? (
+            <ArrowUpRight className="h-3 w-3" />
+          ) : (
+            <ArrowDownRight className="h-3 w-3" />
+          )}
+          {value === 'income' ? 'Receita' : 'Despesa'}
+        </span>
+      ),
+    },
+    {
+      key: 'category',
+      label: 'Categoria',
+      sortable: true,
+      render: (value) => (
+        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-amber-500/10 text-amber-400">
+          {categoryLabels[String(value)] || String(value)}
+        </span>
+      ),
+    },
+    {
+      key: 'description',
+      label: 'Descrição',
+      render: (value) => (
+        <span className="text-sm text-white max-w-[200px] truncate block">{String(value)}</span>
+      ),
+    },
+    {
+      key: 'amount',
+      label: 'Valor',
+      sortable: true,
+      cellClassName: 'text-right',
+      headerClassName: 'text-right',
+      render: (value, row) => (
+        <span
+          className={`text-sm font-medium ${
+            row.type === 'income' ? 'text-green-400' : 'text-red-400'
+          }`}
+        >
+          {row.type === 'income' ? '+' : '-'}
+          {formatCurrency(Number(value))}
+        </span>
+      ),
     },
   ];
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <DollarSign className="h-7 w-7 text-amber-400" />
-            Dashboard Financeiro
-          </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">
-            Visao geral das financas do escritorio
-          </p>
-        </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
-        >
-          <Plus className="h-4 w-4" /> Nova Transação
-        </button>
-      </div>
+      <PageHeader
+        title="Dashboard Financeiro"
+        subtitle="Visao geral das financas do escritorio"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Financeiro', href: '/legal/financial' },
+        ]}
+        actions={
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
+          >
+            <Plus className="h-4 w-4" /> Nova Transação
+          </button>
+        }
+      />
 
       {/* Tab Navigation */}
       <div className="flex gap-1 rounded-lg border border-[#1a2332] bg-[#0d1320] p-1 w-fit">
@@ -258,27 +342,7 @@ export default function FinancialPage() {
       {/* ── Overview Tab ───────────────────────────────────────────────────── */}
       {activeTab === 'overview' && (
         <>
-          {/* Stat Cards */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {stats.map((stat) => (
-              <div
-                key={stat.label}
-                className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-[#6b7a8d] uppercase tracking-wider">
-                      {stat.label}
-                    </p>
-                    <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
-                  </div>
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${stat.iconBg}`}>
-                    <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <StatCardGrid cards={statCards} />
 
           {/* Recent Transactions */}
           <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6">
@@ -288,75 +352,20 @@ export default function FinancialPage() {
             </h2>
 
             {recentTransactions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-[#6b7a8d]">
-                <DollarSign className="h-8 w-8 mb-2" />
-                <p className="text-sm">Nenhuma transacao registrada</p>
-              </div>
+              <EmptyState
+                icon={<DollarSign className="h-8 w-8" />}
+                title="Nenhuma transação registrada"
+                description="Adicione a primeira transação para começar."
+                action={{ label: 'Nova Transação', onClick: () => setShowForm(true) }}
+              />
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-[#1a2332]">
-                      <th className="px-4 py-3 text-left text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
-                        Data
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
-                        Tipo
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
-                        Categoria
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
-                        Descricao
-                      </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
-                        Valor
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#1a2332]">
-                    {recentTransactions.map((txn) => (
-                      <tr key={txn.id} className="hover:bg-[#0a0f1a] transition-colors">
-                        <td className="px-4 py-3 text-sm text-[#6b7a8d]">
-                          {formatDate(txn.date)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-                              txn.type === 'income'
-                                ? 'bg-green-500/10 text-green-400'
-                                : 'bg-red-500/10 text-red-400'
-                            }`}
-                          >
-                            {txn.type === 'income' ? (
-                              <ArrowUpRight className="h-3 w-3" />
-                            ) : (
-                              <ArrowDownRight className="h-3 w-3" />
-                            )}
-                            {txn.type === 'income' ? 'Receita' : 'Despesa'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-amber-500/10 text-amber-400">
-                            {categoryLabels[txn.category] || txn.category}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-white max-w-[200px] truncate">
-                          {txn.description}
-                        </td>
-                        <td
-                          className={`px-4 py-3 text-sm text-right font-medium ${
-                            txn.type === 'income' ? 'text-green-400' : 'text-red-400'
-                          }`}
-                        >
-                          {txn.type === 'income' ? '+' : '-'}
-                          {formatCurrency(txn.amount)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <DataTable<TransactionRow>
+                columns={transactionColumns}
+                data={tableData}
+                paginated
+                pageSize={10}
+                emptyMessage="Nenhuma transacao registrada."
+              />
             )}
           </div>
         </>

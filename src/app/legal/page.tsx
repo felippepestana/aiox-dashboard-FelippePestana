@@ -8,7 +8,6 @@ import {
   Clock,
   DollarSign,
   FileText,
-  Plus,
   Users,
   AlertTriangle,
   ArrowRight,
@@ -17,6 +16,10 @@ import {
 } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
 import { useLegalFinancialStore } from '@/stores/legal-financial-store';
+import {
+  PageHeader,
+  StatCardGrid,
+} from '@/components/legal/shared';
 
 export default function LegalDashboardPage() {
   const {
@@ -44,26 +47,30 @@ export default function LegalDashboardPage() {
   const upcomingDeadlines = getUpcomingDeadlines(7).slice(0, 5);
   const unreadMovements = getUnreadMovements().slice(0, 5);
 
-  const stats = [
+  const statCards = [
     {
       label: 'Processos Ativos',
-      value: activeProcessCount.toString(),
-      icon: Briefcase,
+      value: activeProcessCount,
+      icon: <Briefcase className="h-5 w-5" />,
+      color: '#D4AF37',
     },
     {
       label: 'Prazos Pendentes',
-      value: pendingDeadlineCount.toString(),
-      icon: Clock,
+      value: pendingDeadlineCount,
+      icon: <Clock className="h-5 w-5" />,
+      color: '#FBBF24',
     },
     {
       label: 'Honorarios a Receber',
       value: `R$ ${outstandingHonorarios.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-      icon: DollarSign,
+      icon: <DollarSign className="h-5 w-5" />,
+      color: '#34D399',
     },
     {
       label: 'Pecas em Rascunho',
-      value: draftPetitions.toString(),
-      icon: FileText,
+      value: draftPetitions,
+      icon: <FileText className="h-5 w-5" />,
+      color: '#C0C0C0',
     },
   ];
 
@@ -101,52 +108,26 @@ export default function LegalDashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#060d1a] p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Scale className="h-7 w-7 text-[#C0C0C0]" />
-            Painel Juridico
-          </h1>
-          <p className="text-sm text-[#4A5568] mt-1">
-            Visao geral da sua pratica juridica · APEX Legal Performance
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {quickActions.map((action) => (
-            <Link
-              key={action.label}
-              href={action.href}
-              className="flex items-center gap-2 rounded-lg bg-[#D4AF37]/10 px-4 py-2 text-sm font-medium text-[#D4AF37] hover:bg-[#D4AF37]/20 transition-colors border border-[#D4AF37]/20"
-            >
-              <action.icon className="h-4 w-4" />
-              {action.label}
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-xl border border-[#1a2d52]/60 bg-[#0d1f3c] p-6 hover:border-[#C0C0C0]/20 transition-colors"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-[#4A5568] uppercase tracking-wider">
-                  {stat.label}
-                </p>
-                <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
-              </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#C0C0C0]/10">
-                <stat.icon className="h-5 w-5 text-[#C0C0C0]" />
-              </div>
-            </div>
+      <PageHeader
+        title="Painel Juridico"
+        subtitle="Visao geral da sua pratica juridica · APEX Legal Performance"
+        actions={
+          <div className="flex items-center gap-2 flex-wrap">
+            {quickActions.map((action) => (
+              <Link
+                key={action.label}
+                href={action.href}
+                className="flex items-center gap-2 rounded-lg bg-[#D4AF37]/10 px-4 py-2 text-sm font-medium text-[#D4AF37] hover:bg-[#D4AF37]/20 transition-colors border border-[#D4AF37]/20"
+              >
+                <action.icon className="h-4 w-4" />
+                {action.label}
+              </Link>
+            ))}
           </div>
-        ))}
-      </div>
+        }
+      />
+
+      <StatCardGrid cards={statCards} />
 
       {/* Two Column: Deadlines + Movements */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

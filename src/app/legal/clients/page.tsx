@@ -4,7 +4,6 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import {
   Users,
-  Search,
   Plus,
   Phone,
   Building2,
@@ -18,14 +17,23 @@ import {
 } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
 import type { ClientType, Address } from '@/types/legal';
+import {
+  PageHeader,
+  StatCardGrid,
+  FilterBar,
+  EmptyState,
+} from '@/components/legal/shared';
+import type { FilterValues } from '@/components/legal/shared';
 
 const EMPTY_ADDRESS: Address = { street: '', number: '', neighborhood: '', city: '', state: '', zipCode: '' };
 
 export default function ClientsPage() {
   const { clients, processes, addClient } = useLegalStore();
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState<ClientType | ''>('');
+  const [filterValues, setFilterValues] = useState<FilterValues>({
+    search: '',
+    type: '',
+  });
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -43,9 +51,9 @@ export default function ClientsPage() {
 
   const filteredClients = useMemo(() => {
     return clients.filter((c) => {
-      if (filterType && c.type !== filterType) return false;
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
+      if (filterValues.type && c.type !== filterValues.type) return false;
+      if (filterValues.search) {
+        const q = filterValues.search.toLowerCase();
         if (
           !c.name.toLowerCase().includes(q) &&
           !(c.cpfCnpj || '').toLowerCase().includes(q)
@@ -54,11 +62,20 @@ export default function ClientsPage() {
       }
       return true;
     });
-  }, [clients, filterType, searchQuery]);
+  }, [clients, filterValues]);
 
   function getProcessCount(clientId: string): number {
     return processes.filter((p) => p.clientId === clientId).length;
   }
+
+  const pfCount = useMemo(() => clients.filter((c) => c.type === 'pf').length, [clients]);
+  const pjCount = useMemo(() => clients.filter((c) => c.type === 'pj').length, [clients]);
+  const withActiveProcesses = useMemo(() => {
+    const activeClientIds = new Set(
+      processes.filter((p) => p.status === 'active').map((p) => p.clientId)
+    );
+    return clients.filter((c) => activeClientIds.has(c.id)).length;
+  }, [clients, processes]);
 
   function formatCpfCnpj(value: string): string {
     if (!value) return '';
@@ -107,27 +124,71 @@ export default function ClientsPage() {
   const inputClass = 'w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white placeholder-[#4a5568] focus:border-amber-500/50 focus:outline-none';
   const labelClass = 'block text-xs font-medium text-[#6b7a8d] mb-1';
 
+  const filterConfigs = [
+    {
+      type: 'search' as const,
+      key: 'search',
+      placeholder: 'Buscar por nome ou CPF/CNPJ...',
+    },
+    {
+      type: 'select' as const,
+      key: 'type',
+      label: 'Todos os Tipos',
+      options: [
+        { value: 'pf', label: 'Pessoa Física' },
+        { value: 'pj', label: 'Pessoa Jurídica' },
+      ],
+    },
+  ];
+
+  const statCards = [
+    {
+      label: 'Total Clientes',
+      value: clients.length,
+      icon: <Users className="h-5 w-5" />,
+      color: '#D4AF37',
+    },
+    {
+      label: 'Pessoa Física',
+      value: pfCount,
+      icon: <User className="h-5 w-5" />,
+      color: '#60A5FA',
+    },
+    {
+      label: 'Pessoa Jurídica',
+      value: pjCount,
+      icon: <Building2 className="h-5 w-5" />,
+      color: '#A78BFA',
+    },
+    {
+      label: 'Com Processos Ativos',
+      value: withActiveProcesses,
+      icon: <Briefcase className="h-5 w-5" />,
+      color: '#34D399',
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Users className="h-7 w-7 text-amber-400" />
-            Clientes
-          </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">
-            {clients.length} clientes cadastrados
-          </p>
-        </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          Novo Cliente
-        </button>
-      </div>
+      <PageHeader
+        title="Clientes"
+        subtitle={`${clients.length} clientes cadastrados`}
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Clientes', href: '/legal/clients' },
+        ]}
+        actions={
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Novo Cliente
+          </button>
+        }
+      />
+
+      <StatCardGrid cards={statCards} />
 
       {/* New Client Form */}
       {showForm && (
@@ -252,68 +313,23 @@ export default function ClientsPage() {
         </div>
       )}
 
-      {/* Filters */}
-      <div className="flex items-center gap-3 rounded-xl border border-[#1a2332] bg-[#0d1320] p-4">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7a8d]" />
-          <input
-            type="text"
-            placeholder="Buscar por nome ou CPF/CNPJ..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] pl-10 pr-4 py-2 text-sm text-white placeholder-[#6b7a8d] focus:outline-none focus:border-amber-500/50"
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setFilterType('')}
-            className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-              filterType === ''
-                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                : 'text-[#6b7a8d] border border-[#1a2332] hover:text-white'
-            }`}
-          >
-            Todos
-          </button>
-          <button
-            onClick={() => setFilterType('pf')}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-              filterType === 'pf'
-                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                : 'text-[#6b7a8d] border border-[#1a2332] hover:text-white'
-            }`}
-          >
-            <User className="h-3.5 w-3.5" />
-            Pessoa Fisica
-          </button>
-          <button
-            onClick={() => setFilterType('pj')}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-              filterType === 'pj'
-                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                : 'text-[#6b7a8d] border border-[#1a2332] hover:text-white'
-            }`}
-          >
-            <Building2 className="h-3.5 w-3.5" />
-            Pessoa Juridica
-          </button>
-        </div>
-      </div>
+      <FilterBar
+        filters={filterConfigs}
+        values={filterValues}
+        onFilterChange={(key, value) =>
+          setFilterValues((prev) => ({ ...prev, [key]: value }))
+        }
+        onClear={() => setFilterValues({ search: '', type: '' })}
+      />
 
       {/* Client Cards */}
       {filteredClients.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-[#1a2332] bg-[#0d1320] py-16">
-          <Users className="h-12 w-12 text-[#6b7a8d] mb-3" />
-          <p className="text-[#6b7a8d] text-sm">Nenhum cliente encontrado</p>
-          <button
-            onClick={() => setShowForm(true)}
-            className="mt-4 flex items-center gap-2 text-amber-400 hover:text-amber-300 text-sm"
-          >
-            <Plus className="h-4 w-4" />
-            Cadastrar primeiro cliente
-          </button>
-        </div>
+        <EmptyState
+          icon={<Users className="h-8 w-8" />}
+          title="Nenhum cliente encontrado"
+          description="Cadastre o primeiro cliente para começar."
+          action={{ label: 'Cadastrar Cliente', onClick: () => setShowForm(true) }}
+        />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredClients.map((client) => {

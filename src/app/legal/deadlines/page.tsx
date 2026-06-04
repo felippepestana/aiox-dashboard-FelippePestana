@@ -10,11 +10,20 @@ import {
   Plus,
   X,
   Save,
+  AlertTriangle,
+  CalendarClock,
 } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
 import type { DeadlineType, DeadlineStatus } from '@/types/legal';
 import { ExportPDFButton } from '@/components/legal/ExportPDFButton';
 import { DeadlineCalendar } from '@/components/legal/DeadlineCalendar';
+import {
+  PageHeader,
+  StatCardGrid,
+  FilterBar,
+  EmptyState,
+} from '@/components/legal/shared';
+import type { FilterValues } from '@/components/legal/shared';
 
 const deadlineTypeBadge: Record<DeadlineType, { className: string; label: string }> = {
   fatal: { className: 'bg-red-500/10 text-red-400', label: 'Fatal' },
@@ -59,15 +68,118 @@ export default function DeadlinesPage() {
     notes: '',
   });
 
+  const [filterValues, setFilterValues] = useState<FilterValues>({
+    search: '',
+    type: '',
+    status: '',
+  });
+
   const sortedDeadlines = useMemo(() => {
     return [...deadlines].sort(
       (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
     );
   }, [deadlines]);
 
+  const filteredDeadlines = useMemo(() => {
+    return sortedDeadlines.filter((d) => {
+      if (filterValues.type && d.type !== filterValues.type) return false;
+      if (filterValues.status && d.status !== filterValues.status) return false;
+      if (filterValues.search) {
+        const q = filterValues.search.toLowerCase();
+        const process = getProcessById(d.processId);
+        if (
+          !d.title.toLowerCase().includes(q) &&
+          !(process?.cnj || '').toLowerCase().includes(q)
+        )
+          return false;
+      }
+      return true;
+    });
+  }, [sortedDeadlines, filterValues, getProcessById]);
+
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+
+  const overdueCount = useMemo(() =>
+    deadlines.filter((d) => d.status === 'pending' && new Date(d.dueDate) < now).length,
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  [deadlines]);
+
+  const todayCount = useMemo(() => {
+    const todayStr = now.toDateString();
+    return deadlines.filter(
+      (d) => d.status === 'pending' && new Date(d.dueDate).toDateString() === todayStr
+    ).length;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deadlines]);
+
+  const next7Days = useMemo(() => {
+    const end = new Date(now);
+    end.setDate(end.getDate() + 7);
+    return deadlines.filter(
+      (d) =>
+        d.status === 'pending' &&
+        new Date(d.dueDate) >= now &&
+        new Date(d.dueDate) <= end
+    ).length;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deadlines]);
+
+  const pendingCount = deadlines.filter((d) => d.status === 'pending').length;
+
+  const statCards = [
+    {
+      label: 'Total Prazos',
+      value: deadlines.length,
+      icon: <CalendarClock className="h-5 w-5" />,
+      color: '#D4AF37',
+    },
+    {
+      label: 'Vencidos',
+      value: overdueCount,
+      icon: <AlertTriangle className="h-5 w-5" />,
+      color: '#F87171',
+    },
+    {
+      label: 'Hoje',
+      value: todayCount,
+      icon: <Clock className="h-5 w-5" />,
+      color: '#FBBF24',
+    },
+    {
+      label: 'Próximos 7 Dias',
+      value: next7Days,
+      icon: <CalendarDays className="h-5 w-5" />,
+      color: '#34D399',
+    },
+  ];
+
+  const filterConfigs = [
+    {
+      type: 'search' as const,
+      key: 'search',
+      placeholder: 'Buscar prazo ou CNJ...',
+    },
+    {
+      type: 'select' as const,
+      key: 'type',
+      label: 'Todos os Tipos',
+      options: DEADLINE_TYPES.map((t) => ({ value: t.value, label: t.label })),
+    },
+    {
+      type: 'select' as const,
+      key: 'status',
+      label: 'Todos os Status',
+      options: [
+        { value: 'pending', label: 'Pendente' },
+        { value: 'completed', label: 'Concluído' },
+        { value: 'missed', label: 'Perdido' },
+        { value: 'extended', label: 'Prorrogado' },
+      ],
+    },
+  ];
+
   function getDaysUntil(dateStr: string): number {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
     const due = new Date(dateStr);
     due.setHours(0, 0, 0, 0);
     return Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -99,60 +211,61 @@ export default function DeadlinesPage() {
     });
   }
 
+  const viewToggle = (
+    <div className="flex items-center gap-1 rounded-lg border border-[#1a2332] bg-[#0d1320] p-1">
+      <button
+        onClick={() => setView('list')}
+        className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ${
+          view === 'list'
+            ? 'bg-amber-500/10 text-amber-400'
+            : 'text-[#6b7a8d] hover:text-white'
+        }`}
+      >
+        <List className="h-4 w-4" />
+        Lista
+      </button>
+      <button
+        onClick={() => setView('calendar')}
+        className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ${
+          view === 'calendar'
+            ? 'bg-amber-500/10 text-amber-400'
+            : 'text-[#6b7a8d] hover:text-white'
+        }`}
+      >
+        <CalendarDays className="h-4 w-4" />
+        Calendario
+      </button>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Clock className="h-7 w-7 text-amber-400" />
-            Prazos
-          </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">
-            {deadlines.filter((d) => d.status === 'pending').length} prazos pendentes
-          </p>
-        </div>
-
-        {/* Actions + View Toggle */}
-        <div className="flex items-center gap-2">
-          <ExportPDFButton
-            type="deadlines"
-            data={{ deadlines: sortedDeadlines, processMap, title: 'Agenda de Prazos' }}
-            label="Exportar PDF"
-          />
-          <button
-            onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
-          >
-            <Plus className="h-4 w-4" /> Novo Prazo
-          </button>
-
-          <div className="flex items-center gap-1 rounded-lg border border-[#1a2332] bg-[#0d1320] p-1">
+      <PageHeader
+        title="Prazos"
+        subtitle={`${pendingCount} prazos pendentes`}
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Prazos', href: '/legal/deadlines' },
+        ]}
+        actions={
+          <>
+            <ExportPDFButton
+              type="deadlines"
+              data={{ deadlines: sortedDeadlines, processMap, title: 'Agenda de Prazos' }}
+              label="Exportar PDF"
+            />
             <button
-              onClick={() => setView('list')}
-              className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ${
-                view === 'list'
-                  ? 'bg-amber-500/10 text-amber-400'
-                  : 'text-[#6b7a8d] hover:text-white'
-              }`}
+              onClick={() => setShowForm(true)}
+              className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
             >
-              <List className="h-4 w-4" />
-              Lista
+              <Plus className="h-4 w-4" /> Novo Prazo
             </button>
-            <button
-              onClick={() => setView('calendar')}
-              className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ${
-                view === 'calendar'
-                  ? 'bg-amber-500/10 text-amber-400'
-                  : 'text-[#6b7a8d] hover:text-white'
-              }`}
-            >
-              <CalendarDays className="h-4 w-4" />
-              Calendario
-            </button>
-          </div>
-        </div>
-      </div>
+            {viewToggle}
+          </>
+        }
+      />
+
+      <StatCardGrid cards={statCards} />
 
       {/* New Deadline Form */}
       {showForm && (
@@ -261,95 +374,108 @@ export default function DeadlinesPage() {
 
       {/* List View */}
       {view === 'list' && (
-        <div className="space-y-3">
-          {sortedDeadlines.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-[#1a2332] bg-[#0d1320] py-16">
-              <Clock className="h-12 w-12 text-[#6b7a8d] mb-3" />
-              <p className="text-[#6b7a8d] text-sm">Nenhum prazo cadastrado</p>
-            </div>
-          ) : (
-            sortedDeadlines.map((deadline) => {
-              const process = getProcessById(deadline.processId);
-              const days = getDaysUntil(deadline.dueDate);
-              const statusInfo = deadlineStatusIcon[deadline.status];
-              const StatusIcon = statusInfo.icon;
+        <>
+          <FilterBar
+            filters={filterConfigs}
+            values={filterValues}
+            onFilterChange={(key, value) =>
+              setFilterValues((prev) => ({ ...prev, [key]: value }))
+            }
+            onClear={() => setFilterValues({ search: '', type: '', status: '' })}
+          />
 
-              return (
-                <div
-                  key={deadline.id}
-                  className={`flex items-center gap-4 rounded-xl border border-[#1a2332] bg-[#0d1320] p-4 border-l-4 ${getDateColor(
-                    deadline.dueDate,
-                    deadline.status
-                  )}`}
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0a0f1a]">
-                    <StatusIcon className={`h-5 w-5 ${statusInfo.className}`} />
-                  </div>
+          <div className="space-y-3">
+            {filteredDeadlines.length === 0 ? (
+              <EmptyState
+                icon={<Clock className="h-8 w-8" />}
+                title="Nenhum prazo encontrado"
+                description="Cadastre o primeiro prazo para começar."
+                action={{ label: 'Novo Prazo', onClick: () => setShowForm(true) }}
+              />
+            ) : (
+              filteredDeadlines.map((deadline) => {
+                const process = getProcessById(deadline.processId);
+                const days = getDaysUntil(deadline.dueDate);
+                const statusInfo = deadlineStatusIcon[deadline.status];
+                const StatusIcon = statusInfo.icon;
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-white truncate">
-                        {deadline.title}
-                      </p>
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                          deadlineTypeBadge[deadline.type].className
-                        }`}
+                return (
+                  <div
+                    key={deadline.id}
+                    className={`flex items-center gap-4 rounded-xl border border-[#1a2332] bg-[#0d1320] p-4 border-l-4 ${getDateColor(
+                      deadline.dueDate,
+                      deadline.status
+                    )}`}
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0a0f1a]">
+                      <StatusIcon className={`h-5 w-5 ${statusInfo.className}`} />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-white truncate">
+                          {deadline.title}
+                        </p>
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                            deadlineTypeBadge[deadline.type].className
+                          }`}
+                        >
+                          {deadlineTypeBadge[deadline.type].label}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1">
+                        {process && (
+                          <span className="text-xs text-[#6b7a8d] font-mono">
+                            {process.cnj}
+                          </span>
+                        )}
+                        {deadline.assignedTo && (
+                          <span className="text-xs text-[#6b7a8d]">
+                            Resp: {deadline.assignedTo}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="text-right flex-shrink-0">
+                      <p
+                        className={`text-sm font-medium ${getDateTextColor(
+                          deadline.dueDate,
+                          deadline.status
+                        )}`}
                       >
-                        {deadlineTypeBadge[deadline.type].label}
-                      </span>
+                        {formatDate(deadline.dueDate)}
+                      </p>
+                      <p className="text-xs text-[#6b7a8d]">
+                        {deadline.status === 'completed'
+                          ? 'Concluido'
+                          : deadline.status === 'missed'
+                          ? 'Perdido'
+                          : days < 0
+                          ? `${Math.abs(days)} dias atrasado`
+                          : days === 0
+                          ? 'Hoje'
+                          : days === 1
+                          ? 'Amanha'
+                          : `${days} dias`}
+                      </p>
                     </div>
-                    <div className="flex items-center gap-3 mt-1">
-                      {process && (
-                        <span className="text-xs text-[#6b7a8d] font-mono">
-                          {process.cnj}
-                        </span>
-                      )}
-                      {deadline.assignedTo && (
-                        <span className="text-xs text-[#6b7a8d]">
-                          Resp: {deadline.assignedTo}
-                        </span>
-                      )}
-                    </div>
-                  </div>
 
-                  <div className="text-right flex-shrink-0">
-                    <p
-                      className={`text-sm font-medium ${getDateTextColor(
-                        deadline.dueDate,
-                        deadline.status
-                      )}`}
-                    >
-                      {formatDate(deadline.dueDate)}
-                    </p>
-                    <p className="text-xs text-[#6b7a8d]">
-                      {deadline.status === 'completed'
-                        ? 'Concluido'
-                        : deadline.status === 'missed'
-                        ? 'Perdido'
-                        : days < 0
-                        ? `${Math.abs(days)} dias atrasado`
-                        : days === 0
-                        ? 'Hoje'
-                        : days === 1
-                        ? 'Amanha'
-                        : `${days} dias`}
-                    </p>
+                    {deadline.status === 'pending' && (
+                      <button
+                        onClick={() => completeDeadline(deadline.id)}
+                        className="flex-shrink-0 rounded-lg border border-[#1a2332] px-3 py-1.5 text-xs text-[#6b7a8d] hover:text-green-400 hover:border-green-500/30 transition-colors"
+                      >
+                        Concluir
+                      </button>
+                    )}
                   </div>
-
-                  {deadline.status === 'pending' && (
-                    <button
-                      onClick={() => completeDeadline(deadline.id)}
-                      className="flex-shrink-0 rounded-lg border border-[#1a2332] px-3 py-1.5 text-xs text-[#6b7a8d] hover:text-green-400 hover:border-green-500/30 transition-colors"
-                    >
-                      Concluir
-                    </button>
-                  )}
-                </div>
-              );
-            })
-          )}
-        </div>
+                );
+              })
+            )}
+          </div>
+        </>
       )}
 
       {/* Calendar View */}

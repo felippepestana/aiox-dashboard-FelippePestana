@@ -2,18 +2,23 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Briefcase,
-  Search,
   Plus,
-  Filter,
   ChevronRight,
-  AlertTriangle,
   Clock,
 } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
 import type { LegalArea, ProcessStatus, UrgencyLevel } from '@/types/legal';
 import { ExportPDFButton } from '@/components/legal/ExportPDFButton';
+import {
+  PageHeader,
+  FilterBar,
+  DataTable,
+  EmptyState,
+} from '@/components/legal/shared';
+import type { FilterValues, ColumnDef } from '@/components/legal/shared';
 
 const AREAS: { value: LegalArea | ''; label: string }[] = [
   { value: '', label: 'Todas as Areas' },
@@ -97,21 +102,35 @@ const areaBadge: Record<LegalArea, string> = {
   digital: 'bg-cyan-500/10 text-cyan-400',
 };
 
+type ProcessRow = {
+  id: string;
+  cnj: string;
+  title: string;
+  area: LegalArea;
+  status: ProcessStatus;
+  urgency: UrgencyLevel;
+  nextDeadline: string | null;
+  clientName: string;
+};
+
 export default function ProcessesPage() {
   const { processes, deadlines, getClientById } = useLegalStore();
+  const router = useRouter();
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterArea, setFilterArea] = useState<LegalArea | ''>('');
-  const [filterStatus, setFilterStatus] = useState<ProcessStatus | ''>('');
-  const [filterUrgency, setFilterUrgency] = useState<UrgencyLevel | ''>('');
+  const [filterValues, setFilterValues] = useState<FilterValues>({
+    search: '',
+    area: '',
+    status: '',
+    urgency: '',
+  });
 
   const filteredProcesses = useMemo(() => {
     return processes.filter((p) => {
-      if (filterArea && p.area !== filterArea) return false;
-      if (filterStatus && p.status !== filterStatus) return false;
-      if (filterUrgency && p.urgency !== filterUrgency) return false;
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
+      if (filterValues.area && p.area !== filterValues.area) return false;
+      if (filterValues.status && p.status !== filterValues.status) return false;
+      if (filterValues.urgency && p.urgency !== filterValues.urgency) return false;
+      if (filterValues.search) {
+        const q = filterValues.search.toLowerCase();
         const client = getClientById(p.clientId);
         const clientName = client?.name?.toLowerCase() || '';
         if (
@@ -123,7 +142,7 @@ export default function ProcessesPage() {
       }
       return true;
     });
-  }, [processes, filterArea, filterStatus, filterUrgency, searchQuery, getClientById]);
+  }, [processes, filterValues, getClientById]);
 
   function getNextDeadline(processId: string): string | null {
     const now = new Date();
@@ -141,204 +160,187 @@ export default function ProcessesPage() {
     });
   }
 
+  const tableData: ProcessRow[] = useMemo(() => {
+    return filteredProcesses.map((p) => {
+      const client = getClientById(p.clientId);
+      return {
+        id: p.id,
+        cnj: p.cnj,
+        title: p.title,
+        area: p.area,
+        status: p.status,
+        urgency: p.urgency,
+        nextDeadline: getNextDeadline(p.id),
+        clientName: client?.name || '--',
+      };
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredProcesses, getClientById]);
+
+  const columns: ColumnDef<ProcessRow>[] = [
+    {
+      key: 'cnj',
+      label: 'CNJ',
+      sortable: true,
+      render: (value) => (
+        <span className="text-sm font-mono text-amber-400">{String(value)}</span>
+      ),
+    },
+    {
+      key: 'title',
+      label: 'Título',
+      sortable: true,
+      render: (value) => (
+        <span className="text-sm text-white">{String(value)}</span>
+      ),
+    },
+    {
+      key: 'area',
+      label: 'Área',
+      sortable: true,
+      render: (value) => (
+        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${areaBadge[value as LegalArea]}`}>
+          {String(value)}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      sortable: true,
+      render: (value) => (
+        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusBadge[value as ProcessStatus]}`}>
+          {statusLabel[value as ProcessStatus]}
+        </span>
+      ),
+    },
+    {
+      key: 'urgency',
+      label: 'Urgência',
+      sortable: true,
+      render: (value) => (
+        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${urgencyBadge[value as UrgencyLevel]}`}>
+          {urgencyLabel[value as UrgencyLevel]}
+        </span>
+      ),
+    },
+    {
+      key: 'nextDeadline',
+      label: 'Próximo Prazo',
+      render: (value) =>
+        value ? (
+          <span className="text-sm text-[#6b7a8d] flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            {formatDate(String(value))}
+          </span>
+        ) : (
+          <span className="text-sm text-[#4a5568]">--</span>
+        ),
+    },
+    {
+      key: 'clientName',
+      label: 'Cliente',
+      sortable: true,
+      render: (value) => (
+        <span className="text-sm text-[#6b7a8d]">{String(value)}</span>
+      ),
+    },
+    {
+      key: 'id',
+      label: '',
+      render: (value) => (
+        <Link
+          href={`/legal/processes/${String(value)}`}
+          className="text-amber-400 hover:text-amber-300 transition-colors"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Link>
+      ),
+      cellClassName: 'text-right',
+    },
+  ];
+
+  const filterConfigs = [
+    {
+      type: 'search' as const,
+      key: 'search',
+      placeholder: 'Buscar por CNJ, título ou cliente...',
+    },
+    {
+      type: 'select' as const,
+      key: 'area',
+      label: 'Todas as Áreas',
+      options: AREAS.filter((a) => a.value !== '').map((a) => ({ value: a.value, label: a.label })),
+    },
+    {
+      type: 'select' as const,
+      key: 'status',
+      label: 'Todos os Status',
+      options: STATUSES.filter((s) => s.value !== '').map((s) => ({ value: s.value, label: s.label })),
+    },
+    {
+      type: 'select' as const,
+      key: 'urgency',
+      label: 'Todas as Urgências',
+      options: URGENCIES.filter((u) => u.value !== '').map((u) => ({ value: u.value, label: u.label })),
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Briefcase className="h-7 w-7 text-amber-400" />
-            Processos
-          </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">
-            {processes.length} processos cadastrados
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <ExportPDFButton
-            type="processes"
-            data={{ processes: filteredProcesses, title: 'Lista de Processos' }}
-            label="Exportar PDF"
-          />
-          <Link
-            href="/legal/processes/new"
-            className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            Novo Processo
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        title="Processos"
+        subtitle={`${processes.length} processos cadastrados`}
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Processos', href: '/legal/processes' },
+        ]}
+        actions={
+          <>
+            <ExportPDFButton
+              type="processes"
+              data={{ processes: filteredProcesses, title: 'Lista de Processos' }}
+              label="Exportar PDF"
+            />
+            <Link
+              href="/legal/processes/new"
+              className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              Novo Processo
+            </Link>
+          </>
+        }
+      />
 
-      {/* Filter Bar */}
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[#1a2332] bg-[#0d1320] p-4">
-        <Filter className="h-4 w-4 text-[#6b7a8d]" />
+      <FilterBar
+        filters={filterConfigs}
+        values={filterValues}
+        onFilterChange={(key, value) =>
+          setFilterValues((prev) => ({ ...prev, [key]: value }))
+        }
+        onClear={() =>
+          setFilterValues({ search: '', area: '', status: '', urgency: '' })
+        }
+      />
 
-        <select
-          value={filterArea}
-          onChange={(e) => setFilterArea(e.target.value as LegalArea | '')}
-          className="rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50"
-        >
-          {AREAS.map((a) => (
-            <option key={a.value} value={a.value}>
-              {a.label}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value as ProcessStatus | '')}
-          className="rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50"
-        >
-          {STATUSES.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={filterUrgency}
-          onChange={(e) => setFilterUrgency(e.target.value as UrgencyLevel | '')}
-          className="rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50"
-        >
-          {URGENCIES.map((u) => (
-            <option key={u.value} value={u.value}>
-              {u.label}
-            </option>
-          ))}
-        </select>
-
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7a8d]" />
-          <input
-            type="text"
-            placeholder="Buscar por CNJ, titulo ou cliente..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] pl-10 pr-4 py-2 text-sm text-white placeholder-[#6b7a8d] focus:outline-none focus:border-amber-500/50"
-          />
-        </div>
-      </div>
-
-      {/* Process List */}
       {filteredProcesses.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-[#1a2332] bg-[#0d1320] py-16">
-          <Briefcase className="h-12 w-12 text-[#6b7a8d] mb-3" />
-          <p className="text-[#6b7a8d] text-sm">Nenhum processo encontrado</p>
-          <Link
-            href="/legal/processes/new"
-            className="mt-4 flex items-center gap-2 text-amber-400 hover:text-amber-300 text-sm"
-          >
-            <Plus className="h-4 w-4" />
-            Cadastrar primeiro processo
-          </Link>
-        </div>
+        <EmptyState
+          icon={<Briefcase className="h-8 w-8" />}
+          title="Nenhum processo encontrado"
+          description="Cadastre o primeiro processo para começar."
+          action={{ label: 'Cadastrar Processo', href: '/legal/processes/new' }}
+        />
       ) : (
-        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[#1a2332]">
-                  <th className="px-4 py-3 text-left text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
-                    CNJ
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
-                    Titulo
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
-                    Area
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
-                    Urgencia
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
-                    Proximo Prazo
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
-                    Cliente
-                  </th>
-                  <th className="px-4 py-3" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#1a2332]">
-                {filteredProcesses.map((proc) => {
-                  const client = getClientById(proc.clientId);
-                  const nextDeadline = getNextDeadline(proc.id);
-                  return (
-                    <tr
-                      key={proc.id}
-                      className="hover:bg-[#0a0f1a] transition-colors"
-                    >
-                      <td className="px-4 py-3">
-                        <span className="text-sm font-mono text-amber-400">
-                          {proc.cnj}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-sm text-white">{proc.title}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                            areaBadge[proc.area]
-                          }`}
-                        >
-                          {proc.area}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                            statusBadge[proc.status]
-                          }`}
-                        >
-                          {statusLabel[proc.status]}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                            urgencyBadge[proc.urgency]
-                          }`}
-                        >
-                          {urgencyLabel[proc.urgency]}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        {nextDeadline ? (
-                          <span className="text-sm text-[#6b7a8d] flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {formatDate(nextDeadline)}
-                          </span>
-                        ) : (
-                          <span className="text-sm text-[#4a5568]">--</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-sm text-[#6b7a8d]">
-                          {client?.name || '--'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <Link
-                          href={`/legal/processes/${proc.id}`}
-                          className="text-amber-400 hover:text-amber-300 transition-colors"
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <DataTable<ProcessRow>
+          columns={columns}
+          data={tableData}
+          paginated
+          pageSize={20}
+          onRowClick={(row) => router.push(`/legal/processes/${row.id}`)}
+          emptyMessage="Nenhum processo encontrado."
+        />
       )}
     </div>
   );
