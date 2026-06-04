@@ -13,6 +13,9 @@ import { DeadlineToast } from '@/components/legal/DeadlineToast';
 import { MobileBottomNav } from '@/components/legal/MobileBottomNav';
 import { PWAInstallPrompt } from '@/components/legal/PWAInstallPrompt';
 import { OfflineIndicator } from '@/components/legal/OfflineIndicator';
+import { CommandPalette } from '@/components/legal/CommandPalette';
+import { getNavForRole, FOOTER_NAV } from '@/lib/navigation-config';
+import { useUserRole } from '@/lib/roles';
 import {
   Scale,
   Briefcase,
@@ -28,117 +31,76 @@ import {
   LayoutDashboard,
   BarChart3,
   Megaphone,
-  TrendingUp,
   Sparkles,
   PanelLeftClose,
   PanelLeftOpen,
-  MapPin,
   Mic,
-  Search,
-  Upload,
   BookOpen,
   User,
-  Calculator,
   Store,
   FileSearch,
-  LineChart,
   MessageCircle,
   Wand2,
-  PieChart,
-  GitBranch,
   MessageSquare,
   Menu,
   X,
   LogOut,
   ShieldCheck,
+  Settings,
+  ChevronDown,
+  ChevronUp,
+  Search,
 } from 'lucide-react';
 
-const NAV_SECTIONS = [
-  {
-    title: 'Operacional',
-    items: [
-      { id: 'dashboard', label: 'Painel Jurídico', icon: Scale, href: '/legal' },
-      { id: 'processes', label: 'Processos', icon: Briefcase, href: '/legal/processes', badge: 'processes' },
-      { id: 'clients', label: 'Clientes', icon: Users, href: '/legal/clients' },
-      { id: 'deadlines', label: 'Prazos', icon: Clock, href: '/legal/deadlines', badge: 'deadlines' },
-      { id: 'petitions', label: 'Peças', icon: FileText, href: '/legal/petitions' },
-      { id: 'publications', label: 'Publicações', icon: Bell, href: '/legal/publications', badge: 'movements' },
-    ],
-  },
-  {
-    title: 'Financeiro',
-    items: [
-      { id: 'financial', label: 'Dashboard Financeiro', icon: DollarSign, href: '/legal/financial' },
-      { id: 'honorarios', label: 'Honorários', icon: Receipt, href: '/legal/honorarios' },
-      { id: 'billing', label: 'Faturamento', icon: CreditCard, href: '/legal/billing' },
-      { id: 'taxes', label: 'Impostos', icon: Building2, href: '/legal/taxes' },
-    ],
-  },
-  {
-    title: 'Estratégia',
-    items: [
-      { id: 'strategy', label: 'Painel Estratégico', icon: Target, href: '/legal/strategy' },
-      { id: 'canvas', label: 'Legal Canvas', icon: LayoutDashboard, href: '/legal/canvas' },
-      { id: 'kpis', label: 'KPIs', icon: BarChart3, href: '/legal/kpis' },
-    ],
-  },
-  {
-    title: 'Marketing',
-    items: [
-      { id: 'marketing', label: 'Marketing Jurídico', icon: Megaphone, href: '/legal/marketing' },
-      { id: 'leads', label: 'Pipeline de Leads', icon: TrendingUp, href: '/legal/leads' },
-      { id: 'content-legal', label: 'Conteúdo', icon: Sparkles, href: '/legal/content' },
-    ],
-  },
-  {
-    title: 'Assistente IA',
-    items: [
-      { id: 'interview', label: 'Entrevista', icon: Mic, href: '/legal/interview' },
-      { id: 'upload', label: 'Upload Docs', icon: Upload, href: '/legal/upload' },
-      { id: 'assets', label: 'Busca de Ativos', icon: Search, href: '/legal/assets' },
-    ],
-  },
-  {
-    title: 'Inteligência',
-    items: [
-      { id: 'precedents', label: 'Precedentes', icon: BookOpen, href: '/legal/precedents' },
-      { id: 'judges', label: 'Magistrados', icon: User, href: '/legal/judges' },
-    ],
-  },
-  {
-    title: 'Produtividade',
-    items: [
-      { id: 'generator', label: 'Gerar Petição', icon: Wand2, href: '/legal/generator' },
-      { id: 'jurimetria', label: 'Jurimetria', icon: PieChart, href: '/legal/jurimetria' },
-      { id: 'flowcharts', label: 'Fluxogramas', icon: GitBranch, href: '/legal/flowcharts' },
-      { id: 'chat', label: 'Chat Jurídico', icon: MessageSquare, href: '/legal/chat' },
-      { id: 'calculator', label: 'Calculadora', icon: Calculator, href: '/legal/calculator' },
-      { id: 'marketplace', label: 'Marketplace', icon: Store, href: '/legal/marketplace' },
-    ],
-  },
-  {
-    title: 'Avançado',
-    items: [
-      { id: 'analyze', label: 'Análise de Docs', icon: FileSearch, href: '/legal/analyze' },
-      { id: 'bi', label: 'Business Intel.', icon: LineChart, href: '/legal/bi' },
-      { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, href: '/legal/whatsapp' },
-    ],
-  },
-  {
-    title: 'Segurança & LGPD',
-    items: [
-      { id: 'audit', label: 'Log de Auditoria', icon: ShieldCheck, href: '/legal/audit' },
-    ],
-  },
-];
+// ─── Icon Map ─────────────────────────────────────────────────────────────────
+
+const ICON_MAP: Record<string, React.ElementType> = {
+  Scale,
+  Briefcase,
+  Users,
+  Clock,
+  FileText,
+  Bell,
+  DollarSign,
+  Receipt,
+  CreditCard,
+  Building2,
+  Target,
+  LayoutDashboard,
+  BarChart3,
+  Megaphone,
+  Sparkles,
+  Mic,
+  BookOpen,
+  User,
+  Store,
+  FileSearch,
+  MessageCircle,
+  Wand2,
+  MessageSquare,
+  ShieldCheck,
+  Settings,
+  Search,
+};
+
+function NavIcon({ name, className }: { name: string; className?: string }) {
+  const Icon = ICON_MAP[name] ?? Scale;
+  return <Icon className={className} />;
+}
+
+// ─── Layout ───────────────────────────────────────────────────────────────────
 
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
+  const [footerOpen, setFooterOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const hydrated = useRef(false);
+
+  const role = useUserRole();
+  const navSections = getNavForRole(role);
 
   const hydrateFromApi = useLegalStore((s) => s.hydrateFromApi);
   const hydrateFinancialFromApi = useLegalFinancialStore((s) => s.hydrateFromApi);
@@ -149,7 +111,6 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
   const unreadMovements = useLegalStore((s) => s.movements.filter((m) => !m.isRead).length);
   const activeProcesses = useLegalStore((s) => s.processes.filter((p) => p.status === 'active').length);
 
-  // Alert counts for bell badge (overdue + today only)
   const { counts: alertCounts } = useDeadlineAlerts();
 
   useEffect(() => {
@@ -167,10 +128,13 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
     setMobileOpen(false);
   }, [pathname]);
 
-  const isActive = useCallback((href: string) => {
-    if (href === '/legal') return pathname === '/legal';
-    return pathname.startsWith(href);
-  }, [pathname]);
+  const isActive = useCallback(
+    (href: string) => {
+      if (href === '/legal') return pathname === '/legal';
+      return pathname.startsWith(href);
+    },
+    [pathname]
+  );
 
   function getBadgeCount(badge?: string): number {
     if (badge === 'deadlines') return pendingDeadlines;
@@ -186,6 +150,8 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       </div>
     );
   }
+
+  const showLabel = !collapsed || mobileOpen;
 
   const sidebarContent = (
     <>
@@ -239,31 +205,32 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-3 scrollbar-thin scrollbar-thumb-[#1a2d52]">
-        {NAV_SECTIONS.map((section) => (
-          <div key={section.title} className="mb-4">
-            {(!collapsed || mobileOpen) && (
+        {navSections.map((section) => (
+          <div key={section.id} className="mb-4">
+            {showLabel && (
               <p className="px-4 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[#2D3748]">
-                {section.title}
+                {section.label}
               </p>
             )}
             <ul className="space-y-0.5 px-2">
               {section.items.map((item) => {
                 const active = isActive(item.href);
-                const Icon = item.icon;
-                const badge = getBadgeCount((item as { badge?: string }).badge);
-                const showLabel = !collapsed || mobileOpen;
+                const badge = getBadgeCount(item.badge);
                 return (
                   <li key={item.id}>
                     <Link
                       href={item.href}
-                      className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200 ${
+                      className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200 ${
                         active
                           ? 'bg-[#C0C0C0]/10 text-[#C0C0C0] border border-[#C0C0C0]/20'
                           : 'text-[#4A5568] hover:bg-[#0d1f3c] hover:text-[#A0AEC0] border border-transparent'
                       } ${!showLabel ? 'justify-center px-2' : ''}`}
                       title={!showLabel ? item.label : undefined}
                     >
-                      <Icon className={`h-4 w-4 flex-shrink-0 ${active ? 'text-[#C0C0C0]' : ''}`} />
+                      <NavIcon
+                        name={item.icon}
+                        className={`h-4 w-4 flex-shrink-0 ${active ? 'text-[#C0C0C0]' : ''}`}
+                      />
                       {showLabel && <span className="truncate flex-1">{item.label}</span>}
                       {showLabel && badge > 0 && (
                         <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-[#C0C0C0]/15 text-[#C0C0C0] text-[10px] font-bold px-1">
@@ -283,35 +250,107 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       </nav>
 
       {/* Deadline Alerts Panel (sidebar, expanded only) */}
-      {(!collapsed || mobileOpen) && (
+      {showLabel && (
         <div className="px-3 pb-2">
           <DeadlineAlerts previewCount={4} />
         </div>
       )}
 
-      {/* Footer */}
-      {(!collapsed || mobileOpen) && (
-        <div className="border-t border-[#1a2d52]/60 p-4 space-y-2">
-          <button
-            onClick={async () => {
-              await fetch('/api/auth/logout', { method: 'POST' });
-              window.location.href = '/login';
-            }}
-            className="flex items-center gap-2 text-[11px] text-[#4A5568] hover:text-red-400 transition-colors w-full"
-          >
-            <LogOut className="h-3 w-3" />
-            <span>Sair</span>
-          </button>
-        </div>
-      )}
+      {/* Sidebar Footer */}
+      <div className="border-t border-[#1a2d52]/60">
+        {/* Gear / Config section */}
+        {showLabel ? (
+          <>
+            <button
+              onClick={() => setFooterOpen((v) => !v)}
+              className="flex w-full items-center justify-between px-4 py-2.5 text-[#4A5568] hover:text-[#A0AEC0] transition-colors"
+              aria-expanded={footerOpen}
+              aria-label="Configurações"
+            >
+              <div className="flex items-center gap-2">
+                <Settings className="h-3.5 w-3.5" />
+                <span className="text-[11px]">Configurações</span>
+              </div>
+              {footerOpen ? (
+                <ChevronUp className="h-3 w-3" />
+              ) : (
+                <ChevronDown className="h-3 w-3" />
+              )}
+            </button>
 
-      {/* Collapse Toggle (desktop only) */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="hidden lg:flex h-10 items-center justify-center border-t border-[#1a2d52]/60 text-[#4A5568] hover:text-white hover:bg-[#0d1f3c] transition-colors"
-      >
-        {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-      </button>
+            {footerOpen && (
+              <ul className="pb-1 px-2 space-y-0.5">
+                {FOOTER_NAV.map((item) => {
+                  const active = isActive(item.href);
+                  return (
+                    <li key={item.id}>
+                      <Link
+                        href={item.href}
+                        className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs transition-colors ${
+                          active
+                            ? 'bg-[#C0C0C0]/10 text-[#C0C0C0]'
+                            : 'text-[#4A5568] hover:bg-[#0d1f3c] hover:text-[#A0AEC0]'
+                        }`}
+                      >
+                        <NavIcon name={item.icon} className="h-3.5 w-3.5 flex-shrink-0" />
+                        <span>{item.label}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
+            <div className="px-4 pb-3 pt-1 space-y-2">
+              {/* Cmd+K hint */}
+              <button
+                onClick={() => {
+                  window.dispatchEvent(
+                    new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true })
+                  );
+                }}
+                className="flex w-full items-center gap-2 rounded-md border border-[#1a2d52]/60 bg-[#060d1a]/60 px-2.5 py-1.5 text-[10px] text-[#2D3748] hover:text-[#4A5568] transition-colors"
+                aria-label="Abrir busca rápida"
+              >
+                <Search className="h-3 w-3 flex-shrink-0" />
+                <span className="flex-1 text-left">⌘K para busca rápida</span>
+              </button>
+
+              <button
+                onClick={async () => {
+                  await fetch('/api/auth/logout', { method: 'POST' });
+                  window.location.href = '/login';
+                }}
+                className="flex items-center gap-2 text-[11px] text-[#4A5568] hover:text-red-400 transition-colors w-full"
+              >
+                <LogOut className="h-3 w-3" />
+                <span>Sair</span>
+              </button>
+            </div>
+          </>
+        ) : (
+          /* Collapsed state: show gear icon only */
+          <div className="flex flex-col items-center py-2 gap-1">
+            <button
+              onClick={() => setCollapsed(false)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-[#4A5568] hover:text-white hover:bg-[#0d1f3c] transition-colors"
+              title="Configurações"
+              aria-label="Abrir configurações"
+            >
+              <Settings className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+
+        {/* Collapse Toggle (desktop only) */}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="hidden lg:flex h-10 w-full items-center justify-center border-t border-[#1a2d52]/60 text-[#4A5568] hover:text-white hover:bg-[#0d1f3c] transition-colors"
+          aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
+        >
+          {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+        </button>
+      </div>
     </>
   );
 
@@ -402,6 +441,9 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
 
       {/* Offline indicator */}
       <OfflineIndicator />
+
+      {/* Global Command Palette */}
+      <CommandPalette />
     </div>
   );
 }
