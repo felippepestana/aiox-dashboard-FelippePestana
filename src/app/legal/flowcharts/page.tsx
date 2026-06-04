@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { GitBranch, Filter } from 'lucide-react';
+import { PageHeader } from '@/components/legal/shared';
 import { ProcessFlowchart } from '@/components/legal/ProcessFlowchart';
 import type { FlowchartStep } from '@/components/legal/ProcessFlowchart';
 
@@ -359,15 +360,14 @@ export default function FlowchartsPage() {
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-          <GitBranch className="h-7 w-7 text-amber-400" />
-          Fluxogramas Processuais
-        </h1>
-        <p className="text-sm text-[#6b7a8d] mt-1">
-          Visualize o passo a passo dos procedimentos juridicos com prazos e artigos aplicaveis
-        </p>
-      </div>
+      <PageHeader
+        title="Fluxogramas Processuais"
+        subtitle="Visualize o passo a passo dos procedimentos juridicos com prazos e artigos aplicaveis"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Fluxogramas', href: '/legal/flowcharts' },
+        ]}
+      />
 
       {/* Area Selector */}
       <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6">

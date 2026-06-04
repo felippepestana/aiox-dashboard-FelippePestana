@@ -12,6 +12,7 @@ import {
   Clock,
   TrendingUp,
 } from 'lucide-react';
+import { PageHeader } from '@/components/legal/shared';
 import { useLegalStrategyStore } from '@/stores/legal-strategy-store';
 import type { AttorneyLevel, LeadershipEntry } from '@/stores/legal-strategy-store';
 
@@ -118,25 +119,24 @@ export default function LeadershipPage() {
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Users className="h-7 w-7 text-amber-400" />
-            Pipeline de Lideranca
-          </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">
-            Gestao de carreira e desenvolvimento da equipe juridica
-          </p>
-        </div>
-        {hasMockData && (
-          <button
-            onClick={seedData}
-            className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-400 hover:bg-amber-500/20 transition-colors border border-amber-500/20"
-          >
-            Carregar Dados Demo
-          </button>
-        )}
-      </div>
+      <PageHeader
+        title="Pipeline de Lideranca"
+        subtitle="Gestao de carreira e desenvolvimento da equipe juridica"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Lideranca', href: '/legal/leadership' },
+        ]}
+        actions={
+          hasMockData ? (
+            <button
+              onClick={seedData}
+              className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-400 hover:bg-amber-500/20 transition-colors border border-amber-500/20"
+            >
+              Carregar Dados Demo
+            </button>
+          ) : undefined
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

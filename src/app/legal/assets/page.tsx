@@ -20,6 +20,7 @@ import {
   Search,
   Filter,
 } from 'lucide-react';
+import { PageHeader } from '@/components/legal/shared';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -240,24 +241,23 @@ export default function AssetsPage() {
     <div className="min-h-screen bg-[#0a0f1a] p-6 lg:p-8 space-y-6">
 
       {/* ── Header ────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Building2 className="h-7 w-7 text-amber-400" />
-            Patrimônio
-          </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">
-            Gestão de ativos do escritório — bens, equipamentos e imóveis
-          </p>
-        </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          Novo Ativo
-        </button>
-      </div>
+      <PageHeader
+        title="Patrimônio"
+        subtitle="Gestão de ativos do escritório — bens, equipamentos e imóveis"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Patrimônio', href: '/legal/assets' },
+        ]}
+        actions={
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Novo Ativo
+          </button>
+        }
+      />
 
       {/* ── Summary Cards ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

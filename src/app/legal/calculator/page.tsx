@@ -12,6 +12,7 @@ import {
   ChevronUp,
   Info,
 } from 'lucide-react';
+import { PageHeader } from '@/components/legal/shared';
 import { DeadlineCalculator } from '@/components/legal/DeadlineCalculator';
 import {
   calculateMonetaryCorrection,
@@ -58,15 +59,15 @@ export default function CalculatorPage() {
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-          <Calculator className="h-7 w-7 text-amber-400" />
-          Calculadoras Juridicas
-        </h1>
-        <p className="text-sm text-[#6b7a8d] mt-1">
-          Ferramentas de calculo para a pratica juridica
-        </p>
-      </div>
+      <PageHeader
+        title="Calculadora de Prazos"
+        subtitle="Ferramentas de calculo para a pratica juridica"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Processos', href: '/legal/processes' },
+          { label: 'Calculadora', href: '/legal/calculator' },
+        ]}
+      />
 
       {/* Tab Navigation */}
       <div className="flex gap-2 border-b border-[#1a2332] pb-0">

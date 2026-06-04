@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { MessageSquare, Send, Upload, User, Bot, Sparkles, FileText, Scale } from 'lucide-react';
+import { PageHeader } from '@/components/legal/shared';
 
 interface ChatMessage {
   id: string;
@@ -207,24 +208,26 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] bg-[#0a0f1a]">
       {/* Header */}
-      <div className="flex-shrink-0 border-b border-[#1a2332] px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <MessageSquare className="h-6 w-6 text-amber-400" />
-            <div>
-              <h1 className="text-lg font-bold text-white">Chat Jurídico com IA</h1>
-              <p className="text-xs text-[#6b7a8d]">
-                Consultas jurídicas + análise de documentos em uma única interface
-                {docContext && <span className="text-amber-400 ml-2">• Documento ativo: {docContext.fileName}</span>}
-              </p>
-            </div>
-          </div>
-          {docContext && (
-            <span className="inline-flex items-center rounded-full px-3 py-1 text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20">
-              <FileText className="h-3 w-3 mr-1" /> {docContext.docType} — {docContext.polo === 'autor' ? 'Polo Ativo' : 'Polo Passivo'}
-            </span>
-          )}
-        </div>
+      <div className="flex-shrink-0 border-b border-[#1a2332] px-6 pt-4">
+        <PageHeader
+          title="Chat Jurídico com IA"
+          subtitle={
+            docContext
+              ? `Consultas jurídicas + análise de documentos em uma única interface • Documento ativo: ${docContext.fileName}`
+              : 'Consultas jurídicas + análise de documentos em uma única interface'
+          }
+          breadcrumbs={[
+            { label: 'Dashboard', href: '/legal' },
+            { label: 'Chat Jurídico', href: '/legal/chat' },
+          ]}
+          actions={
+            docContext ? (
+              <span className="inline-flex items-center rounded-full px-3 py-1 text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <FileText className="h-3 w-3 mr-1" /> {docContext.docType} — {docContext.polo === 'autor' ? 'Polo Ativo' : 'Polo Passivo'}
+              </span>
+            ) : undefined
+          }
+        />
       </div>
 
       {/* Messages */}

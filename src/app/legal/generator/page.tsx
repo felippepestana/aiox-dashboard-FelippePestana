@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { Wand2, Copy, Download, Save, Loader2, CheckCircle2, Sparkles } from 'lucide-react';
 import { PetitionWizard } from '@/components/legal/PetitionWizard';
+import { PageHeader } from '@/components/legal/shared';
 
 const LEGAL_AREAS = [
   { value: 'civil', label: 'Civil' },
@@ -205,15 +206,14 @@ export default function GeneratorPage() {
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-          <Wand2 className="h-7 w-7 text-amber-400" />
-          Gerador de Peticoes com IA
-        </h1>
-        <p className="text-sm text-[#6b7a8d] mt-1">
-          Crie pecas juridicas profissionais em minutos com assistencia de inteligencia artificial
-        </p>
-      </div>
+      <PageHeader
+        title="Gerador de Peças"
+        subtitle="Crie peças jurídicas profissionais em minutos com assistência de inteligência artificial"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Gerador de Peças', href: '/legal/generator' },
+        ]}
+      />
 
       {/* Wizard */}
       <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6">

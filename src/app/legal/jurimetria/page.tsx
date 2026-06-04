@@ -17,6 +17,7 @@ import {
   ArrowDownRight,
   Minus,
 } from 'lucide-react';
+import { PageHeader } from '@/components/legal/shared';
 import { JurimetriaPanel } from '@/components/legal/JurimetriaPanel';
 import type { TribunalStats } from '@/components/legal/JurimetriaPanel';
 
@@ -516,15 +517,14 @@ export default function JurimetriaPage() {
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-          <PieChart className="h-7 w-7 text-amber-400" />
-          Jurimetria
-        </h1>
-        <p className="text-sm text-[#6b7a8d] mt-1">
-          Analise estatistica e previsao de resultados baseada em dados dos tribunais brasileiros
-        </p>
-      </div>
+      <PageHeader
+        title="Jurimetria"
+        subtitle="Analise estatistica e previsao de resultados baseada em dados dos tribunais brasileiros"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Jurimetria', href: '/legal/jurimetria' },
+        ]}
+      />
 
       {/* Filters */}
       <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6">

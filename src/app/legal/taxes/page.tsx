@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useLegalFinancialStore } from '@/stores/legal-financial-store';
 import { useLegalStore } from '@/stores/legal-store';
+import { PageHeader, StatCardGrid, EmptyState } from '@/components/legal/shared';
 import {
   calculateTaxes,
   calculateQuarterlyIRPJ,
@@ -217,30 +218,29 @@ export default function TaxesPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Calculator className="h-7 w-7 text-amber-400" />
-            Planejamento Tributário
-          </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">
-            Calculadora de impostos para escritório de advocacia
-          </p>
-        </div>
-        <button
-          onClick={handleGenerateDeadlines}
-          disabled={generatingDeadlines}
-          className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 disabled:opacity-60 transition-colors"
-        >
-          {generatingDeadlines ? (
-            <RefreshCw className="h-4 w-4 animate-spin" />
-          ) : (
-            <Calendar className="h-4 w-4" />
-          )}
-          Gerar Prazos Fiscais {currentYear}
-        </button>
-      </div>
+      <PageHeader
+        title="Planejamento Tributário"
+        subtitle="Calculadora de impostos para escritório de advocacia"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Financeiro', href: '/legal/financial' },
+          { label: 'Tributos', href: '/legal/taxes' },
+        ]}
+        actions={
+          <button
+            onClick={handleGenerateDeadlines}
+            disabled={generatingDeadlines}
+            className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 disabled:opacity-60 transition-colors"
+          >
+            {generatingDeadlines ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <Calendar className="h-4 w-4" />
+            )}
+            Gerar Prazos Fiscais {currentYear}
+          </button>
+        }
+      />
 
       {deadlinesGenerated && (
         <div className="rounded-xl border border-green-500/20 bg-green-500/5 p-4 flex items-center gap-3">
@@ -250,6 +250,36 @@ export default function TaxesPage() {
           </p>
         </div>
       )}
+
+      {/* Summary Cards */}
+      <StatCardGrid
+        cards={[
+          {
+            label: 'IRPJ / mês',
+            value: formatCurrency(currentTaxes.irpj),
+            icon: <Calculator className="h-5 w-5" />,
+            color: '#F87171',
+          },
+          {
+            label: 'CSLL / mês',
+            value: formatCurrency(currentTaxes.csll),
+            icon: <Calculator className="h-5 w-5" />,
+            color: '#FB923C',
+          },
+          {
+            label: 'PIS/COFINS / mês',
+            value: formatCurrency(currentTaxes.pis + currentTaxes.cofins),
+            icon: <Calculator className="h-5 w-5" />,
+            color: '#60A5FA',
+          },
+          {
+            label: 'ISS / mês',
+            value: formatCurrency(currentTaxes.iss),
+            icon: <Calculator className="h-5 w-5" />,
+            color: '#A78BFA',
+          },
+        ]}
+      />
 
       {/* Regime & Revenue Config */}
       <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-5">
@@ -367,22 +397,6 @@ export default function TaxesPage() {
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {[
-          { label: 'IRPJ', value: currentTaxes.irpj, color: 'text-red-400', bg: 'bg-red-500/10' },
-          { label: 'CSLL', value: currentTaxes.csll, color: 'text-orange-400', bg: 'bg-orange-500/10' },
-          { label: 'PIS/COFINS', value: currentTaxes.pis + currentTaxes.cofins, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-          { label: 'ISS', value: currentTaxes.iss, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-        ].map((card) => (
-          <div key={card.label} className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-4">
-            <p className="text-xs text-[#6b7a8d] uppercase tracking-wider">{card.label} / mês</p>
-            <p className={`text-xl font-bold mt-1 ${card.color}`}>{formatCurrency(card.value)}</p>
-            <div className={`mt-2 h-1 w-full rounded-full ${card.bg}`} />
-          </div>
-        ))}
-      </div>
-
       {/* Tabs */}
       <div className="flex gap-1 rounded-xl border border-[#1a2332] bg-[#0d1320] p-1">
         {tabs.map((tab) => {
@@ -417,12 +431,13 @@ export default function TaxesPage() {
           )}
 
           {taxObligations.length === 0 ? (
-            <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-12 text-center">
-              <Building2 className="h-12 w-12 text-[#2a3342] mx-auto mb-4" />
-              <p className="text-[#6b7a8d]">Nenhuma obrigação tributária cadastrada</p>
-              <p className="text-xs text-[#4a5568] mt-1">
-                Clique em "Gerar Prazos Fiscais" para criar obrigações automaticamente
-              </p>
+            <div className="rounded-xl border border-[#1a2332] bg-[#0d1320]">
+              <EmptyState
+                icon={<Building2 className="h-8 w-8" />}
+                title="Nenhuma obrigação tributária cadastrada"
+                description='Clique em "Gerar Prazos Fiscais" para criar obrigações automaticamente'
+                action={{ label: `Gerar Prazos ${currentYear}`, onClick: handleGenerateDeadlines }}
+              />
             </div>
           ) : (
             <div className="space-y-2">
@@ -551,10 +566,12 @@ export default function TaxesPage() {
       {activeTab === 'quarterly' && (
         <div className="space-y-4">
           {regime === 'simples' ? (
-            <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-12 text-center">
-              <Calculator className="h-12 w-12 text-[#2a3342] mx-auto mb-4" />
-              <p className="text-[#6b7a8d]">No Simples Nacional, o IRPJ é recolhido mensalmente via DAS</p>
-              <p className="text-xs text-[#4a5568] mt-1">Selecione Lucro Presumido ou Lucro Real para ver a apuração trimestral</p>
+            <div className="rounded-xl border border-[#1a2332] bg-[#0d1320]">
+              <EmptyState
+                icon={<Calculator className="h-8 w-8" />}
+                title="Não aplicável ao Simples Nacional"
+                description="No Simples Nacional, o IRPJ é recolhido mensalmente via DAS. Selecione Lucro Presumido ou Lucro Real para ver a apuração trimestral."
+              />
             </div>
           ) : quarterlyCalc ? (
             <>

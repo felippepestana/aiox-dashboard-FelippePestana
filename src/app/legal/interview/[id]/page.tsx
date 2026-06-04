@@ -33,6 +33,7 @@ import type {
   InterviewSuggestion,
   LegalArea,
 } from '@/types/legal';
+import { PageHeader } from '@/components/legal/shared';
 
 // ─── Mock Data for completed session ────────────────────────────────────────
 
@@ -234,18 +235,15 @@ export default function InterviewSessionPage() {
       {/* Top Bar */}
       <div className="flex items-center justify-between border-b border-[#1a2332] bg-[#0d1320] px-6 py-3">
         <div className="flex items-center gap-4">
-          <Link
-            href="/legal/interview"
-            className="flex items-center gap-1 text-[#6b7a8d] hover:text-white transition-colors text-sm"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar
-          </Link>
-          <div className="h-6 w-px bg-[#1a2332]" />
-          <div>
-            <h2 className="text-sm font-semibold text-white">Maria Silva Santos</h2>
-            <span className="text-xs text-amber-400">{AREA_LABELS.trabalhista}</span>
-          </div>
+          <PageHeader
+            title="Maria Silva Santos"
+            subtitle={AREA_LABELS.trabalhista}
+            breadcrumbs={[
+              { label: 'Dashboard', href: '/legal' },
+              { label: 'Entrevistas', href: '/legal/interview' },
+              { label: 'Sessão Ativa', href: '#' },
+            ]}
+          />
         </div>
 
         {/* Recording controls */}

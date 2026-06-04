@@ -22,6 +22,7 @@ import {
   ExternalLink,
   Send,
 } from 'lucide-react';
+import { PageHeader } from '@/components/legal/shared';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -230,24 +231,23 @@ export default function MarketplacePage() {
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Store className="h-7 w-7 text-amber-400" />
-            Legal Tech Marketplace
-          </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">
-            Integracoes e ferramentas para potencializar seu escritorio
-          </p>
-        </div>
-        <button
-          onClick={() => setShowRequest(true)}
-          className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2.5 text-sm font-semibold text-white hover:from-amber-600 hover:to-amber-700 transition-all shadow-lg shadow-amber-500/20"
-        >
-          <Plus className="h-4 w-4" />
-          Solicitar Integracao
-        </button>
-      </div>
+      <PageHeader
+        title="Legal Tech Marketplace"
+        subtitle="Integracoes e ferramentas para potencializar seu escritorio"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Marketplace', href: '/legal/marketplace' },
+        ]}
+        actions={
+          <button
+            onClick={() => setShowRequest(true)}
+            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2.5 text-sm font-semibold text-white hover:from-amber-600 hover:to-amber-700 transition-all shadow-lg shadow-amber-500/20"
+          >
+            <Plus className="h-4 w-4" />
+            Solicitar Integracao
+          </button>
+        }
+      />
 
       {/* Stats Bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

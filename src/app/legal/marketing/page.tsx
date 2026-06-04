@@ -19,6 +19,7 @@ import {
   SquareCheck,
 } from 'lucide-react';
 import { useLegalMarketingStore } from '@/stores/legal-marketing-store';
+import { PageHeader, StatCardGrid } from '@/components/legal/shared';
 import {
   calculateCAC,
   calculateROI,
@@ -252,69 +253,60 @@ export default function MarketingPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Megaphone className="h-7 w-7 text-amber-400" />
-            Marketing Juridico
-          </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">
-            Campanhas, leads e performance conforme OAB
-          </p>
-        </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-400 hover:bg-amber-500/20 transition-colors border border-amber-500/20"
-        >
-          <Plus className="h-4 w-4" />
-          Nova Campanha
-        </button>
-      </div>
+      <PageHeader
+        title="Marketing Juridico"
+        subtitle="Campanhas, leads e performance conforme OAB"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Estratégia', href: '/legal/strategy' },
+          { label: 'Marketing', href: '/legal/marketing' },
+        ]}
+        actions={
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-400 hover:bg-amber-500/20 transition-colors border border-amber-500/20"
+          >
+            <Plus className="h-4 w-4" />
+            Nova Campanha
+          </button>
+        }
+      />
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <Megaphone className="h-4 w-4 text-amber-400" />
-            <p className="text-xs text-[#6b7a8d] uppercase tracking-wider">Campanhas Ativas</p>
-          </div>
-          <p className="text-2xl font-bold text-white">{activeCampaigns}</p>
-          <p className="text-xs text-[#6b7a8d] mt-1">{allCampaigns.length} no total</p>
-        </div>
-        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <DollarSign className="h-4 w-4 text-amber-400" />
-            <p className="text-xs text-[#6b7a8d] uppercase tracking-wider">Investimento Total</p>
-          </div>
-          <p className="text-2xl font-bold text-white">
-            {totalSpend.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
-          </p>
-          <p className="text-xs text-[#6b7a8d] mt-1">
-            CAC: {cac.overall.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
-          </p>
-        </div>
-        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <Users className="h-4 w-4 text-amber-400" />
-            <p className="text-xs text-[#6b7a8d] uppercase tracking-wider">Leads Gerados</p>
-          </div>
-          <p className="text-2xl font-bold text-white">{totalLeadsGenerated}</p>
-          <p className="text-xs text-[#6b7a8d] mt-1">
-            {allCampaigns.reduce((s, c) => s + c.metrics.conversions, 0)} convertidos
-          </p>
-        </div>
-        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="h-4 w-4 text-amber-400" />
-            <p className="text-xs text-[#6b7a8d] uppercase tracking-wider">Taxa de Conversao</p>
-          </div>
-          <p className="text-2xl font-bold text-white">{overallConvRate.toFixed(1)}%</p>
-          <p className="text-xs text-[#6b7a8d] mt-1">
-            ROI medio: {roiResult.overall.toFixed(0)}%
-          </p>
-        </div>
-      </div>
+      <StatCardGrid
+        cards={[
+          {
+            label: 'Campanhas Ativas',
+            value: activeCampaigns,
+            icon: <Megaphone className="h-5 w-5" />,
+            trendLabel: `${allCampaigns.length} no total`,
+            color: '#f59e0b',
+          },
+          {
+            label: 'Investimento Total',
+            value: totalSpend.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }),
+            icon: <DollarSign className="h-5 w-5" />,
+            trendLabel: `CAC: ${cac.overall.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}`,
+            color: '#f59e0b',
+          },
+          {
+            label: 'Leads Gerados',
+            value: totalLeadsGenerated,
+            icon: <Users className="h-5 w-5" />,
+            trend: totalLeadsGenerated > 0 ? 'up' : 'flat',
+            trendLabel: `${allCampaigns.reduce((s, c) => s + c.metrics.conversions, 0)} convertidos`,
+            color: '#8b5cf6',
+          },
+          {
+            label: 'Taxa de Conversao',
+            value: `${overallConvRate.toFixed(1)}%`,
+            icon: <TrendingUp className="h-5 w-5" />,
+            trend: overallConvRate >= 10 ? 'up' : 'flat',
+            trendLabel: `ROI medio: ${roiResult.overall.toFixed(0)}%`,
+            color: '#22c55e',
+          },
+        ]}
+      />
 
       {/* OAB Compliance Banner */}
       <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 flex items-center gap-3">

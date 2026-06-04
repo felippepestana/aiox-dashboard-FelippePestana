@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
 import { useLegalFinancialStore } from '@/stores/legal-financial-store';
+import { PageHeader } from '@/components/legal/shared';
 import { LGPDPanel } from '@/components/legal/LGPDPanel';
 import type { ProcessStatus, HonorarioType, HonorarioStatus, InvoiceStatus } from '@/types/legal';
 
@@ -159,14 +160,14 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="p-6 space-y-6">
-      {/* Back nav */}
-      <Link
-        href="/legal/clients"
-        className="inline-flex items-center gap-2 text-sm text-[#6b7a8d] hover:text-white transition-colors"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Clientes
-      </Link>
+      <PageHeader
+        title={client.name}
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Clientes', href: '/legal/clients' },
+          { label: client.name, href: `/legal/clients/${id}` },
+        ]}
+      />
 
       {/* Client Header Card */}
       <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-5">

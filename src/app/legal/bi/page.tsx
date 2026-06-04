@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { LineChart as LineChartIcon, TrendingUp, Briefcase, Users, Clock, DollarSign, CheckCircle, BarChart2 } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
 import { useLegalFinancialStore } from '@/stores/legal-financial-store';
+import { PageHeader, StatCardGrid } from '@/components/legal/shared';
 import {
   generateMonthlyFinancialReport,
   generateCaseloadReport,
@@ -107,21 +108,15 @@ export default function BIPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 lg:p-8">
-      {/* Header */}
-      <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 shadow-lg shadow-amber-500/20">
-              <LineChartIcon className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white">Business Intelligence</h1>
-              <p className="text-sm text-[#6b7a8d]">Métricas e análises estratégicas do escritório</p>
-            </div>
-          </div>
-        </div>
-        <ReportExport />
-      </div>
+      <PageHeader
+        title="Business Intelligence"
+        subtitle="Métricas e análises estratégicas do escritório"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Business Intelligence', href: '/legal/bi' },
+        ]}
+        actions={<ReportExport />}
+      />
 
       {/* Period Selector */}
       <div className="flex items-center gap-2 mb-6">
@@ -141,77 +136,81 @@ export default function BIPage() {
       </div>
 
       {/* Overview KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <MetricCard
-          label="Receita Total"
-          value={formatBRLShort(totalRevenue)}
-          subValue={fmtBRL(totalRevenue)}
-          trend={profit >= 0 ? 'up' : 'down'}
-          trendLabel={`${profit >= 0 ? '+' : ''}${formatBRLShort(profit)}`}
-          icon={<DollarSign className="h-5 w-5 text-amber-400" />}
-          accentColor="#f59e0b"
-        />
-        <MetricCard
-          label="Processos Ativos"
-          value={String(caseloadReport.activeProcesses)}
-          subValue={`${caseloadReport.newThisMonth} novos este mês`}
-          trend={caseloadReport.newThisMonth > 0 ? 'up' : 'flat'}
-          icon={<Briefcase className="h-5 w-5 text-blue-400" />}
-          accentColor="#3b82f6"
-        />
-        <MetricCard
-          label="Total Clientes"
-          value={String(clientReport.totalClients)}
-          subValue={`${clientReport.newThisMonth} novos este mês`}
-          trend={clientReport.newThisMonth > 0 ? 'up' : 'flat'}
-          icon={<Users className="h-5 w-5 text-purple-400" />}
-          accentColor="#8b5cf6"
-        />
-        <MetricCard
-          label="Prazos Pendentes"
-          value={String(pendingDeadlines)}
-          subValue={missedDeadlines > 0 ? `${missedDeadlines} perdidos` : 'Nenhum perdido'}
-          trend={missedDeadlines > 0 ? 'down' : 'flat'}
-          trendPositive={false}
-          icon={<Clock className="h-5 w-5 text-red-400" />}
-          accentColor="#ef4444"
-        />
-      </div>
+      <StatCardGrid
+        className="mb-6"
+        cards={[
+          {
+            label: 'Receita Total',
+            value: formatBRLShort(totalRevenue),
+            icon: <DollarSign className="h-5 w-5" />,
+            trend: profit >= 0 ? 'up' : 'down',
+            trendLabel: `${profit >= 0 ? '+' : ''}${formatBRLShort(profit)}`,
+            color: '#f59e0b',
+          },
+          {
+            label: 'Processos Ativos',
+            value: caseloadReport.activeProcesses,
+            icon: <Briefcase className="h-5 w-5" />,
+            trend: caseloadReport.newThisMonth > 0 ? 'up' : 'flat',
+            trendLabel: caseloadReport.newThisMonth > 0 ? `+${caseloadReport.newThisMonth} novos` : undefined,
+            color: '#3b82f6',
+          },
+          {
+            label: 'Total Clientes',
+            value: clientReport.totalClients,
+            icon: <Users className="h-5 w-5" />,
+            trend: clientReport.newThisMonth > 0 ? 'up' : 'flat',
+            trendLabel: clientReport.newThisMonth > 0 ? `+${clientReport.newThisMonth} novos` : undefined,
+            color: '#8b5cf6',
+          },
+          {
+            label: 'Prazos Pendentes',
+            value: pendingDeadlines,
+            icon: <Clock className="h-5 w-5" />,
+            trend: missedDeadlines > 0 ? 'down' : 'flat',
+            trendLabel: missedDeadlines > 0 ? `${missedDeadlines} perdidos` : undefined,
+            trendPositive: false,
+            color: '#ef4444',
+          },
+        ]}
+      />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <MetricCard
-          label="Taxa de Êxito"
-          value={winRate ? `${winRate}%` : '—'}
-          subValue={wonCount > 0 ? `${wonCount} ganhos / ${lostCount} perdidos` : 'Sem dados ainda'}
-          trend={winRate ? (parseFloat(winRate) >= 60 ? 'up' : 'down') : 'flat'}
-          icon={<TrendingUp className="h-5 w-5 text-green-400" />}
-          accentColor="#22c55e"
-        />
-        <MetricCard
-          label="Conformidade de Prazos"
-          value={complianceRate ? `${complianceRate}%` : '—'}
-          subValue={`${completedDeadlines} cumpridos`}
-          trend={complianceRate ? (parseFloat(complianceRate) >= 80 ? 'up' : 'down') : 'flat'}
-          progressPct={complianceRate ? parseFloat(complianceRate) : undefined}
-          icon={<CheckCircle className="h-5 w-5 text-teal-400" />}
-          accentColor="#14b8a6"
-        />
-        <MetricCard
-          label="Resultado (Lucro)"
-          value={formatBRLShort(profit)}
-          subValue={profit >= 0 ? 'Positivo' : 'Negativo'}
-          trend={profit >= 0 ? 'up' : 'down'}
-          icon={<BarChart2 className="h-5 w-5 text-amber-400" />}
-          accentColor="#f59e0b"
-        />
-        <MetricCard
-          label="Clientes Ativos"
-          value={String(clientReport.activeClients)}
-          subValue={`${((clientReport.activeClients / Math.max(1, clientReport.totalClients)) * 100).toFixed(0)}% da carteira`}
-          icon={<Users className="h-5 w-5 text-indigo-400" />}
-          accentColor="#6366f1"
-        />
-      </div>
+      <StatCardGrid
+        className="mb-8"
+        cards={[
+          {
+            label: 'Taxa de Êxito',
+            value: winRate ? `${winRate}%` : '—',
+            icon: <TrendingUp className="h-5 w-5" />,
+            trend: winRate ? (parseFloat(winRate) >= 60 ? 'up' : 'down') : 'flat',
+            trendLabel: wonCount > 0 ? `${wonCount}G / ${lostCount}P` : undefined,
+            color: '#22c55e',
+          },
+          {
+            label: 'Conformidade de Prazos',
+            value: complianceRate ? `${complianceRate}%` : '—',
+            icon: <CheckCircle className="h-5 w-5" />,
+            trend: complianceRate ? (parseFloat(complianceRate) >= 80 ? 'up' : 'down') : 'flat',
+            trendLabel: `${completedDeadlines} cumpridos`,
+            color: '#14b8a6',
+          },
+          {
+            label: 'Resultado (Lucro)',
+            value: formatBRLShort(profit),
+            icon: <BarChart2 className="h-5 w-5" />,
+            trend: profit >= 0 ? 'up' : 'down',
+            trendLabel: profit >= 0 ? 'Positivo' : 'Negativo',
+            color: '#f59e0b',
+          },
+          {
+            label: 'Clientes Ativos',
+            value: clientReport.activeClients,
+            icon: <Users className="h-5 w-5" />,
+            trendLabel: `${((clientReport.activeClients / Math.max(1, clientReport.totalClients)) * 100).toFixed(0)}% da carteira`,
+            color: '#6366f1',
+          },
+        ]}
+      />
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

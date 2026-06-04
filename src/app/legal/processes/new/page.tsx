@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Search, Loader2, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Save, Search, Loader2, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { useLegalStore } from '@/stores/legal-store';
 import type { LegalArea, CourtSystem, UrgencyLevel, FeeType } from '@/types/legal';
+import { PageHeader } from '@/components/legal/shared';
 
 const AREAS: { value: LegalArea; label: string }[] = [
   { value: 'civil', label: 'Cível' },
@@ -199,15 +200,15 @@ export default function NewProcessPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/legal/processes" className="text-[#6b7a8d] hover:text-white transition-colors">
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-white">Novo Processo</h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">Inicie pela consulta do número CNJ para pré-cadastro automático</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Novo Processo"
+        subtitle="Inicie pela consulta do número CNJ para pré-cadastro automático"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Processos', href: '/legal/processes' },
+          { label: 'Novo Processo', href: '/legal/processes/new' },
+        ]}
+      />
 
       {/* CNJ Search Section */}
       <div className="rounded-xl border-2 border-amber-500/30 bg-amber-500/5 p-6">

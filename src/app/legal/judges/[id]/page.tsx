@@ -23,6 +23,7 @@ import {
   Target,
 } from 'lucide-react';
 import type { MagistrateProfile } from '@/lib/legal-intelligence';
+import { PageHeader } from '@/components/legal/shared';
 
 interface VotingPattern {
   area: string;
@@ -254,25 +255,16 @@ export default function JudgeDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
-      {/* Back + Header */}
-      <div>
-        <Link
-          href="/legal/judges"
-          className="inline-flex items-center gap-1.5 text-sm text-[#6b7a8d] hover:text-amber-400 transition-colors mb-4"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar para Magistrados
-        </Link>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-              <Gavel className="h-7 w-7 text-amber-400" />
-              {judge.name}
-            </h1>
-            <p className="text-sm text-[#6b7a8d] mt-1">
-              Perfil detalhado e padroes de decisao
-            </p>
-          </div>
+      {/* Header */}
+      <PageHeader
+        title={judge.name}
+        subtitle="Perfil detalhado e padroes de decisao"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Magistrados', href: '/legal/judges' },
+          { label: judge.name, href: `/legal/judges/${judgeId}` },
+        ]}
+        actions={
           <button
             onClick={generateAiProfile}
             disabled={aiLoading}
@@ -285,8 +277,8 @@ export default function JudgeDetailPage() {
             )}
             {aiLoading ? 'Analisando...' : 'Perfil por IA'}
           </button>
-        </div>
-      </div>
+        }
+      />
 
       {aiError && (
         <div className="flex items-center gap-2 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3">

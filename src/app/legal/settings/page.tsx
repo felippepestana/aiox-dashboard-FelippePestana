@@ -26,6 +26,7 @@ import {
   Phone,
   MapPin,
 } from 'lucide-react';
+import { PageHeader } from '@/components/legal/shared';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -319,39 +320,38 @@ export default function LegalSettingsPage() {
   return (
     <div className="min-h-screen bg-[#060d1a] p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Settings className="h-7 w-7 text-[#C0C0C0]" />
-            Configurações
-          </h1>
-          <p className="text-sm text-[#4A5568] mt-1">
-            Personalize o APEX Legal Performance para seu escritório
-          </p>
-        </div>
-        <button
-          onClick={handleSave}
-          className={`flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition-all shadow-lg ${
-            saved
-              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-              : dirty
-              ? 'bg-[#D4AF37] text-black hover:bg-[#C09B2A] shadow-[#D4AF37]/20'
-              : 'bg-[#1a2d52] text-[#4A5568] border border-[#1a2d52]/60 cursor-default'
-          }`}
-        >
-          {saved ? (
-            <>
-              <CheckCircle2 className="h-4 w-4" />
-              Salvo!
-            </>
-          ) : (
-            <>
-              <Save className="h-4 w-4" />
-              Salvar Configurações
-            </>
-          )}
-        </button>
-      </div>
+      <PageHeader
+        title="Configurações"
+        subtitle="Personalize o APEX Legal Performance para seu escritório"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Configurações', href: '/legal/settings' },
+        ]}
+        actions={
+          <button
+            onClick={handleSave}
+            className={`flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition-all shadow-lg ${
+              saved
+                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                : dirty
+                ? 'bg-[#D4AF37] text-black hover:bg-[#C09B2A] shadow-[#D4AF37]/20'
+                : 'bg-[#1a2d52] text-[#4A5568] border border-[#1a2d52]/60 cursor-default'
+            }`}
+          >
+            {saved ? (
+              <>
+                <CheckCircle2 className="h-4 w-4" />
+                Salvo!
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                Salvar Configurações
+              </>
+            )}
+          </button>
+        }
+      />
 
       {/* 1. Profile / Firma */}
       <SectionCard title="Perfil do Escritório" icon={Building2}>

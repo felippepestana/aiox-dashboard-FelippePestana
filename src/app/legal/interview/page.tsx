@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
 import type { InterviewSession, LegalArea } from '@/types/legal';
+import { PageHeader } from '@/components/legal/shared';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -937,24 +938,23 @@ export default function InterviewListPage() {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Mic className="h-7 w-7 text-[#C0C0C0]" />
-            Assistente de Entrevista
-          </h1>
-          <p className="text-sm text-[#4A5568] mt-1">
-            Transcrição em tempo real, roteiro assistido por IA e geração de estratégia
-          </p>
-        </div>
-        <button
-          onClick={() => setShowNewModal(true)}
-          className="flex items-center gap-2 rounded-lg bg-amber-500 px-5 py-2.5 text-sm font-semibold text-black hover:bg-amber-400 transition-colors shadow-lg shadow-amber-500/20"
-        >
-          <Plus className="h-4 w-4" />
-          Nova Entrevista
-        </button>
-      </div>
+      <PageHeader
+        title="Assistente de Entrevista"
+        subtitle="Transcrição em tempo real, roteiro assistido por IA e geração de estratégia"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Entrevistas', href: '/legal/interview' },
+        ]}
+        actions={
+          <button
+            onClick={() => setShowNewModal(true)}
+            className="flex items-center gap-2 rounded-lg bg-amber-500 px-5 py-2.5 text-sm font-semibold text-black hover:bg-amber-400 transition-colors shadow-lg shadow-amber-500/20"
+          >
+            <Plus className="h-4 w-4" />
+            Nova Entrevista
+          </button>
+        }
+      />
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
 import { CourtIntegration } from '@/components/legal/CourtIntegration';
+import { PageHeader } from '@/components/legal/shared';
 import { getCourtSystemForCNJ, buildConsultationUrl, COURT_SYSTEMS } from '@/lib/court/court-systems';
 import { getTribunalFromCNJ } from '@/lib/court/cnj-utils';
 import type { CourtSystem } from '@/types/legal';
@@ -165,38 +166,39 @@ export default function ProcessCourtPage({ params }: { params: Promise<{ id: str
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-4">
-          <Link href={`/legal/processes/${id}`} className="text-[#6b7a8d] hover:text-white transition-colors">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <div>
-            <h1 className="text-xl font-bold text-white">{process.title}</h1>
-            <p className="text-sm text-amber-400 font-mono mt-0.5">{process.cnj}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {consultationUrl && (
-            <a
-              href={consultationUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 rounded-full border border-[#1a2332] px-3 py-1 text-xs text-[#6b7a8d] hover:text-amber-400 hover:border-amber-500/20 transition-colors"
+      <PageHeader
+        title={process.title}
+        subtitle={process.cnj}
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Processos', href: '/legal/processes' },
+          { label: process.title, href: `/legal/processes/${id}` },
+          { label: 'Tribunal', href: `/legal/processes/${id}/court` },
+        ]}
+        actions={
+          <div className="flex items-center gap-2">
+            {consultationUrl && (
+              <a
+                href={consultationUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 rounded-full border border-[#1a2332] px-3 py-1 text-xs text-[#6b7a8d] hover:text-amber-400 hover:border-amber-500/20 transition-colors"
+              >
+                <ExternalLink className="h-3 w-3" />
+                Consultar no Tribunal
+              </a>
+            )}
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="flex items-center gap-1.5 rounded-full border border-[#1a2332] px-3 py-1 text-xs text-[#6b7a8d] hover:text-amber-400 hover:border-amber-500/20 transition-colors disabled:opacity-40"
             >
-              <ExternalLink className="h-3 w-3" />
-              Consultar no Tribunal
-            </a>
-          )}
-          <button
-            onClick={handleSync}
-            disabled={syncing}
-            className="flex items-center gap-1.5 rounded-full border border-[#1a2332] px-3 py-1 text-xs text-[#6b7a8d] hover:text-amber-400 hover:border-amber-500/20 transition-colors disabled:opacity-40"
-          >
-            <RefreshCw className={`h-3 w-3 ${syncing ? 'animate-spin' : ''}`} />
-            {syncing ? 'Sincronizando...' : 'Sincronizar'}
-          </button>
-        </div>
-      </div>
+              <RefreshCw className={`h-3 w-3 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? 'Sincronizando...' : 'Sincronizar'}
+            </button>
+          </div>
+        }
+      />
 
       {/* Sync error */}
       {syncError && (

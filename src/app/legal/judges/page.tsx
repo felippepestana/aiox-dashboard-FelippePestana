@@ -16,6 +16,7 @@ import {
   Brain,
 } from 'lucide-react';
 import type { MagistrateProfile } from '@/lib/legal-intelligence';
+import { PageHeader, StatCardGrid, EmptyState } from '@/components/legal/shared';
 
 interface JudgeProfile {
   id: string;
@@ -334,15 +335,14 @@ export default function JudgesPage() {
       {aiProfile && <AiProfileModal profile={aiProfile} onClose={() => setAiProfile(null)} />}
 
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-          <Gavel className="h-7 w-7 text-amber-400" />
-          Inteligencia de Magistrados
-        </h1>
-        <p className="text-sm text-[#6b7a8d] mt-1">
-          Perfis, padroes de decisao e analise de magistrados
-        </p>
-      </div>
+      <PageHeader
+        title="Perfil de Magistrados"
+        subtitle="Perfis, padrões de decisão e análise de magistrados"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Perfil de Magistrados', href: '/legal/judges' },
+        ]}
+      />
 
       {/* AI Profile by Name */}
       <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-6">
@@ -436,30 +436,30 @@ export default function JudgesPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6">
-          <p className="text-xs text-[#6b7a8d] uppercase tracking-wider">Magistrados Mapeados</p>
-          <p className="text-2xl font-bold text-white mt-1">{MOCK_JUDGES.length}</p>
-        </div>
-        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6">
-          <p className="text-xs text-[#6b7a8d] uppercase tracking-wider">Total de Processos</p>
-          <p className="text-2xl font-bold text-white mt-1">
-            {MOCK_JUDGES.reduce((s, j) => s + j.caseCount, 0).toLocaleString('pt-BR')}
-          </p>
-        </div>
-        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6">
-          <p className="text-xs text-[#6b7a8d] uppercase tracking-wider">Sentimento Medio</p>
-          <p className="text-2xl font-bold text-white mt-1">
-            {(MOCK_JUDGES.reduce((s, j) => s + j.sentiment, 0) / MOCK_JUDGES.length).toFixed(0)}%
-          </p>
-        </div>
-        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6">
-          <p className="text-xs text-[#6b7a8d] uppercase tracking-wider">Taxa Favoravel Media</p>
-          <p className="text-2xl font-bold text-white mt-1">
-            {(MOCK_JUDGES.reduce((s, j) => s + j.favorableRate, 0) / MOCK_JUDGES.length).toFixed(0)}%
-          </p>
-        </div>
-      </div>
+      <StatCardGrid
+        cards={[
+          {
+            label: 'Magistrados Mapeados',
+            value: MOCK_JUDGES.length,
+            icon: <Gavel className="h-5 w-5" />,
+          },
+          {
+            label: 'Total de Processos',
+            value: MOCK_JUDGES.reduce((s, j) => s + j.caseCount, 0).toLocaleString('pt-BR'),
+            icon: <BarChart3 className="h-5 w-5" />,
+          },
+          {
+            label: 'Sentimento Médio',
+            value: `${(MOCK_JUDGES.reduce((s, j) => s + j.sentiment, 0) / MOCK_JUDGES.length).toFixed(0)}%`,
+            icon: <TrendingUp className="h-5 w-5" />,
+          },
+          {
+            label: 'Taxa Favorável Média',
+            value: `${(MOCK_JUDGES.reduce((s, j) => s + j.favorableRate, 0) / MOCK_JUDGES.length).toFixed(0)}%`,
+            icon: <Scale className="h-5 w-5" />,
+          },
+        ]}
+      />
 
       {/* Judge Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -546,9 +546,12 @@ export default function JudgesPage() {
         ))}
 
         {filtered.length === 0 && (
-          <div className="col-span-full rounded-xl border border-[#1a2332] bg-[#0d1320] p-12 text-center">
-            <Search className="h-8 w-8 text-[#6b7a8d] mx-auto mb-3" />
-            <p className="text-sm text-[#6b7a8d]">Nenhum magistrado encontrado</p>
+          <div className="col-span-full rounded-xl border border-[#1a2332] bg-[#0d1320]">
+            <EmptyState
+              icon={<Search className="h-8 w-8" />}
+              title="Nenhum magistrado encontrado"
+              description="Tente ajustar os filtros ou a busca para encontrar o magistrado desejado."
+            />
           </div>
         )}
       </div>

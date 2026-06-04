@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { FileSearch, Loader2, Sparkles, Send, Upload, User, Bot, Scale, AlertCircle, CheckCircle2, Scissors, MessageSquare, Cpu } from 'lucide-react';
+import { PageHeader } from '@/components/legal/shared';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -408,42 +409,41 @@ export default function AnalyzePage() {
   return (
     <div className="flex flex-col h-[calc(100vh-64px)]">
       {/* Header */}
-      <div className="flex-shrink-0 border-b border-[#1a2332] bg-[#0d1320] px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10">
-              <FileSearch className="h-5 w-5 text-amber-400" />
+      <div className="flex-shrink-0 border-b border-[#1a2332] bg-[#0d1320] px-6 pt-4">
+        <PageHeader
+          title="Análise de Documentos"
+          subtitle={
+            phase === 'upload' ? 'Envie um documento para análise completa com IA' :
+            phase === 'polo_question' ? 'Identifique o polo que você representa' :
+            phase === 'analyzing' ? 'IA analisando o documento...' :
+            phase === 'results' ? 'Análise concluída — revise os resultados' :
+            'Converse com a IA sobre o documento analisado'
+          }
+          breadcrumbs={[
+            { label: 'Dashboard', href: '/legal' },
+            { label: 'Análise de Documentos', href: '/legal/analyze' },
+          ]}
+          actions={
+            <div className="flex items-center gap-2">
+              {aiMeta.model && (
+                <div className="flex items-center gap-1.5 rounded-lg border border-[#1a2332] px-3 py-1.5 text-[10px] text-[#6b7a8d]">
+                  <Cpu className="h-3 w-3" />
+                  {aiMeta.model} | {aiMeta.tokens} tokens | ${aiMeta.cost?.toFixed(4)}
+                </div>
+              )}
+              {analysis && phase !== 'chat' && (
+                <button onClick={goToChat} className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors">
+                  <MessageSquare className="h-4 w-4" /> Abrir Chat
+                </button>
+              )}
+              {phase === 'chat' && (
+                <button onClick={() => setPhase('results')} className="flex items-center gap-2 rounded-lg border border-[#1a2332] px-4 py-2 text-sm text-[#8899aa] hover:text-white transition-colors">
+                  Ver Resultados
+                </button>
+              )}
             </div>
-            <div>
-              <h1 className="text-lg font-bold text-white">Análise Inteligente de Documentos</h1>
-              <p className="text-xs text-[#6b7a8d]">
-                {phase === 'upload' && 'Envie um documento para análise completa com IA'}
-                {phase === 'polo_question' && 'Identifique o polo que você representa'}
-                {phase === 'analyzing' && 'IA analisando o documento...'}
-                {phase === 'results' && 'Análise concluída — revise os resultados'}
-                {phase === 'chat' && 'Converse com a IA sobre o documento analisado'}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {aiMeta.model && (
-              <div className="flex items-center gap-1.5 rounded-lg border border-[#1a2332] px-3 py-1.5 text-[10px] text-[#6b7a8d]">
-                <Cpu className="h-3 w-3" />
-                {aiMeta.model} | {aiMeta.tokens} tokens | ${aiMeta.cost?.toFixed(4)}
-              </div>
-            )}
-            {analysis && phase !== 'chat' && (
-              <button onClick={goToChat} className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors">
-                <MessageSquare className="h-4 w-4" /> Abrir Chat
-              </button>
-            )}
-            {phase === 'chat' && (
-              <button onClick={() => setPhase('results')} className="flex items-center gap-2 rounded-lg border border-[#1a2332] px-4 py-2 text-sm text-[#8899aa] hover:text-white transition-colors">
-                Ver Resultados
-              </button>
-            )}
-          </div>
-        </div>
+          }
+        />
       </div>
 
       {/* Content */}

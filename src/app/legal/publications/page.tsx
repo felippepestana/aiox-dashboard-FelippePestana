@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react';
 import {
   Bell,
-  Search,
   Eye,
   EyeOff,
   Calendar,
@@ -14,6 +13,8 @@ import {
   X,
 } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
+import { PageHeader, FilterBar, EmptyState } from '@/components/legal/shared';
+import type { FilterValues } from '@/components/legal/shared';
 
 // ─── Sync result types ────────────────────────────────────────────────────────
 
@@ -37,8 +38,7 @@ export default function PublicationsPage() {
   const { movements, processes, getProcessById, markMovementRead, hydrateFromApi } =
     useLegalStore();
 
-  const [searchQuery, setSearchQuery]   = useState('');
-  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const [filterValues, setFilterValues] = useState<FilterValues>({});
   const [syncState, setSyncState]       = useState<SyncState>({
     status: 'idle',
     totalSynced: 0,
@@ -49,10 +49,15 @@ export default function PublicationsPage() {
   // ─── Filtered / sorted movement list ──────────────────────────────────────
 
   const sortedMovements = useMemo(() => {
+    const searchQuery = filterValues['search'] ?? '';
+    const showUnreadOnly = filterValues['unread'] === 'true';
+    const sourceFilter = filterValues['source'] ?? '';
+
     return [...movements]
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .filter((m) => {
         if (showUnreadOnly && m.isRead) return false;
+        if (sourceFilter && m.source !== sourceFilter) return false;
         if (searchQuery) {
           const q = searchQuery.toLowerCase();
           const process = getProcessById(m.processId);
@@ -65,9 +70,10 @@ export default function PublicationsPage() {
         }
         return true;
       });
-  }, [movements, searchQuery, showUnreadOnly, getProcessById]);
+  }, [movements, filterValues, getProcessById]);
 
   const unreadCount = movements.filter((m) => !m.isRead).length;
+  const showUnreadOnly = filterValues['unread'] === 'true';
 
   // ─── DataJud sync handler ─────────────────────────────────────────────────
 
@@ -156,40 +162,35 @@ export default function PublicationsPage() {
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
 
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Bell className="h-7 w-7 text-amber-400" />
-            Movimentações e Publicações
-          </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">
-            {movements.length} movimentações registradas
-            {unreadCount > 0 && (
-              <span className="ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-amber-500/10 text-amber-400">
-                {unreadCount} não lidas
-              </span>
-            )}
-          </p>
-        </div>
-
-        {/* DataJud sync button */}
-        <button
-          onClick={handleDatajudSync}
-          disabled={syncState.status === 'syncing'}
-          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors border
-            ${
-              syncState.status === 'syncing'
-                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 cursor-not-allowed opacity-70'
-                : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
-            }`}
-        >
-          <RefreshCw
-            className={`h-4 w-4 ${syncState.status === 'syncing' ? 'animate-spin' : ''}`}
-          />
-          {syncState.status === 'syncing' ? 'Sincronizando…' : 'Sincronizar com DataJud'}
-        </button>
-      </div>
+      <PageHeader
+        title="Movimentações e Publicações"
+        subtitle={
+          unreadCount > 0
+            ? `${movements.length} movimentações — ${unreadCount} não lida${unreadCount !== 1 ? 's' : ''}`
+            : `${movements.length} movimentações registradas`
+        }
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Publicações', href: '/legal/publications' },
+        ]}
+        actions={
+          <button
+            onClick={handleDatajudSync}
+            disabled={syncState.status === 'syncing'}
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors border
+              ${
+                syncState.status === 'syncing'
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 cursor-not-allowed opacity-70'
+                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
+              }`}
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${syncState.status === 'syncing' ? 'animate-spin' : ''}`}
+            />
+            {syncState.status === 'syncing' ? 'Sincronizando…' : 'Sincronizar com DataJud'}
+          </button>
+        }
+      />
 
       {/* Sync result panel */}
       {showSyncPanel && syncState.status !== 'idle' && syncState.status !== 'syncing' && (
@@ -266,43 +267,50 @@ export default function PublicationsPage() {
         </div>
       )}
 
-      {/* Filters */}
-      <div className="flex items-center gap-3 rounded-xl border border-[#1a2332] bg-[#0d1320] p-4">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7a8d]" />
-          <input
-            type="text"
-            placeholder="Buscar por CNJ, conteúdo ou fonte..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] pl-10 pr-4 py-2 text-sm text-white placeholder-[#6b7a8d] focus:outline-none focus:border-amber-500/50"
-          />
-        </div>
-        <button
-          onClick={() => setShowUnreadOnly(!showUnreadOnly)}
-          className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-            showUnreadOnly
-              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-              : 'text-[#6b7a8d] border border-[#1a2332] hover:text-white'
-          }`}
-        >
-          {showUnreadOnly ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          {showUnreadOnly ? 'Não lidas' : 'Todas'}
-        </button>
-      </div>
+      {/* FilterBar */}
+      <FilterBar
+        filters={[
+          {
+            type: 'search',
+            key: 'search',
+            placeholder: 'Buscar por CNJ, conteúdo ou fonte...',
+          },
+          {
+            type: 'select',
+            key: 'source',
+            label: 'Fonte',
+            options: [
+              { value: 'manual', label: 'Manual' },
+              { value: 'dje', label: 'DJE' },
+              { value: 'pje', label: 'PJe' },
+              { value: 'datajud', label: 'DataJud' },
+              { value: 'esaj', label: 'eSAJ' },
+              { value: 'eproc', label: 'eProc' },
+            ],
+          },
+          {
+            type: 'select',
+            key: 'unread',
+            label: 'Leitura',
+            options: [
+              { value: 'true', label: 'Não lidas' },
+            ],
+          },
+        ]}
+        values={filterValues}
+        onFilterChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
+        onClear={() => setFilterValues({})}
+      />
 
       {/* Movements List */}
       {sortedMovements.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-[#1a2332] bg-[#0d1320] py-16">
-          <Bell className="h-12 w-12 text-[#6b7a8d] mb-3" />
-          <p className="text-[#6b7a8d] text-sm">
-            {showUnreadOnly
-              ? 'Nenhuma movimentação não lida'
-              : 'Nenhuma movimentação registrada'}
-          </p>
-          <p className="text-xs text-[#4a5568] mt-2">
-            Clique em &ldquo;Sincronizar com DataJud&rdquo; para importar movimentações dos seus processos
-          </p>
+        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320]">
+          <EmptyState
+            icon={<Bell className="h-8 w-8" />}
+            title={showUnreadOnly ? 'Nenhuma movimentação não lida' : 'Nenhuma movimentação registrada'}
+            description='Clique em "Sincronizar com DataJud" para importar movimentações dos seus processos'
+            action={{ label: 'Sincronizar com DataJud', onClick: handleDatajudSync }}
+          />
         </div>
       ) : (
         <div className="space-y-3">

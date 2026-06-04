@@ -25,6 +25,7 @@ import {
   Info,
 } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
+import { PageHeader } from '@/components/legal/shared';
 import {
   buildWhatsAppLink,
   formatPhoneNumber,
@@ -275,47 +276,43 @@ export default function WhatsAppPage() {
 
       {/* ── Page Header ──────────────────────────────────────────────────── */}
       <div className="flex-shrink-0 border-b border-[#1a2332] px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-green-700 shadow-lg shadow-green-500/20">
-              <MessageCircle className="h-5 w-5 text-white" />
+        <PageHeader
+          title="WhatsApp — Comunicação com Clientes"
+          subtitle="Prepare e envie mensagens via WhatsApp Web"
+          breadcrumbs={[
+            { label: 'Dashboard', href: '/legal' },
+            { label: 'WhatsApp', href: '/legal/whatsapp' },
+          ]}
+          actions={
+            <div className="hidden lg:flex items-center gap-3">
+              <SummaryCard
+                icon={<Users className="h-4 w-4 text-blue-400" />}
+                label="Contatos"
+                value={contactClients.length}
+                color="blue"
+              />
+              <SummaryCard
+                icon={<MessageCircle className="h-4 w-4 text-green-400" />}
+                label="Hoje"
+                value={messagesToday}
+                color="green"
+              />
+              <SummaryCard
+                icon={<CalendarClock className="h-4 w-4 text-amber-400" />}
+                label="Aguardando"
+                value={pendingResponses}
+                color="amber"
+              />
+              <SummaryCard
+                icon={<LayoutTemplate className="h-4 w-4 text-purple-400" />}
+                label="Templates"
+                value={MESSAGE_TEMPLATES.length}
+                color="purple"
+              />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-white">WhatsApp — Comunicação com Clientes</h1>
-              <p className="text-xs text-[#6b7a8d]">
-                Prepare e envie mensagens via WhatsApp Web
-              </p>
-            </div>
-          </div>
-
-          {/* Summary Cards */}
-          <div className="hidden lg:flex items-center gap-3">
-            <SummaryCard
-              icon={<Users className="h-4 w-4 text-blue-400" />}
-              label="Contatos"
-              value={contactClients.length}
-              color="blue"
-            />
-            <SummaryCard
-              icon={<MessageCircle className="h-4 w-4 text-green-400" />}
-              label="Hoje"
-              value={messagesToday}
-              color="green"
-            />
-            <SummaryCard
-              icon={<CalendarClock className="h-4 w-4 text-amber-400" />}
-              label="Aguardando"
-              value={pendingResponses}
-              color="amber"
-            />
-            <SummaryCard
-              icon={<LayoutTemplate className="h-4 w-4 text-purple-400" />}
-              label="Templates"
-              value={MESSAGE_TEMPLATES.length}
-              color="purple"
-            />
-          </div>
-        </div>
+          }
+          className="mb-0 pb-0 border-b-0"
+        />
       </div>
 
       {/* ── Main 3-column layout ─────────────────────────────────────────── */}

@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   AlertTriangle,
   XCircle,
-  User,
   Briefcase,
   Calendar,
   Plus,
@@ -16,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useLegalFinancialStore } from '@/stores/legal-financial-store';
 import { useLegalStore } from '@/stores/legal-store';
+import { PageHeader, StatCardGrid, EmptyState } from '@/components/legal/shared';
 import type { HonorarioStatus, HonorarioType } from '@/types/legal';
 
 type TabValue = 'active' | 'completed' | 'defaulted';
@@ -82,6 +82,16 @@ export default function HonorariosPage() {
     },
   ];
 
+  const totalActive = honorarios
+    .filter((h) => h.status === 'active')
+    .reduce((s, h) => s + h.amount, 0);
+  const totalReceived = honorarios
+    .filter((h) => h.status === 'completed')
+    .reduce((s, h) => s + h.amount, 0);
+  const totalDefaulted = honorarios
+    .filter((h) => h.status === 'defaulted')
+    .reduce((s, h) => s + h.amount, 0);
+
   function formatCurrency(value: number): string {
     return value.toLocaleString('pt-BR', {
       style: 'currency',
@@ -99,24 +109,53 @@ export default function HonorariosPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Receipt className="h-7 w-7 text-amber-400" />
-            Honorarios
-          </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">
-            {honorarios.length} contratos de honorarios
-          </p>
-        </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
-        >
-          <Plus className="h-4 w-4" /> Novo Honorário
-        </button>
-      </div>
+      <PageHeader
+        title="Honorários"
+        subtitle={`${honorarios.length} contratos de honorários`}
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Financeiro', href: '/legal/financial' },
+          { label: 'Honorários', href: '/legal/honorarios' },
+        ]}
+        actions={
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
+          >
+            <Plus className="h-4 w-4" /> Novo Honorário
+          </button>
+        }
+      />
+
+      {/* Summary Stats */}
+      <StatCardGrid
+        cards={[
+          {
+            label: 'Contratos Ativos',
+            value: formatCurrency(totalActive),
+            icon: <Receipt className="h-5 w-5" />,
+            color: '#F59E0B',
+          },
+          {
+            label: 'Total Quitado',
+            value: formatCurrency(totalReceived),
+            icon: <CheckCircle2 className="h-5 w-5" />,
+            color: '#4ADE80',
+          },
+          {
+            label: 'Inadimplência',
+            value: formatCurrency(totalDefaulted),
+            icon: <AlertTriangle className="h-5 w-5" />,
+            color: '#F87171',
+          },
+          {
+            label: 'Total de Contratos',
+            value: honorarios.length,
+            icon: <DollarSign className="h-5 w-5" />,
+            color: '#60A5FA',
+          },
+        ]}
+      />
 
       {/* New Honorario Form */}
       {showForm && (
@@ -233,11 +272,13 @@ export default function HonorariosPage() {
 
       {/* Honorario List */}
       {filteredHonorarios.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-[#1a2332] bg-[#0d1320] py-16">
-          <Receipt className="h-12 w-12 text-[#6b7a8d] mb-3" />
-          <p className="text-[#6b7a8d] text-sm">
-            Nenhum honorario {activeTab === 'active' ? 'ativo' : activeTab === 'completed' ? 'quitado' : 'inadimplente'}
-          </p>
+        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320]">
+          <EmptyState
+            icon={<Receipt className="h-8 w-8" />}
+            title={`Nenhum honorário ${activeTab === 'active' ? 'ativo' : activeTab === 'completed' ? 'quitado' : 'inadimplente'}`}
+            description="Os contratos de honorários aparecerão aqui quando cadastrados."
+            action={{ label: 'Novo Honorário', onClick: () => setShowForm(true) }}
+          />
         </div>
       ) : (
         <div className="space-y-3">

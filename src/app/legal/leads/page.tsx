@@ -17,6 +17,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { useLegalMarketingStore } from '@/stores/legal-marketing-store';
+import { PageHeader, StatCardGrid } from '@/components/legal/shared';
 import { getLeadScoring } from '@/lib/marketing-engine';
 import type { LeadStatus, LegalArea, LegalLead } from '@/types/legal';
 
@@ -212,32 +213,33 @@ export default function LeadsPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Users className="h-7 w-7 text-amber-400" />
-            Pipeline de Leads
-          </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">Gestao de prospectos e conversao de clientes</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 rounded-lg bg-[#0d1320] border border-[#1a2332] px-3 py-2 text-sm text-[#6b7a8d] hover:text-white hover:border-[#2a3342] transition-colors"
-          >
-            Filtros
-            <ChevronDown className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-          </button>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-400 hover:bg-amber-500/20 transition-colors border border-amber-500/20"
-          >
-            <Plus className="h-4 w-4" />
-            Novo Lead
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="Pipeline de Leads"
+        subtitle="Gestao de prospectos e conversao de clientes"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Marketing', href: '/legal/marketing' },
+          { label: 'Leads', href: '/legal/leads' },
+        ]}
+        actions={
+          <>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 rounded-lg bg-[#0d1320] border border-[#1a2332] px-3 py-2 text-sm text-[#6b7a8d] hover:text-white hover:border-[#2a3342] transition-colors"
+            >
+              Filtros
+              <ChevronDown className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-400 hover:bg-amber-500/20 transition-colors border border-amber-500/20"
+            >
+              <Plus className="h-4 w-4" />
+              Novo Lead
+            </button>
+          </>
+        }
+      />
 
       {/* Filters panel */}
       {showFilters && (
@@ -285,38 +287,36 @@ export default function LeadsPage() {
       )}
 
       {/* Pipeline metrics */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <Users className="h-4 w-4 text-amber-400" />
-            <p className="text-[10px] text-[#6b7a8d] uppercase tracking-wider">Total Leads</p>
-          </div>
-          <p className="text-2xl font-bold text-white">{totalLeads}</p>
-        </div>
-        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <TrendingUp className="h-4 w-4 text-amber-400" />
-            <p className="text-[10px] text-[#6b7a8d] uppercase tracking-wider">Taxa Conversao</p>
-          </div>
-          <p className="text-2xl font-bold text-white">{convRate.toFixed(1)}%</p>
-        </div>
-        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <Clock className="h-4 w-4 text-amber-400" />
-            <p className="text-[10px] text-[#6b7a8d] uppercase tracking-wider">Tempo Medio</p>
-          </div>
-          <p className="text-2xl font-bold text-white">{avgDays}d</p>
-        </div>
-        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <DollarSign className="h-4 w-4 text-amber-400" />
-            <p className="text-[10px] text-[#6b7a8d] uppercase tracking-wider">Valor Pipeline</p>
-          </div>
-          <p className="text-2xl font-bold text-white">
-            {pipelineValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
-          </p>
-        </div>
-      </div>
+      <StatCardGrid
+        cards={[
+          {
+            label: 'Total Leads',
+            value: totalLeads,
+            icon: <Users className="h-5 w-5" />,
+            color: '#D4AF37',
+          },
+          {
+            label: 'Taxa Conversao',
+            value: `${convRate.toFixed(1)}%`,
+            icon: <TrendingUp className="h-5 w-5" />,
+            trend: convRate >= 20 ? 'up' : convRate > 0 ? 'flat' : 'flat',
+            color: '#22c55e',
+          },
+          {
+            label: 'Tempo Medio',
+            value: `${avgDays}d`,
+            icon: <Clock className="h-5 w-5" />,
+            color: '#f59e0b',
+          },
+          {
+            label: 'Valor Pipeline',
+            value: pipelineValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }),
+            icon: <DollarSign className="h-5 w-5" />,
+            trend: pipelineValue > 0 ? 'up' : 'flat',
+            color: '#8b5cf6',
+          },
+        ]}
+      />
 
       {/* Kanban Board */}
       <div className="overflow-x-auto">

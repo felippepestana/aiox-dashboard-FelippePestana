@@ -21,6 +21,7 @@ import {
   Eye,
   LinkIcon,
 } from 'lucide-react';
+import { PageHeader } from '@/components/legal/shared';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -530,33 +531,28 @@ export default function UploadPage() {
   return (
     <div className="p-6 space-y-6 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 shadow-lg shadow-amber-500/20">
-            <Upload className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-white">Central de Documentos</h1>
-            <p className="text-sm text-[#6b7a8d]">
-              Envie, vincule e analise documentos jurídicos com IA
-            </p>
-          </div>
-        </div>
-
-        {/* Stats */}
-        {uploadedFiles.length > 0 && (
-          <div className="flex items-center gap-4 text-sm">
-            <div className="text-center">
-              <p className="text-lg font-bold text-white">{doneCount}</p>
-              <p className="text-[10px] text-[#6b7a8d] uppercase">Enviados</p>
+      <PageHeader
+        title="Upload de Documentos"
+        subtitle="Envie, vincule e analise documentos jurídicos com IA"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Upload de Documentos', href: '/legal/upload' },
+        ]}
+        actions={
+          uploadedFiles.length > 0 ? (
+            <div className="flex items-center gap-4 text-sm">
+              <div className="text-center">
+                <p className="text-lg font-bold text-white">{doneCount}</p>
+                <p className="text-[10px] text-[#6b7a8d] uppercase">Enviados</p>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-bold text-amber-400">{analyzedCount}</p>
+                <p className="text-[10px] text-[#6b7a8d] uppercase">Analisados</p>
+              </div>
             </div>
-            <div className="text-center">
-              <p className="text-lg font-bold text-amber-400">{analyzedCount}</p>
-              <p className="text-[10px] text-[#6b7a8d] uppercase">Analisados</p>
-            </div>
-          </div>
-        )}
-      </div>
+          ) : undefined
+        }
+      />
 
       {/* Drop Zone */}
       <DropZone onFiles={handleFiles} />

@@ -5,7 +5,6 @@ import Link from 'next/link';
 import {
   FileText,
   Plus,
-  Filter,
   Calendar,
   Briefcase,
   CheckCircle2,
@@ -15,8 +14,10 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
-import type { PetitionStatus, PetitionType } from '@/types/legal';
+import { PageHeader, FilterBar, EmptyState } from '@/components/legal/shared';
+import type { FilterValues } from '@/components/legal/shared';
 import { ExportPDFButton } from '@/components/legal/ExportPDFButton';
+import type { PetitionStatus, PetitionType } from '@/types/legal';
 
 const petitionStatusConfig: Record<
   PetitionStatus,
@@ -45,29 +46,22 @@ const petitionTypeLabel: Record<PetitionType, string> = {
   outro: 'Outro',
 };
 
-const STATUS_FILTERS: { value: PetitionStatus | ''; label: string }[] = [
-  { value: '', label: 'Todos' },
-  { value: 'draft', label: 'Rascunho' },
-  { value: 'review', label: 'Revisao' },
-  { value: 'approved', label: 'Aprovada' },
-  { value: 'filed', label: 'Protocolada' },
-];
-
 export default function PetitionsPage() {
   const { petitions, processes, getProcessById, updatePetitionStatus } = useLegalStore();
 
-  const [filterStatus, setFilterStatus] = useState<PetitionStatus | ''>('');
-
-  const filteredPetitions = useMemo(() => {
-    if (!filterStatus) return petitions;
-    return petitions.filter((p) => p.status === filterStatus);
-  }, [petitions, filterStatus]);
+  const [filterValues, setFilterValues] = useState<FilterValues>({});
 
   const processMap = useMemo(() => {
     const map: Record<string, string> = {};
     processes.forEach((p) => { map[p.id] = p.cnj; });
     return map;
   }, [processes]);
+
+  const filteredPetitions = useMemo(() => {
+    const status = filterValues['status'] as PetitionStatus | '' | undefined;
+    if (!status) return petitions;
+    return petitions.filter((p) => p.status === status);
+  }, [petitions, filterValues]);
 
   function formatDate(dateStr: string): string {
     return new Date(dateStr).toLocaleDateString('pt-BR', {
@@ -77,65 +71,69 @@ export default function PetitionsPage() {
     });
   }
 
+  const filterConfigs = [
+    {
+      type: 'select' as const,
+      key: 'status',
+      label: 'Status',
+      options: [
+        { value: 'draft', label: 'Rascunho' },
+        { value: 'review', label: 'Revisão' },
+        { value: 'approved', label: 'Aprovada' },
+        { value: 'filed', label: 'Protocolada' },
+        { value: 'rejected', label: 'Rejeitada' },
+      ],
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <FileText className="h-7 w-7 text-amber-400" />
-            Pecas Processuais
-          </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">
-            {petitions.length} pecas cadastradas
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <ExportPDFButton
-            type="petitions"
-            data={{ petitions: filteredPetitions, processMap, title: 'Peças Processuais' }}
-            label="Exportar PDF"
-          />
-          <Link
-            href="/legal/petitions/new"
-            className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            Nova Peca
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        title="Peças Processuais"
+        subtitle={`${petitions.length} peças cadastradas`}
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Petições', href: '/legal/petitions' },
+        ]}
+        actions={
+          <>
+            <ExportPDFButton
+              type="petitions"
+              data={{ petitions: filteredPetitions, processMap, title: 'Peças Processuais' }}
+              label="Exportar PDF"
+            />
+            <Link
+              href="/legal/petitions/new"
+              className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              Nova Peça
+            </Link>
+          </>
+        }
+      />
 
-      {/* Status Filter */}
-      <div className="flex items-center gap-2 rounded-xl border border-[#1a2332] bg-[#0d1320] p-4">
-        <Filter className="h-4 w-4 text-[#6b7a8d] mr-1" />
-        {STATUS_FILTERS.map((sf) => (
-          <button
-            key={sf.value}
-            onClick={() => setFilterStatus(sf.value as PetitionStatus | '')}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-              filterStatus === sf.value
-                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                : 'text-[#6b7a8d] border border-[#1a2332] hover:text-white'
-            }`}
-          >
-            {sf.label}
-          </button>
-        ))}
-      </div>
+      {/* Filter Bar */}
+      <FilterBar
+        filters={filterConfigs}
+        values={filterValues}
+        onFilterChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
+        onClear={() => setFilterValues({})}
+      />
 
       {/* Petition Cards */}
       {filteredPetitions.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-[#1a2332] bg-[#0d1320] py-16">
-          <FileText className="h-12 w-12 text-[#6b7a8d] mb-3" />
-          <p className="text-[#6b7a8d] text-sm">Nenhuma peca encontrada</p>
-          <Link
-            href="/legal/petitions/new"
-            className="mt-4 flex items-center gap-2 text-amber-400 hover:text-amber-300 text-sm"
-          >
-            <Plus className="h-4 w-4" />
-            Criar nova peca
-          </Link>
+        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320]">
+          <EmptyState
+            icon={<FileText className="h-8 w-8" />}
+            title="Nenhuma peça encontrada"
+            description={
+              petitions.length === 0
+                ? 'Crie sua primeira peça processual para começar.'
+                : 'Nenhuma peça corresponde ao filtro selecionado.'
+            }
+            action={{ label: 'Nova Peça', href: '/legal/petitions/new' }}
+          />
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

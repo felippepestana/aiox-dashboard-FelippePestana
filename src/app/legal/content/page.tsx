@@ -19,6 +19,7 @@ import {
   Megaphone,
 } from 'lucide-react';
 import { useLegalMarketingStore } from '@/stores/legal-marketing-store';
+import { PageHeader } from '@/components/legal/shared';
 import type { LegalCampaignChannel, LegalArea, LegalContentItem } from '@/types/legal';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -185,52 +186,51 @@ export default function ContentPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <FileText className="h-7 w-7 text-amber-400" />
-            Calendario de Conteudo
-          </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">
-            Calendario editorial e publicacoes conforme OAB
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* View toggle */}
-          <div className="flex rounded-lg border border-[#1a2332] overflow-hidden">
+      <PageHeader
+        title="Calendario de Conteudo"
+        subtitle="Calendario editorial e publicacoes conforme OAB"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Marketing', href: '/legal/marketing' },
+          { label: 'Conteudo', href: '/legal/content' },
+        ]}
+        actions={
+          <>
+            {/* View toggle */}
+            <div className="flex rounded-lg border border-[#1a2332] overflow-hidden">
+              <button
+                onClick={() => setViewMode('calendar')}
+                className={`flex items-center gap-1.5 px-3 py-2 text-sm transition-colors ${
+                  viewMode === 'calendar'
+                    ? 'bg-amber-500/10 text-amber-400'
+                    : 'bg-[#0d1320] text-[#6b7a8d] hover:text-white'
+                }`}
+              >
+                <LayoutGrid className="h-4 w-4" />
+                Calendario
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`flex items-center gap-1.5 px-3 py-2 text-sm transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-amber-500/10 text-amber-400'
+                    : 'bg-[#0d1320] text-[#6b7a8d] hover:text-white'
+                }`}
+              >
+                <List className="h-4 w-4" />
+                Lista
+              </button>
+            </div>
             <button
-              onClick={() => setViewMode('calendar')}
-              className={`flex items-center gap-1.5 px-3 py-2 text-sm transition-colors ${
-                viewMode === 'calendar'
-                  ? 'bg-amber-500/10 text-amber-400'
-                  : 'bg-[#0d1320] text-[#6b7a8d] hover:text-white'
-              }`}
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-400 hover:bg-amber-500/20 transition-colors border border-amber-500/20"
             >
-              <LayoutGrid className="h-4 w-4" />
-              Calendario
+              <Plus className="h-4 w-4" />
+              Novo Conteudo
             </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`flex items-center gap-1.5 px-3 py-2 text-sm transition-colors ${
-                viewMode === 'list'
-                  ? 'bg-amber-500/10 text-amber-400'
-                  : 'bg-[#0d1320] text-[#6b7a8d] hover:text-white'
-              }`}
-            >
-              <List className="h-4 w-4" />
-              Lista
-            </button>
-          </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-400 hover:bg-amber-500/20 transition-colors border border-amber-500/20"
-          >
-            <Plus className="h-4 w-4" />
-            Novo Conteudo
-          </button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">

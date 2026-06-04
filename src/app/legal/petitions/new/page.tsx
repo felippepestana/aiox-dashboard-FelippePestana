@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { ArrowLeft, Save, Sparkles, LayoutTemplate, PenLine } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
+import { PageHeader } from '@/components/legal/shared';
 import { PetitionTemplateSelector } from '@/components/legal/PetitionTemplateSelector';
 import { PetitionTemplateEditor } from '@/components/legal/PetitionTemplateEditor';
 import type { PetitionType } from '@/types/legal';
@@ -68,8 +68,6 @@ export default function NewPetitionPage() {
   };
 
   const handleTemplateSave = (content: string, title: string) => {
-    const linkedProcess = processes.find((p) => p.id === templateProcessId);
-
     addPetition({
       processId: templateProcessId,
       type: (selectedTemplate?.petitionType as PetitionType) ?? 'outro',
@@ -86,22 +84,31 @@ export default function NewPetitionPage() {
   const linkedProcess = processes.find((p) => p.id === templateProcessId);
   const linkedClient = linkedProcess ? getClientById(linkedProcess.clientId) : undefined;
 
+  const baseBreadcrumbs = [
+    { label: 'Dashboard', href: '/legal' },
+    { label: 'Petições', href: '/legal/petitions' },
+    { label: 'Nova Petição', href: '/legal/petitions/new' },
+  ];
+
   // ── Mode: Choose ──────────────────────────────────────────────────────────
 
   if (mode === 'choose') {
     return (
       <div className="p-6 space-y-6">
-        <div className="flex items-center gap-4">
-          <Link href="/legal/petitions" className="text-[#6b7a8d] hover:text-white transition-colors">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-white">Nova Peça Processual</h1>
-            <p className="text-sm text-[#6b7a8d] mt-1">
-              Escolha como deseja criar a nova peça
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          title="Nova Peça Processual"
+          subtitle="Escolha como deseja criar a nova peça"
+          breadcrumbs={baseBreadcrumbs}
+          actions={
+            <button
+              type="button"
+              onClick={() => router.push('/legal/petitions')}
+              className="flex items-center gap-2 text-[#6b7a8d] hover:text-white transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          }
+        />
 
         {/* Option cards */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 max-w-2xl">
@@ -154,21 +161,20 @@ export default function NewPetitionPage() {
   if (mode === 'template-select') {
     return (
       <div className="p-6 space-y-6">
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => setMode('choose')}
-            className="text-[#6b7a8d] hover:text-white transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-white">Selecionar Template</h1>
-            <p className="text-sm text-[#6b7a8d] mt-1">
-              Escolha o modelo de peça processual
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          title="Selecionar Template"
+          subtitle="Escolha o modelo de peça processual"
+          breadcrumbs={baseBreadcrumbs}
+          actions={
+            <button
+              type="button"
+              onClick={() => setMode('choose')}
+              className="flex items-center gap-2 text-[#6b7a8d] hover:text-white transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          }
+        />
 
         {/* Optional: link a process before selecting template */}
         {processes.length > 0 && (
@@ -206,6 +212,12 @@ export default function NewPetitionPage() {
   if (mode === 'template-edit' && selectedTemplate) {
     return (
       <div className="p-6 space-y-6">
+        <PageHeader
+          title="Editar Peça a partir de Template"
+          subtitle={selectedTemplate.name}
+          breadcrumbs={baseBreadcrumbs}
+        />
+
         {/* Squad Integration Banner */}
         <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
           <div className="flex items-start gap-3">
@@ -237,21 +249,20 @@ export default function NewPetitionPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center gap-4">
-        <button
-          type="button"
-          onClick={() => setMode('choose')}
-          className="text-[#6b7a8d] hover:text-white transition-colors"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-white">Nova Peça — Em Branco</h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">
-            Elabore uma nova peça com assistência do squad de análise
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Nova Peça — Em Branco"
+        subtitle="Elabore uma nova peça com assistência do squad de análise"
+        breadcrumbs={baseBreadcrumbs}
+        actions={
+          <button
+            type="button"
+            onClick={() => setMode('choose')}
+            className="flex items-center gap-2 text-[#6b7a8d] hover:text-white transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        }
+      />
 
       {/* Squad Integration Banner */}
       <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">

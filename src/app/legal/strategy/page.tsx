@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useLegalStrategyStore } from '@/stores/legal-strategy-store';
 import { SelemRadar } from '@/components/legal/SelemRadar';
+import { PageHeader } from '@/components/legal/shared';
 import type { SelemPillar } from '@/types/legal';
 
 const PILLAR_LABELS: Record<SelemPillar, string> = {
@@ -301,35 +302,33 @@ export default function StrategyPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Target className="h-7 w-7 text-amber-400" />
-            Painel Estrategico
-          </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">
-            Metodologia SELEM — Gestao Estrategica do Escritorio
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {selemAssessments.length === 0 && (
-            <button
-              onClick={seedDemoData}
-              className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-400 hover:bg-amber-500/20 transition-colors border border-amber-500/20"
+      <PageHeader
+        title="Painel Estrategico"
+        subtitle="Metodologia SELEM — Gestao Estrategica do Escritorio"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Painel Estrategico', href: '/legal/strategy' },
+        ]}
+        actions={
+          <>
+            {selemAssessments.length === 0 && (
+              <button
+                onClick={seedDemoData}
+                className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-400 hover:bg-amber-500/20 transition-colors border border-amber-500/20"
+              >
+                Carregar Dados Demo
+              </button>
+            )}
+            <Link
+              href="/legal/canvas"
+              className="flex items-center gap-2 rounded-lg border border-[#1a2332] px-4 py-2 text-sm text-[#6b7a8d] hover:text-white hover:border-amber-500/30 transition-colors"
             >
-              Carregar Dados Demo
-            </button>
-          )}
-          <Link
-            href="/legal/canvas"
-            className="flex items-center gap-2 rounded-lg border border-[#1a2332] px-4 py-2 text-sm text-[#6b7a8d] hover:text-white hover:border-amber-500/30 transition-colors"
-          >
-            <ExternalLink className="h-4 w-4" />
-            Legal Canvas
-          </Link>
-        </div>
-      </div>
+              <ExternalLink className="h-4 w-4" />
+              Legal Canvas
+            </Link>
+          </>
+        }
+      />
 
       {/* ── SELEM Assessment Section ── */}
       <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] overflow-hidden">

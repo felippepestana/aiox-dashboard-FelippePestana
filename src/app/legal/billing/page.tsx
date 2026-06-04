@@ -19,6 +19,7 @@ import {
 import { useLegalFinancialStore } from '@/stores/legal-financial-store';
 import { useLegalStore } from '@/stores/legal-store';
 import { ExportPDFButton } from '@/components/legal';
+import { PageHeader, StatCardGrid, EmptyState } from '@/components/legal/shared';
 import type { InvoiceStatus, LegalInvoiceItem } from '@/types/legal';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -220,95 +221,70 @@ export default function BillingPage() {
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 lg:p-8 space-y-6">
 
-      {/* ── Header ────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <CreditCard className="h-7 w-7 text-amber-400" />
-            Faturamento
-          </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">
-            Gestão de faturas, cobranças e recebimentos
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {invoices.length > 0 && (
-            <ExportPDFButton
-              type="financial"
-              data={{
-                period: String(new Date().getFullYear()),
-                transactions: [],
-                totalIncome: summaryStats.totalReceived,
-                totalExpense: 0,
-                balance: summaryStats.totalReceived,
-              } as import('@/lib/pdf-export').FinancialReportData}
-              label="Exportar PDF"
-              variant="button"
-            />
-          )}
-          <button
-            onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            Nova Fatura
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="Faturamento"
+        subtitle="Gestão de faturas, cobranças e recebimentos"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Financeiro', href: '/legal/financial' },
+          { label: 'Faturamento', href: '/legal/billing' },
+        ]}
+        actions={
+          <>
+            {invoices.length > 0 && (
+              <ExportPDFButton
+                type="financial"
+                data={{
+                  period: String(new Date().getFullYear()),
+                  transactions: [],
+                  totalIncome: summaryStats.totalReceived,
+                  totalExpense: 0,
+                  balance: summaryStats.totalReceived,
+                } as import('@/lib/pdf-export').FinancialReportData}
+                label="Exportar PDF"
+                variant="button"
+              />
+            )}
+            <button
+              onClick={() => setShowForm(true)}
+              className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              Nova Fatura
+            </button>
+          </>
+        }
+      />
 
       {/* ── Summary Cards ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
+      <StatCardGrid
+        cards={[
           {
             label: 'Total Faturado',
             value: formatCurrency(summaryStats.totalInvoiced),
-            sub: `${invoices.length} fatura${invoices.length !== 1 ? 's' : ''}`,
-            icon: FileText,
-            color: 'text-amber-400',
-            bg: 'bg-amber-500/10',
+            icon: <FileText className="h-5 w-5" />,
+            color: '#F59E0B',
           },
           {
             label: 'Total Recebido',
             value: formatCurrency(summaryStats.totalReceived),
-            sub: `${invoices.filter((i) => i.status === 'paid').length} pagas`,
-            icon: CheckCircle2,
-            color: 'text-green-400',
-            bg: 'bg-green-500/10',
+            icon: <CheckCircle2 className="h-5 w-5" />,
+            color: '#4ADE80',
           },
           {
             label: 'Total Vencido',
             value: formatCurrency(summaryStats.totalOverdue),
-            sub: `${invoices.filter((i) => i.status === 'overdue').length} vencida${invoices.filter((i) => i.status === 'overdue').length !== 1 ? 's' : ''}`,
-            icon: AlertTriangle,
-            color: 'text-red-400',
-            bg: 'bg-red-500/10',
+            icon: <AlertTriangle className="h-5 w-5" />,
+            color: '#F87171',
           },
           {
             label: 'Prazo Médio de Pagto.',
             value: summaryStats.avgDays > 0 ? `${summaryStats.avgDays} dias` : '—',
-            sub: 'para faturas pagas',
-            icon: Clock,
-            color: 'text-blue-400',
-            bg: 'bg-blue-500/10',
+            icon: <Clock className="h-5 w-5" />,
+            color: '#60A5FA',
           },
-        ].map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div key={stat.label} className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${stat.bg}`}>
-                  <Icon className={`h-4 w-4 ${stat.color}`} />
-                </div>
-                <p className="text-xs font-medium text-[#6b7a8d] uppercase tracking-wider">
-                  {stat.label}
-                </p>
-              </div>
-              <p className="text-2xl font-bold text-white">{stat.value}</p>
-              <p className="text-xs text-[#4a5568] mt-1">{stat.sub}</p>
-            </div>
-          );
-        })}
-      </div>
+        ]}
+      />
 
       {/* ── New Invoice Form ───────────────────────────────────────────────── */}
       {showForm && (
@@ -544,14 +520,17 @@ export default function BillingPage() {
 
       {/* ── Invoice List ───────────────────────────────────────────────────── */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-[#1a2332] bg-[#0d1320] py-16">
-          <CreditCard className="h-12 w-12 text-[#2a3342] mx-auto mb-4" />
-          <p className="text-[#6b7a8d] text-sm">Nenhuma fatura encontrada</p>
-          <p className="text-xs text-[#4a5568] mt-1">
-            {invoices.length === 0
-              ? 'Crie sua primeira fatura para começar'
-              : 'Nenhuma fatura corresponde ao filtro selecionado'}
-          </p>
+        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320]">
+          <EmptyState
+            icon={<CreditCard className="h-8 w-8" />}
+            title="Nenhuma fatura encontrada"
+            description={
+              invoices.length === 0
+                ? 'Crie sua primeira fatura para começar'
+                : 'Nenhuma fatura corresponde ao filtro selecionado'
+            }
+            action={invoices.length === 0 ? { label: 'Nova Fatura', onClick: () => setShowForm(true) } : undefined}
+          />
         </div>
       ) : (
         <div className="space-y-3">

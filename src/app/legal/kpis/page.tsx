@@ -20,6 +20,7 @@ import { useLegalStore } from '@/stores/legal-store';
 import { useLegalFinancialStore } from '@/stores/legal-financial-store';
 import { KPICard } from '@/components/legal/KPICard';
 import { MetricCard } from '@/components/legal/ReportCharts';
+import { PageHeader, StatCardGrid } from '@/components/legal/shared';
 import type { KPI } from '@/types/legal';
 
 type KPICategory = KPI['category'];
@@ -168,35 +169,33 @@ export default function KPIsPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <BarChart3 className="h-7 w-7 text-amber-400" />
-            KPIs do Escritório
-          </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">
-            Indicadores-chave de desempenho
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {kpis.length === 0 && (
+      <PageHeader
+        title="KPIs do Escritório"
+        subtitle="Indicadores-chave de desempenho"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'KPIs', href: '/legal/kpis' },
+        ]}
+        actions={
+          <>
+            {kpis.length === 0 && (
+              <button
+                onClick={seedDemoKPIs}
+                className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-400 hover:bg-amber-500/20 transition-colors border border-amber-500/20"
+              >
+                Carregar Demo
+              </button>
+            )}
             <button
-              onClick={seedDemoKPIs}
+              onClick={() => { setShowForm(true); setFormData((f) => ({ ...f, category: activeTab })); }}
               className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-400 hover:bg-amber-500/20 transition-colors border border-amber-500/20"
             >
-              Carregar Demo
+              <Plus className="h-4 w-4" />
+              Novo KPI
             </button>
-          )}
-          <button
-            onClick={() => { setShowForm(true); setFormData((f) => ({ ...f, category: activeTab })); }}
-            className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-400 hover:bg-amber-500/20 transition-colors border border-amber-500/20"
-          >
-            <Plus className="h-4 w-4" />
-            Novo KPI
-          </button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Health Score Banner */}
       <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-5">
@@ -317,20 +316,32 @@ export default function KPIsPage() {
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-4 text-center">
-          <p className="text-xs text-[#6b7a8d] uppercase tracking-wider">KPIs Manuais</p>
-          <p className="text-2xl font-bold text-white mt-1">{kpis.length}</p>
-        </div>
-        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-4 text-center">
-          <p className="text-xs text-[#6b7a8d] uppercase tracking-wider">Na Meta (≥80%)</p>
-          <p className="text-2xl font-bold text-green-400 mt-1">{totalOnTarget}</p>
-        </div>
-        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-4 text-center">
-          <p className="text-xs text-[#6b7a8d] uppercase tracking-wider">Crítico (&lt;60%)</p>
-          <p className="text-2xl font-bold text-red-400 mt-1">{totalBelowTarget}</p>
-        </div>
-      </div>
+      <StatCardGrid
+        cards={[
+          {
+            label: 'KPIs Manuais',
+            value: kpis.length,
+            icon: <BarChart3 className="h-5 w-5" />,
+            color: '#D4AF37',
+          },
+          {
+            label: 'Na Meta (≥80%)',
+            value: totalOnTarget,
+            icon: <CheckCircle className="h-5 w-5" />,
+            trend: totalOnTarget > 0 ? 'up' : 'flat',
+            color: '#22c55e',
+          },
+          {
+            label: 'Crítico (<60%)',
+            value: totalBelowTarget,
+            icon: <TrendingUp className="h-5 w-5" />,
+            trend: totalBelowTarget > 0 ? 'down' : 'flat',
+            trendPositive: false,
+            color: '#ef4444',
+          },
+        ]}
+        className="sm:grid-cols-3 lg:grid-cols-3"
+      />
 
       {/* Tabs */}
       <div>

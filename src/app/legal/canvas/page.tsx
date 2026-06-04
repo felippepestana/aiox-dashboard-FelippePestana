@@ -12,6 +12,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useLegalStrategyStore } from '@/stores/legal-strategy-store';
+import { PageHeader } from '@/components/legal/shared';
 import type { LegalCanvas } from '@/types/legal';
 
 // ─── Canvas Block Definitions ───────────────────────────────────────────────
@@ -443,49 +444,48 @@ export default function CanvasPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-4 space-y-4">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <LayoutDashboard className="h-7 w-7 text-amber-400" />
-            Legal Business Canvas
-          </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">
-            Modelo Canvas adaptado para escritórios de advocacia — Metodologia Lara Selem
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {totalNotes === 0 && (
+      <PageHeader
+        title="Legal Business Canvas"
+        subtitle="Modelo Canvas adaptado para escritórios de advocacia — Metodologia Lara Selem"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Estratégia', href: '/legal/strategy' },
+          { label: 'Legal Canvas', href: '/legal/canvas' },
+        ]}
+        actions={
+          <>
+            {totalNotes === 0 && (
+              <button
+                onClick={loadDemo}
+                className="flex items-center gap-1.5 rounded-lg bg-amber-500/10 px-3 py-2 text-sm font-medium text-amber-400 hover:bg-amber-500/20 transition-colors border border-amber-500/20"
+              >
+                <Wand2 className="h-4 w-4" />
+                Demo
+              </button>
+            )}
+            {totalNotes > 0 && (
+              <button
+                onClick={clearCanvas}
+                className="flex items-center gap-1.5 rounded-lg bg-red-500/10 px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-500/20 transition-colors border border-red-500/20"
+              >
+                <Trash2 className="h-4 w-4" />
+                Limpar
+              </button>
+            )}
             <button
-              onClick={loadDemo}
-              className="flex items-center gap-1.5 rounded-lg bg-amber-500/10 px-3 py-2 text-sm font-medium text-amber-400 hover:bg-amber-500/20 transition-colors border border-amber-500/20"
+              onClick={exportPDF}
+              className="flex items-center gap-1.5 rounded-lg bg-[#1a2332] px-3 py-2 text-sm font-medium text-white hover:bg-[#1e2a3d] transition-colors border border-[#2a3444]"
             >
-              <Wand2 className="h-4 w-4" />
-              Demo
+              <FileDown className="h-4 w-4" />
+              Exportar
             </button>
-          )}
-          {totalNotes > 0 && (
-            <button
-              onClick={clearCanvas}
-              className="flex items-center gap-1.5 rounded-lg bg-red-500/10 px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-500/20 transition-colors border border-red-500/20"
-            >
-              <Trash2 className="h-4 w-4" />
-              Limpar
-            </button>
-          )}
-          <button
-            onClick={exportPDF}
-            className="flex items-center gap-1.5 rounded-lg bg-[#1a2332] px-3 py-2 text-sm font-medium text-white hover:bg-[#1e2a3d] transition-colors border border-[#2a3444]"
-          >
-            <FileDown className="h-4 w-4" />
-            Exportar
-          </button>
-          <div className="flex items-center gap-1.5 rounded-lg bg-green-500/10 px-3 py-2 text-xs text-green-400 border border-green-500/20">
-            <Save className="h-3.5 w-3.5" />
-            {savedAt ? `Salvo ${new Date(savedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : 'Auto-save ativo'}
-          </div>
-        </div>
-      </div>
+            <div className="flex items-center gap-1.5 rounded-lg bg-green-500/10 px-3 py-2 text-xs text-green-400 border border-green-500/20">
+              <Save className="h-3.5 w-3.5" />
+              {savedAt ? `Salvo ${new Date(savedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : 'Auto-save ativo'}
+            </div>
+          </>
+        }
+      />
 
       {/* Firm name input */}
       <div className="flex items-center gap-3">

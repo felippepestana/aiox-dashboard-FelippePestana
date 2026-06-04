@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { ShieldCheck, Activity, Users, Download, AlertTriangle } from 'lucide-react';
 import { AuditLogViewer } from '@/components/legal/AuditLogViewer';
+import { PageHeader } from '@/components/legal/shared';
 
 interface SummaryStats {
   totalToday: number;
@@ -83,17 +84,14 @@ export default function AuditLogPage() {
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
       {/* Page header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <ShieldCheck className="h-7 w-7 text-amber-400" />
-            Log de Auditoria
-          </h1>
-          <p className="text-sm text-[#6b7a8d] mt-1">
-            Rastreamento completo de ações — conformidade LGPD Art. 37
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Segurança & LGPD"
+        subtitle="Rastreamento completo de ações — conformidade LGPD Art. 37"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Segurança & LGPD', href: '/legal/audit' },
+        ]}
+      />
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

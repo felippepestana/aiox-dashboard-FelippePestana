@@ -20,6 +20,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import type { PrecedentResult, PrecedentFilters, Favorability } from '@/lib/legal-intelligence';
+import { PageHeader, EmptyState } from '@/components/legal/shared';
 
 // ─── Static mock data (always available) ────────────────────────────────────
 
@@ -387,15 +388,14 @@ export default function PrecedentsPage() {
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-          <BookOpen className="h-7 w-7 text-amber-400" />
-          Pesquisa de Jurisprudencia
-        </h1>
-        <p className="text-sm text-[#6b7a8d] mt-1">
-          Busca inteligente em precedentes dos tribunais brasileiros
-        </p>
-      </div>
+      <PageHeader
+        title="Precedentes"
+        subtitle="Busca inteligente em precedentes dos tribunais brasileiros"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Precedentes', href: '/legal/precedents' },
+        ]}
+      />
 
       {/* AI Search */}
       <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-6">
@@ -546,14 +546,16 @@ export default function PrecedentsPage() {
           ))}
 
           {displayResults.length === 0 && (
-            <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-12 text-center">
-              <Search className="h-8 w-8 text-[#6b7a8d] mx-auto mb-3" />
-              <p className="text-sm font-medium text-white mb-1">Nenhum precedente encontrado</p>
-              <p className="text-xs text-[#6b7a8d]">
-                {isAiMode
-                  ? 'A busca por IA nao retornou resultados. Tente reformular a consulta.'
-                  : 'Tente ajustar os filtros ou use a busca por IA para resultados mais abrangentes.'}
-              </p>
+            <div className="rounded-xl border border-[#1a2332] bg-[#0d1320]">
+              <EmptyState
+                icon={<Search className="h-8 w-8" />}
+                title="Nenhum precedente encontrado"
+                description={
+                  isAiMode
+                    ? 'A busca por IA não retornou resultados. Tente reformular a consulta.'
+                    : 'Tente ajustar os filtros ou use a busca por IA para resultados mais abrangentes.'
+                }
+              />
             </div>
           )}
         </div>

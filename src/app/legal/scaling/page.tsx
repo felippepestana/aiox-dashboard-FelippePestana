@@ -13,6 +13,7 @@ import {
   CalendarDays,
   Goal,
 } from 'lucide-react';
+import { PageHeader } from '@/components/legal/shared';
 import { useLegalStrategyStore } from '@/stores/legal-strategy-store';
 
 type Quadrant = 'people' | 'strategy' | 'execution' | 'cash';
@@ -123,15 +124,14 @@ export default function ScalingUpPage() {
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-          <Rocket className="h-7 w-7 text-amber-400" />
-          Scaling Up - Plano Estrategico
-        </h1>
-        <p className="text-sm text-[#6b7a8d] mt-1">
-          One-Page Strategic Plan para o escritorio
-        </p>
-      </div>
+      <PageHeader
+        title="Scaling Up - Plano Estrategico"
+        subtitle="One-Page Strategic Plan para o escritorio"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/legal' },
+          { label: 'Escalabilidade', href: '/legal/scaling' },
+        ]}
+      />
 
       {/* BHAG */}
       <div className="rounded-xl border border-amber-500/20 bg-[#0d1320] p-6">
