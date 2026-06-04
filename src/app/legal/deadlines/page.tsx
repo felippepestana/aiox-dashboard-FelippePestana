@@ -5,11 +5,8 @@ import {
   Clock,
   CalendarDays,
   List,
-  AlertTriangle,
   CheckCircle2,
   XCircle,
-  ChevronLeft,
-  ChevronRight,
   Plus,
   X,
   Save,
@@ -17,6 +14,7 @@ import {
 import { useLegalStore } from '@/stores/legal-store';
 import type { DeadlineType, DeadlineStatus } from '@/types/legal';
 import { ExportPDFButton } from '@/components/legal/ExportPDFButton';
+import { DeadlineCalendar } from '@/components/legal/DeadlineCalendar';
 
 const deadlineTypeBadge: Record<DeadlineType, { className: string; label: string }> = {
   fatal: { className: 'bg-red-500/10 text-red-400', label: 'Fatal' },
@@ -49,6 +47,7 @@ export default function DeadlinesPage() {
     processes.forEach((p) => { map[p.id] = p.cnj; });
     return map;
   }, [processes]);
+
   const [view, setView] = useState<'list' | 'calendar'>('list');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
@@ -58,10 +57,6 @@ export default function DeadlinesPage() {
     dueDate: '',
     assignedTo: '',
     notes: '',
-  });
-  const [calendarMonth, setCalendarMonth] = useState(() => {
-    const now = new Date();
-    return { year: now.getFullYear(), month: now.getMonth() };
   });
 
   const sortedDeadlines = useMemo(() => {
@@ -104,51 +99,6 @@ export default function DeadlinesPage() {
     });
   }
 
-  function formatDateShort(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: 'short',
-    });
-  }
-
-  // Calendar helpers
-  function getDaysInMonth(year: number, month: number): number {
-    return new Date(year, month + 1, 0).getDate();
-  }
-
-  function getFirstDayOfMonth(year: number, month: number): number {
-    return new Date(year, month, 1).getDay();
-  }
-
-  const monthNames = [
-    'Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho',
-    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
-  ];
-
-  function getDeadlinesForDay(year: number, month: number, day: number) {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return deadlines.filter((d) => d.dueDate.startsWith(dateStr));
-  }
-
-  const daysInMonth = getDaysInMonth(calendarMonth.year, calendarMonth.month);
-  const firstDay = getFirstDayOfMonth(calendarMonth.year, calendarMonth.month);
-
-  function prevMonth() {
-    setCalendarMonth((prev) => {
-      const m = prev.month - 1;
-      if (m < 0) return { year: prev.year - 1, month: 11 };
-      return { ...prev, month: m };
-    });
-  }
-
-  function nextMonth() {
-    setCalendarMonth((prev) => {
-      const m = prev.month + 1;
-      if (m > 11) return { year: prev.year + 1, month: 0 };
-      return { ...prev, month: m };
-    });
-  }
-
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 space-y-6">
       {/* Header */}
@@ -163,7 +113,7 @@ export default function DeadlinesPage() {
           </p>
         </div>
 
-        {/* View Toggle */}
+        {/* Actions + View Toggle */}
         <div className="flex items-center gap-2">
           <ExportPDFButton
             type="deadlines"
@@ -177,30 +127,30 @@ export default function DeadlinesPage() {
             <Plus className="h-4 w-4" /> Novo Prazo
           </button>
 
-        <div className="flex items-center gap-1 rounded-lg border border-[#1a2332] bg-[#0d1320] p-1">
-          <button
-            onClick={() => setView('list')}
-            className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ${
-              view === 'list'
-                ? 'bg-amber-500/10 text-amber-400'
-                : 'text-[#6b7a8d] hover:text-white'
-            }`}
-          >
-            <List className="h-4 w-4" />
-            Lista
-          </button>
-          <button
-            onClick={() => setView('calendar')}
-            className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ${
-              view === 'calendar'
-                ? 'bg-amber-500/10 text-amber-400'
-                : 'text-[#6b7a8d] hover:text-white'
-            }`}
-          >
-            <CalendarDays className="h-4 w-4" />
-            Calendario
-          </button>
-        </div>
+          <div className="flex items-center gap-1 rounded-lg border border-[#1a2332] bg-[#0d1320] p-1">
+            <button
+              onClick={() => setView('list')}
+              className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ${
+                view === 'list'
+                  ? 'bg-amber-500/10 text-amber-400'
+                  : 'text-[#6b7a8d] hover:text-white'
+              }`}
+            >
+              <List className="h-4 w-4" />
+              Lista
+            </button>
+            <button
+              onClick={() => setView('calendar')}
+              className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ${
+                view === 'calendar'
+                  ? 'bg-amber-500/10 text-amber-400'
+                  : 'text-[#6b7a8d] hover:text-white'
+              }`}
+            >
+              <CalendarDays className="h-4 w-4" />
+              Calendario
+            </button>
+          </div>
         </div>
       </div>
 
@@ -216,26 +166,40 @@ export default function DeadlinesPage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div>
               <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Título *</label>
-              <input type="text" value={form.title} onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))}
+              <input
+                type="text"
+                value={form.title}
+                onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))}
                 placeholder="Contestação - Processo CNJ..."
-                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white placeholder-[#4a5568] focus:border-amber-500/50 focus:outline-none" />
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white placeholder-[#4a5568] focus:border-amber-500/50 focus:outline-none"
+              />
             </div>
             <div>
               <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Tipo *</label>
-              <select value={form.type} onChange={(e) => setForm(f => ({ ...f, type: e.target.value as DeadlineType }))}
-                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50">
+              <select
+                value={form.type}
+                onChange={(e) => setForm(f => ({ ...f, type: e.target.value as DeadlineType }))}
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50"
+              >
                 {DEADLINE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Data de Vencimento *</label>
-              <input type="date" value={form.dueDate} onChange={(e) => setForm(f => ({ ...f, dueDate: e.target.value }))}
-                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50" />
+              <input
+                type="date"
+                value={form.dueDate}
+                onChange={(e) => setForm(f => ({ ...f, dueDate: e.target.value }))}
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50"
+              />
             </div>
             <div>
               <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Processo</label>
-              <select value={form.processId} onChange={(e) => setForm(f => ({ ...f, processId: e.target.value }))}
-                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50">
+              <select
+                value={form.processId}
+                onChange={(e) => setForm(f => ({ ...f, processId: e.target.value }))}
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50"
+              >
                 <option value="">Selecionar processo...</option>
                 {processes.filter(p => p.status === 'active').map((p) => (
                   <option key={p.id} value={p.id}>{p.cnj} — {p.title}</option>
@@ -244,19 +208,32 @@ export default function DeadlinesPage() {
             </div>
             <div>
               <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Responsável</label>
-              <input type="text" value={form.assignedTo} onChange={(e) => setForm(f => ({ ...f, assignedTo: e.target.value }))}
+              <input
+                type="text"
+                value={form.assignedTo}
+                onChange={(e) => setForm(f => ({ ...f, assignedTo: e.target.value }))}
                 placeholder="Dr. Nome"
-                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white placeholder-[#4a5568] focus:border-amber-500/50 focus:outline-none" />
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white placeholder-[#4a5568] focus:border-amber-500/50 focus:outline-none"
+              />
             </div>
             <div>
               <label className="block text-xs font-medium text-[#6b7a8d] mb-1">Observações</label>
-              <input type="text" value={form.notes} onChange={(e) => setForm(f => ({ ...f, notes: e.target.value }))}
+              <input
+                type="text"
+                value={form.notes}
+                onChange={(e) => setForm(f => ({ ...f, notes: e.target.value }))}
                 placeholder="Notas..."
-                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white placeholder-[#4a5568] focus:border-amber-500/50 focus:outline-none" />
+                className="w-full rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 text-sm text-white placeholder-[#4a5568] focus:border-amber-500/50 focus:outline-none"
+              />
             </div>
           </div>
           <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-[#1a2332]">
-            <button onClick={() => setShowForm(false)} className="rounded-lg border border-[#1a2332] px-4 py-2 text-sm text-[#6b7a8d] hover:text-white transition-colors">Cancelar</button>
+            <button
+              onClick={() => setShowForm(false)}
+              className="rounded-lg border border-[#1a2332] px-4 py-2 text-sm text-[#6b7a8d] hover:text-white transition-colors"
+            >
+              Cancelar
+            </button>
             <button
               onClick={() => {
                 if (!form.title.trim() || !form.dueDate) return;
@@ -377,101 +354,11 @@ export default function DeadlinesPage() {
 
       {/* Calendar View */}
       {view === 'calendar' && (
-        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6">
-          {/* Calendar Header */}
-          <div className="flex items-center justify-between mb-6">
-            <button
-              onClick={prevMonth}
-              className="rounded-lg border border-[#1a2332] p-2 text-[#6b7a8d] hover:text-white transition-colors"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <h2 className="text-lg font-semibold text-white">
-              {monthNames[calendarMonth.month]} {calendarMonth.year}
-            </h2>
-            <button
-              onClick={nextMonth}
-              className="rounded-lg border border-[#1a2332] p-2 text-[#6b7a8d] hover:text-white transition-colors"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-
-          {/* Day Headers */}
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'].map((day) => (
-              <div
-                key={day}
-                className="text-center text-xs font-medium text-[#6b7a8d] py-2"
-              >
-                {day}
-              </div>
-            ))}
-          </div>
-
-          {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-1">
-            {/* Empty cells for days before month start */}
-            {Array.from({ length: firstDay }).map((_, i) => (
-              <div key={`empty-${i}`} className="h-24 rounded-lg bg-[#0a0f1a]/50" />
-            ))}
-
-            {/* Day cells */}
-            {Array.from({ length: daysInMonth }).map((_, i) => {
-              const day = i + 1;
-              const dayDeadlines = getDeadlinesForDay(
-                calendarMonth.year,
-                calendarMonth.month,
-                day
-              );
-              const today = new Date();
-              const isToday =
-                today.getFullYear() === calendarMonth.year &&
-                today.getMonth() === calendarMonth.month &&
-                today.getDate() === day;
-
-              return (
-                <div
-                  key={day}
-                  className={`h-24 rounded-lg border p-1.5 overflow-hidden ${
-                    isToday
-                      ? 'border-amber-500/30 bg-amber-500/5'
-                      : 'border-[#1a2332] bg-[#0a0f1a]'
-                  }`}
-                >
-                  <span
-                    className={`text-xs font-medium ${
-                      isToday ? 'text-amber-400' : 'text-[#6b7a8d]'
-                    }`}
-                  >
-                    {day}
-                  </span>
-                  <div className="mt-1 space-y-0.5">
-                    {dayDeadlines.slice(0, 2).map((dl) => (
-                      <div
-                        key={dl.id}
-                        className={`rounded px-1 py-0.5 text-[10px] truncate ${
-                          dl.status === 'completed'
-                            ? 'bg-green-500/10 text-green-400'
-                            : dl.type === 'fatal'
-                            ? 'bg-red-500/10 text-red-400'
-                            : 'bg-amber-500/10 text-amber-400'
-                        }`}
-                      >
-                        {dl.title}
-                      </div>
-                    ))}
-                    {dayDeadlines.length > 2 && (
-                      <div className="text-[10px] text-[#6b7a8d] px-1">
-                        +{dayDeadlines.length - 2} mais
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <DeadlineCalendar
+          deadlines={deadlines}
+          processMap={processMap}
+          onComplete={completeDeadline}
+        />
       )}
     </div>
   );
