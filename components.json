@@ -18,5 +18,9 @@
     "lib": "@/lib",
     "hooks": "@/hooks"
   },
-  "registries": {}
+  "registries": {
+    "apex-legal": {
+      "url": "./registry/registry.json"
+    }
+  }
 }

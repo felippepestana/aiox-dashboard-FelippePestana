@@ -1,0 +1,130 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "apex-legal",
+  "description": "APEX Legal Performance — Design System for Brazilian Legal SaaS",
+  "items": [
+    {
+      "name": "apex-theme",
+      "type": "registry:theme",
+      "description": "APEX deep navy + silver chrome + gold accent dark theme",
+      "cssVars": {
+        "dark": {
+          "background": "#060d1a",
+          "foreground": "#FAFAFA",
+          "card": "#0d1f3c",
+          "card-foreground": "#FAFAFA",
+          "popover": "#0a1628",
+          "popover-foreground": "#FAFAFA",
+          "primary": "#C0C0C0",
+          "primary-foreground": "#060d1a",
+          "secondary": "#0a1628",
+          "secondary-foreground": "#C0C0C0",
+          "muted": "#0a1628",
+          "muted-foreground": "#718096",
+          "accent": "rgba(192, 192, 192, 0.15)",
+          "accent-foreground": "#C0C0C0",
+          "destructive": "#F87171",
+          "border": "rgba(192, 192, 192, 0.10)",
+          "input": "rgba(192, 192, 192, 0.12)",
+          "ring": "rgba(212, 175, 55, 0.50)",
+          "radius": "0.25rem"
+        }
+      }
+    },
+    {
+      "name": "page-header",
+      "type": "registry:component",
+      "description": "Page header with breadcrumbs, title, subtitle, and action buttons",
+      "dependencies": ["lucide-react"],
+      "files": [
+        {
+          "path": "src/components/legal/shared/PageHeader.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "stat-card-grid",
+      "type": "registry:component",
+      "description": "Responsive grid of metric stat cards with trend indicators",
+      "dependencies": ["lucide-react"],
+      "files": [
+        {
+          "path": "src/components/legal/shared/StatCardGrid.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "data-table",
+      "type": "registry:component",
+      "description": "Searchable, sortable, paginated data table with custom cell renderers",
+      "dependencies": ["lucide-react"],
+      "registryDependencies": ["button"],
+      "files": [
+        {
+          "path": "src/components/legal/shared/DataTable.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "filter-bar",
+      "type": "registry:component",
+      "description": "Horizontal filter bar with select, dateRange, and search filter types",
+      "dependencies": ["lucide-react"],
+      "files": [
+        {
+          "path": "src/components/legal/shared/FilterBar.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "empty-state",
+      "type": "registry:component",
+      "description": "Centered empty state with icon, title, description, and CTA",
+      "files": [
+        {
+          "path": "src/components/legal/shared/EmptyState.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "loading-state",
+      "type": "registry:component",
+      "description": "Skeleton loading states for tables, cards, and full pages",
+      "files": [
+        {
+          "path": "src/components/legal/shared/LoadingState.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "breadcrumbs",
+      "type": "registry:component",
+      "description": "Auto-detecting breadcrumb navigation with PT-BR route labels",
+      "dependencies": ["lucide-react"],
+      "files": [
+        {
+          "path": "src/components/legal/shared/Breadcrumbs.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "command-palette",
+      "type": "registry:component",
+      "description": "Cmd+K command palette for global search across pages, processes, clients",
+      "dependencies": ["lucide-react"],
+      "files": [
+        {
+          "path": "src/components/legal/CommandPalette.tsx",
+          "type": "registry:component"
+        }
+      ]
+    }
+  ]
+}
