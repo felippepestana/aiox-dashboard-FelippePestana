@@ -1,41 +1,70 @@
-import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { NextRequest, NextResponse } from 'next/server';
+import {
+  getAuthUser,
+  unauthorized,
+  notFound,
+  serverError,
+  badRequest,
+} from '@/lib/api-utils';
+import { getClientById, updateClient, deleteClient } from '@/lib/db/clients';
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+type RouteContext = { params: Promise<{ id: string }> };
+
+export async function GET(request: NextRequest, { params }: RouteContext) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
   const { id } = await params;
-  const { data, error } = await supabase.from('clients').select('*').eq('id', id).single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 404 });
-  return NextResponse.json({ client: data });
+
+  try {
+    const client = await getClientById(user.id, id);
+    if (!client) return notFound('Client not found');
+    return NextResponse.json({ client });
+  } catch (error) {
+    console.error('Failed to fetch client:', error);
+    return notFound('Client not found');
+  }
 }
 
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(request: NextRequest, { params }: RouteContext) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
   const { id } = await params;
-  const body = await request.json();
 
-  const { data, error } = await supabase
-    .from('clients')
-    .update({
-      ...(body.type !== undefined && { type: body.type }),
-      ...(body.name !== undefined && { name: body.name }),
-      ...(body.cpfCnpj !== undefined && { cpf_cnpj: body.cpfCnpj }),
-      ...(body.email !== undefined && { email: body.email }),
-      ...(body.phone !== undefined && { phone: body.phone }),
-      ...(body.whatsapp !== undefined && { whatsapp: body.whatsapp }),
-      ...(body.address !== undefined && { address: body.address }),
-      ...(body.notes !== undefined && { notes: body.notes }),
-      ...(body.leadSource !== undefined && { lead_source: body.leadSource }),
-    })
-    .eq('id', id)
-    .select()
-    .single();
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return badRequest();
+  }
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ client: data });
+  try {
+    const client = await updateClient(user.id, id, body);
+    if (!client) return notFound('Client not found');
+    return NextResponse.json({ client });
+  } catch (error) {
+    console.error('Failed to update client:', error);
+    return serverError();
+  }
 }
 
-export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+// Keep PUT as an alias for PATCH for backward compatibility
+export async function PUT(request: NextRequest, context: RouteContext) {
+  return PATCH(request, context);
+}
+
+export async function DELETE(request: NextRequest, { params }: RouteContext) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
   const { id } = await params;
-  const { error } = await supabase.from('clients').delete().eq('id', id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true });
+
+  try {
+    await deleteClient(user.id, id);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Failed to delete client:', error);
+    return serverError();
+  }
 }

@@ -1,47 +1,46 @@
-import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { NextRequest, NextResponse } from 'next/server';
+import { getAuthUser, unauthorized, serverError, badRequest } from '@/lib/api-utils';
+import { getPetitions, createPetition } from '@/lib/db/petitions';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
   const { searchParams } = new URL(request.url);
-  const status = searchParams.get('status');
-  const processId = searchParams.get('processId');
+  const filters = {
+    status: searchParams.get('status') ?? undefined,
+    processId: searchParams.get('processId') ?? undefined,
+  };
 
-  let query = supabase.from('petitions').select('*, processes(cnj, title)').order('created_at', { ascending: false });
-
-  if (status) query = query.eq('status', status);
-  if (processId) query = query.eq('process_id', processId);
-
-  const { data, error } = await query;
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  try {
+    const petitions = await getPetitions(user.id, filters);
+    return NextResponse.json({ petitions });
+  } catch (error) {
+    console.error('Failed to fetch petitions:', error);
+    return serverError();
   }
-
-  return NextResponse.json({ petitions: data || [] });
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
+  let body: Record<string, unknown>;
   try {
-    const body = await request.json();
-
-    const { data, error } = await supabase.from('petitions').insert({
-      process_id: body.processId,
-      type: body.type,
-      title: body.title,
-      status: body.status || 'draft',
-      content: body.content || '',
-      template_id: body.templateId,
-      court_system: body.courtSystem,
-      ai_model: body.aiModel,
-      ai_cost: body.aiCost,
-    }).select().single();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ petition: data }, { status: 201 });
+    body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    return badRequest();
+  }
+
+  if (!body.title) {
+    return badRequest('title is required');
+  }
+
+  try {
+    const petition = await createPetition(user.id, body as unknown as Parameters<typeof createPetition>[1]);
+    return NextResponse.json({ petition }, { status: 201 });
+  } catch (error) {
+    console.error('Failed to create petition:', error);
+    return serverError();
   }
 }

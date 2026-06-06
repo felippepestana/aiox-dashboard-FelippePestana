@@ -1,47 +1,46 @@
-import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { NextRequest, NextResponse } from 'next/server';
+import { getAuthUser, unauthorized, serverError, badRequest } from '@/lib/api-utils';
+import { getClients, createClient } from '@/lib/db/clients';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
   const { searchParams } = new URL(request.url);
-  const type = searchParams.get('type');
-  const search = searchParams.get('search');
+  const filters = {
+    type: searchParams.get('type') ?? undefined,
+    search: searchParams.get('search') ?? undefined,
+  };
 
-  let query = supabase.from('clients').select('*').order('created_at', { ascending: false });
-
-  if (type) query = query.eq('type', type);
-  if (search) query = query.or(`name.ilike.%${search}%,cpf_cnpj.ilike.%${search}%`);
-
-  const { data, error } = await query;
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  try {
+    const clients = await getClients(user.id, filters);
+    return NextResponse.json({ clients });
+  } catch (error) {
+    console.error('Failed to fetch clients:', error);
+    return serverError();
   }
-
-  return NextResponse.json({ clients: data || [] });
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
+  let body: Record<string, unknown>;
   try {
-    const body = await request.json();
-
-    const { data, error } = await supabase.from('clients').insert({
-      type: body.type,
-      name: body.name,
-      cpf_cnpj: body.cpfCnpj,
-      email: body.email,
-      phone: body.phone,
-      whatsapp: body.whatsapp,
-      address: body.address || {},
-      notes: body.notes || '',
-      lead_source: body.leadSource,
-    }).select().single();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ client: data }, { status: 201 });
+    body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    return badRequest();
+  }
+
+  if (!body.name) {
+    return badRequest('name is required');
+  }
+
+  try {
+    const client = await createClient(user.id, body as unknown as Parameters<typeof createClient>[1]);
+    return NextResponse.json({ client }, { status: 201 });
+  } catch (error) {
+    console.error('Failed to create client:', error);
+    return serverError();
   }
 }

@@ -1,31 +1,46 @@
-import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { NextRequest, NextResponse } from 'next/server';
+import { getAuthUser, unauthorized, serverError, badRequest } from '@/lib/api-utils';
+import { getFinancialSummary, createTransaction } from '@/lib/db/financial';
 
-export async function GET() {
-  const [honorarios, transactions] = await Promise.all([
-    supabase.from('honorarios').select('*'),
-    supabase.from('transactions').select('*').order('date', { ascending: false }).limit(50),
-  ]);
+export async function GET(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
 
-  const allTxns = transactions.data || [];
-  const income = allTxns.filter(t => t.type === 'income').reduce((s, t) => s + (t.amount || 0), 0);
-  const expenses = allTxns.filter(t => t.type === 'expense').reduce((s, t) => s + (t.amount || 0), 0);
-  const outstanding = (honorarios.data || [])
-    .filter(h => h.status === 'active')
-    .reduce((s, h) => {
-      const remaining = (h.installments || 1) - (h.paid_installments || 0);
-      const perInstallment = (h.amount || 0) / (h.installments || 1);
-      return s + remaining * perInstallment;
-    }, 0);
+  try {
+    const data = await getFinancialSummary(user.id);
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error('Failed to fetch financial data:', error);
+    return serverError();
+  }
+}
 
-  return NextResponse.json({
-    summary: {
-      totalRevenue: income,
-      totalExpenses: expenses,
-      profit: income - expenses,
-      outstandingHonorarios: outstanding,
-    },
-    recentTransactions: allTxns.slice(0, 10),
-    honorarios: honorarios.data || [],
-  });
+export async function POST(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return badRequest();
+  }
+
+  if (!body.type || !['income', 'expense'].includes(body.type as string)) {
+    return badRequest('type must be "income" or "expense"');
+  }
+  if (body.amount === undefined || body.amount === null) {
+    return badRequest('amount is required');
+  }
+
+  try {
+    const transaction = await createTransaction(
+      user.id,
+      body as unknown as Parameters<typeof createTransaction>[1]
+    );
+    return NextResponse.json({ transaction }, { status: 201 });
+  } catch (error) {
+    console.error('Failed to create transaction:', error);
+    return serverError();
+  }
 }

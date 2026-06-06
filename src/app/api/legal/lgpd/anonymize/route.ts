@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { anonymizeClient } from '@/lib/lgpd-compliance';
 import { logAuditEvent } from '@/lib/audit-log';
-import { getSession } from '@/lib/auth';
+import { getServerUser } from '@/lib/auth';
 
 // POST /api/legal/lgpd/anonymize
 // Body: { clientId }
@@ -13,8 +13,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'clientId is required' }, { status: 400 });
     }
 
-    const session = await getSession();
-    const userId = session?.id ?? 'anonymous';
+    const user = await getServerUser();
+    const userId = user?.id ?? 'anonymous';
 
     const result = await anonymizeClient(body.clientId);
 

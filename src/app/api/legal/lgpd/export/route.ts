@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { generateDataReport } from '@/lib/lgpd-compliance';
 import { logAuditEvent } from '@/lib/audit-log';
-import { getSession } from '@/lib/auth';
+import { getServerUser } from '@/lib/auth';
 
 // GET /api/legal/lgpd/export?clientId=<id>
 export async function GET(request: Request) {
@@ -12,8 +12,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'clientId is required' }, { status: 400 });
   }
 
-  const session = await getSession();
-  const userId = session?.id ?? 'anonymous';
+  const user = await getServerUser();
+  const userId = user?.id ?? 'anonymous';
 
   const report = await generateDataReport(clientId);
 

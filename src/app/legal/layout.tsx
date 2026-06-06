@@ -8,6 +8,7 @@ import { useLegalFinancialStore } from '@/stores/legal-financial-store';
 import { useLegalMarketingStore } from '@/stores/legal-marketing-store';
 import { useLegalStrategyStore } from '@/stores/legal-strategy-store';
 import { useDeadlineAlerts } from '@/hooks/useDeadlineAlerts';
+import { useHydration } from '@/hooks/useHydration';
 import { DeadlineAlerts } from '@/components/legal/DeadlineAlerts';
 import { DeadlineToast } from '@/components/legal/DeadlineToast';
 import { MobileBottomNav } from '@/components/legal/MobileBottomNav';
@@ -99,7 +100,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
   const [footerOpen, setFooterOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
-  const hydrated = useRef(false);
+  const otherHydrated = useRef(false);
 
   const { shouldShow, markCompleted } = useOnboarding();
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -107,7 +108,9 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
   const role = useUserRole();
   const navSections = getNavForRole(role);
 
-  const hydrateFromApi = useLegalStore((s) => s.hydrateFromApi);
+  // Legal store hydration — returns syncing state for the indicator
+  const { syncing: legalSyncing } = useHydration();
+
   const hydrateFinancialFromApi = useLegalFinancialStore((s) => s.hydrateFromApi);
   const hydrateMarketingFromApi = useLegalMarketingStore((s) => s.hydrateFromApi);
   const hydrateStrategyFromApi = useLegalStrategyStore((s) => s.hydrateFromApi);
@@ -121,14 +124,13 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     setMounted(true);
     setShowOnboarding(shouldShow);
-    if (!hydrated.current) {
-      hydrated.current = true;
-      hydrateFromApi();
+    if (!otherHydrated.current) {
+      otherHydrated.current = true;
       hydrateFinancialFromApi();
       hydrateMarketingFromApi();
       hydrateStrategyFromApi();
     }
-  }, [hydrateFromApi, hydrateFinancialFromApi, hydrateMarketingFromApi, hydrateStrategyFromApi, shouldShow]);
+  }, [hydrateFinancialFromApi, hydrateMarketingFromApi, hydrateStrategyFromApi, shouldShow]);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -276,6 +278,13 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
               <div className="flex items-center gap-2">
                 <Settings className="h-3.5 w-3.5" />
                 <span className="text-[11px]">Configurações</span>
+                {legalSyncing && (
+                  <span
+                    className="h-1.5 w-1.5 rounded-full bg-[#C0C0C0] animate-pulse"
+                    title="Sincronizando dados..."
+                    aria-label="Sincronizando"
+                  />
+                )}
               </div>
               {footerOpen ? (
                 <ChevronUp className="h-3 w-3" />

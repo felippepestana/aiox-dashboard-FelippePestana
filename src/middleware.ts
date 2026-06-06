@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 // ─── Route config ─────────────────────────────────────────────────────────────
 
@@ -76,9 +77,42 @@ function pruneRateLimitStore(): void {
   }
 }
 
+// ─── Session validation ───────────────────────────────────────────────────────
+
+/**
+ * Validates a session token — tries Supabase JWT first, then falls back to the
+ * legacy Base64-encoded session format so that existing sessions keep working
+ * until they naturally expire.
+ */
+async function isValidSession(token: string): Promise<boolean> {
+  // 1. Try Supabase JWT validation
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const serviceKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+    const supabase = createClient(supabaseUrl, serviceKey);
+    const { data: { user } } = await supabase.auth.getUser(token);
+    if (user) return true;
+  } catch {
+    /* network error or invalid JWT — fall through */
+  }
+
+  // 2. Fallback: legacy Base64 session (migration period)
+  try {
+    const payload = JSON.parse(Buffer.from(token, 'base64url').toString('utf-8'));
+    if (payload.exp && payload.exp > Date.now()) return true;
+  } catch {
+    /* not a legacy token */
+  }
+
+  return false;
+}
+
 // ─── Middleware ───────────────────────────────────────────────────────────────
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Skip static files early — no auth, headers, or rate limiting needed
@@ -125,8 +159,16 @@ export function middleware(request: NextRequest) {
 
   if (isProtected || isDashboardRoute) {
     const sessionCookie = request.cookies.get('aiox_session');
+    const token = sessionCookie?.value;
 
-    if (!sessionCookie?.value) {
+    if (!token) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('from', pathname);
+      return applySecurityHeaders(NextResponse.redirect(loginUrl));
+    }
+
+    const isValid = await isValidSession(token);
+    if (!isValid) {
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('from', pathname);
       return applySecurityHeaders(NextResponse.redirect(loginUrl));

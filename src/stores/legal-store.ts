@@ -33,6 +33,7 @@ interface LegalState {
 
   // ── Hydration ───────────────────────────────────────────────────────────
   hydrateFromApi: () => Promise<void>;
+  syncToApi: () => Promise<void>;
 
   // ── Process Actions ──────────────────────────────────────────────────────
   addProcess: (process: Omit<LegalProcess, 'id' | 'createdAt' | 'updatedAt'>) => string;
@@ -110,30 +111,93 @@ export const useLegalStore = create<LegalState>()(
       hydrateFromApi: async () => {
         set({ syncing: true });
         try {
-          const [processes, clients, deadlines, petitions, movements] = await Promise.all([
-            api.fetchProcesses(),
-            api.fetchClients(),
-            api.fetchDeadlines(),
-            api.fetchPetitions(),
-            api.fetchMovements(),
+          const [processesRes, clientsRes, deadlinesRes, petitionsRes, movementsRes] = await Promise.allSettled([
+            fetch('/api/legal/processes').then(r => r.ok ? r.json() : Promise.reject(new Error(`${r.status}`))),
+            fetch('/api/legal/clients').then(r => r.ok ? r.json() : Promise.reject(new Error(`${r.status}`))),
+            fetch('/api/legal/deadlines').then(r => r.ok ? r.json() : Promise.reject(new Error(`${r.status}`))),
+            fetch('/api/legal/petitions').then(r => r.ok ? r.json() : Promise.reject(new Error(`${r.status}`))),
+            fetch('/api/legal/movements').then(r => r.ok ? r.json() : Promise.reject(new Error(`${r.status}`))),
           ]);
-          set({
-            processes: processes as LegalProcess[],
-            clients: (clients as LegalClient[]).map((c) => ({
+
+          // Only update state for successful responses — keep localStorage data as fallback for failures
+          const updates: Partial<LegalState> = {};
+
+          if (processesRes.status === 'fulfilled') {
+            updates.processes = (processesRes.value.processes ?? processesRes.value) as LegalProcess[];
+          }
+          if (clientsRes.status === 'fulfilled') {
+            const raw = (clientsRes.value.clients ?? clientsRes.value) as LegalClient[];
+            updates.clients = raw.map((c) => ({
               ...c,
               processIds: c.processIds || [],
               contractIds: c.contractIds || [],
-            })),
-            deadlines: deadlines as Deadline[],
-            petitions: (petitions as Petition[]).map((p) => ({
+            }));
+          }
+          if (deadlinesRes.status === 'fulfilled') {
+            updates.deadlines = (deadlinesRes.value.deadlines ?? deadlinesRes.value) as Deadline[];
+          }
+          if (petitionsRes.status === 'fulfilled') {
+            const raw = (petitionsRes.value.petitions ?? petitionsRes.value) as Petition[];
+            updates.petitions = raw.map((p) => ({
               ...p,
               documentIds: p.documentIds || [],
-            })),
-            movements: movements as ProcessMovement[],
-            syncing: false,
-            lastSyncAt: nowISO(),
-          });
-        } catch {
+            }));
+          }
+          if (movementsRes.status === 'fulfilled') {
+            updates.movements = (movementsRes.value.movements ?? movementsRes.value) as ProcessMovement[];
+          }
+
+          set({ ...updates, syncing: false, lastSyncAt: nowISO() });
+        } catch (error) {
+          console.error('Failed to hydrate from API:', error);
+          set({ syncing: false });
+        }
+      },
+
+      syncToApi: async () => {
+        const state = get();
+        set({ syncing: true });
+        try {
+          await Promise.allSettled([
+            ...state.processes.map((p) =>
+              fetch(`/api/legal/processes/${p.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(p),
+              })
+            ),
+            ...state.clients.map((c) =>
+              fetch(`/api/legal/clients/${c.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(c),
+              })
+            ),
+            ...state.deadlines.map((d) =>
+              fetch(`/api/legal/deadlines/${d.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(d),
+              })
+            ),
+            ...state.petitions.map((p) =>
+              fetch(`/api/legal/petitions/${p.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(p),
+              })
+            ),
+            ...state.movements.map((m) =>
+              fetch(`/api/legal/movements/${m.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(m),
+              })
+            ),
+          ]);
+          set({ syncing: false, lastSyncAt: nowISO() });
+        } catch (error) {
+          console.error('Failed to sync to API:', error);
           set({ syncing: false });
         }
       },
