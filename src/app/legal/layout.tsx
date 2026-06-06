@@ -14,6 +14,8 @@ import { MobileBottomNav } from '@/components/legal/MobileBottomNav';
 import { PWAInstallPrompt } from '@/components/legal/PWAInstallPrompt';
 import { OfflineIndicator } from '@/components/legal/OfflineIndicator';
 import { CommandPalette } from '@/components/legal/CommandPalette';
+import OnboardingWizard from '@/components/legal/OnboardingWizard';
+import { useOnboarding } from '@/hooks/useOnboarding';
 import { getNavForRole, FOOTER_NAV } from '@/lib/navigation-config';
 import { useUserRole } from '@/lib/roles';
 import {
@@ -99,6 +101,9 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const hydrated = useRef(false);
 
+  const { shouldShow, markCompleted } = useOnboarding();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
   const role = useUserRole();
   const navSections = getNavForRole(role);
 
@@ -115,6 +120,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     setMounted(true);
+    setShowOnboarding(shouldShow);
     if (!hydrated.current) {
       hydrated.current = true;
       hydrateFromApi();
@@ -122,7 +128,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       hydrateMarketingFromApi();
       hydrateStrategyFromApi();
     }
-  }, [hydrateFromApi, hydrateFinancialFromApi, hydrateMarketingFromApi, hydrateStrategyFromApi]);
+  }, [hydrateFromApi, hydrateFinancialFromApi, hydrateMarketingFromApi, hydrateStrategyFromApi, shouldShow]);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -444,6 +450,20 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
 
       {/* Global Command Palette */}
       <CommandPalette />
+
+      {/* Onboarding Wizard — shown once for first-time users */}
+      {showOnboarding && (
+        <OnboardingWizard
+          onComplete={() => {
+            markCompleted();
+            setShowOnboarding(false);
+          }}
+          onSkip={() => {
+            markCompleted();
+            setShowOnboarding(false);
+          }}
+        />
+      )}
     </div>
   );
 }
