@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { useLegalStore } from '@/stores/legal-store';
 import type { LegalArea, CourtSystem, UrgencyLevel, FeeType } from '@/types/legal';
 import { PageHeader } from '@/components/legal/shared';
+import { ClientSelector } from '@/components/legal/ClientSelector';
+import type { ClientOption } from '@/components/legal/ClientSelector';
 
 const AREAS: { value: LegalArea; label: string }[] = [
   { value: 'civil', label: 'Cível' },
@@ -95,6 +97,14 @@ function inferState(tribunal: string): string {
 export default function NewProcessPage() {
   const router = useRouter();
   const { addProcess, addMovement, clients } = useLegalStore();
+
+  const clientOptions: ClientOption[] = clients.map((c) => ({
+    id: c.id,
+    name: c.name,
+    type: c.type,
+    cpfCnpj: c.cpfCnpj,
+    email: c.email,
+  }));
 
   const [cnjInput, setCnjInput] = useState('');
   const [searchStatus, setSearchStatus] = useState<CnjSearchStatus>('idle');
@@ -392,11 +402,12 @@ export default function NewProcessPage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className={labelClass}>Cliente *</label>
-              <select className={fieldClass} value={form.clientId}
-                onChange={(e) => setForm({ ...form, clientId: e.target.value })} required>
-                <option value="">Selecione um cliente</option>
-                {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
+              <ClientSelector
+                clients={clientOptions}
+                value={form.clientId || undefined}
+                onChange={(clientId) => setForm({ ...form, clientId: clientId ?? '' })}
+                placeholder="Buscar cliente..."
+              />
             </div>
             <div>
               <label className={labelClass}>Parte Contrária</label>

@@ -23,9 +23,12 @@ import {
   ExternalLink,
   ChevronLeft,
   Info,
+  PenSquare,
 } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
 import { PageHeader } from '@/components/legal/shared';
+import { LegalMessageComposer } from '@/components/legal/LegalMessageComposer';
+import type { ComposerMessage } from '@/components/legal/LegalMessageComposer';
 import {
   buildWhatsAppLink,
   formatPhoneNumber,
@@ -69,6 +72,35 @@ function seedMessages(clientId: string, clientName: string, phone: string): What
   ];
 }
 
+// ─── Legal message templates for LegalMessageComposer ───────────────────────
+
+const messageTemplates = [
+  {
+    id: '1',
+    name: 'Lembrete de Prazo',
+    content:
+      'Prezado(a) [CLIENTE], informamos que o prazo para [AÇÃO] no processo [CNJ] vence em [DATA]. Favor providenciar os documentos necessários.',
+  },
+  {
+    id: '2',
+    name: 'Agendamento de Reunião',
+    content:
+      'Prezado(a) [CLIENTE], gostaríamos de agendar uma reunião para discutir o andamento do seu processo. Por favor, informe sua disponibilidade.',
+  },
+  {
+    id: '3',
+    name: 'Atualização Processual',
+    content:
+      'Prezado(a) [CLIENTE], informamos que houve uma nova movimentação no processo [CNJ]: [DESCRIÇÃO]. Estamos acompanhando e tomaremos as providências necessárias.',
+  },
+  {
+    id: '4',
+    name: 'Cobrança de Honorários',
+    content:
+      'Prezado(a) [CLIENTE], informamos que a parcela de honorários referente ao mês de [MÊS] encontra-se pendente. Favor regularizar o pagamento.',
+  },
+];
+
 // ─── Tick icon by message status ────────────────────────────────────────────
 
 function StatusTick({ status }: { status: WhatsAppMessage['status'] }) {
@@ -93,6 +125,7 @@ export default function WhatsAppPage() {
   const [showTemplates, setShowTemplates] = useState(false);
   const [activeTab, setActiveTab] = useState<'chat' | 'templates'>('chat');
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [showComposer, setShowComposer] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -259,6 +292,13 @@ export default function WhatsAppPage() {
     }
   }
 
+  // ── Composer send handler ─────────────────────────────────────────────────
+  function handleComposerSend(msg: ComposerMessage) {
+    console.log('[LegalMessageComposer] Message sent:', msg);
+    setShowComposer(false);
+    showToast(`Mensagem preparada para ${msg.to} via ${msg.channel}.`);
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
   //  Render
   // ─────────────────────────────────────────────────────────────────────────
@@ -274,6 +314,20 @@ export default function WhatsAppPage() {
         </div>
       )}
 
+      {/* ── Nova Mensagem — LegalMessageComposer Modal ───────────────────── */}
+      {showComposer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-2xl mx-4">
+            <LegalMessageComposer
+              channels={['whatsapp']}
+              templates={messageTemplates}
+              onSend={handleComposerSend}
+              onCancel={() => setShowComposer(false)}
+            />
+          </div>
+        </div>
+      )}
+
       {/* ── Page Header ──────────────────────────────────────────────────── */}
       <div className="flex-shrink-0 border-b border-[#1a2332] px-6 py-4">
         <PageHeader
@@ -284,31 +338,41 @@ export default function WhatsAppPage() {
             { label: 'WhatsApp', href: '/legal/whatsapp' },
           ]}
           actions={
-            <div className="hidden lg:flex items-center gap-3">
-              <SummaryCard
-                icon={<Users className="h-4 w-4 text-blue-400" />}
-                label="Contatos"
-                value={contactClients.length}
-                color="blue"
-              />
-              <SummaryCard
-                icon={<MessageCircle className="h-4 w-4 text-green-400" />}
-                label="Hoje"
-                value={messagesToday}
-                color="green"
-              />
-              <SummaryCard
-                icon={<CalendarClock className="h-4 w-4 text-amber-400" />}
-                label="Aguardando"
-                value={pendingResponses}
-                color="amber"
-              />
-              <SummaryCard
-                icon={<LayoutTemplate className="h-4 w-4 text-purple-400" />}
-                label="Templates"
-                value={MESSAGE_TEMPLATES.length}
-                color="purple"
-              />
+            <div className="flex items-center gap-3">
+              <div className="hidden lg:flex items-center gap-3">
+                <SummaryCard
+                  icon={<Users className="h-4 w-4 text-blue-400" />}
+                  label="Contatos"
+                  value={contactClients.length}
+                  color="blue"
+                />
+                <SummaryCard
+                  icon={<MessageCircle className="h-4 w-4 text-green-400" />}
+                  label="Hoje"
+                  value={messagesToday}
+                  color="green"
+                />
+                <SummaryCard
+                  icon={<CalendarClock className="h-4 w-4 text-amber-400" />}
+                  label="Aguardando"
+                  value={pendingResponses}
+                  color="amber"
+                />
+                <SummaryCard
+                  icon={<LayoutTemplate className="h-4 w-4 text-purple-400" />}
+                  label="Templates"
+                  value={MESSAGE_TEMPLATES.length}
+                  color="purple"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowComposer(true)}
+                className="flex items-center gap-2 rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-500 transition-colors flex-shrink-0"
+              >
+                <PenSquare className="h-4 w-4" />
+                <span>Nova Mensagem</span>
+              </button>
             </div>
           }
           className="mb-0 pb-0 border-b-0"

@@ -7,6 +7,8 @@ import { useLegalStore } from '@/stores/legal-store';
 import type { ProcessStatus, DeadlineType } from '@/types/legal';
 import { ExportPDFButton } from '@/components/legal/ExportPDFButton';
 import { PageHeader } from '@/components/legal/shared';
+import { CaseTimeline } from '@/components/legal/CaseTimeline';
+import type { TimelineMovement } from '@/components/legal/CaseTimeline';
 
 const areaLabels: Record<string, string> = {
   civil: 'Cível', trabalhista: 'Trabalhista', tributario: 'Tributário', penal: 'Penal',
@@ -307,34 +309,40 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ id: st
           )}
         </div>
 
-        {/* Timeline */}
-        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-4 lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-amber-400" /> Movimentações ({movements.length})
-            </h2>
-          </div>
-          {movements.length === 0 ? (
-            <p className="text-xs text-[#4a5568]">Nenhuma movimentação registrada</p>
-          ) : (
-            <div className="space-y-3">
-              {movements.slice(0, 10).map((m) => (
-                <div key={m.id} className={`flex gap-3 py-2 border-b border-[#1a2332] last:border-0 ${!m.isRead ? 'bg-amber-500/5 -mx-2 px-2 rounded' : ''}`}>
-                  <div className="flex-shrink-0 mt-1">
-                    <div className={`h-2 w-2 rounded-full ${m.isRead ? 'bg-[#2a3342]' : 'bg-amber-400'}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-[#c0ccda]">{m.description}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-[#4a5568]">{m.date.split('T')[0]}</span>
-                      <span className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] bg-blue-500/10 text-blue-400">{m.source}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+      </div>
+
+      {/* Movimentações */}
+      <div>
+        <div className="flex items-center gap-3 mb-4">
+          <h2 className="text-base font-semibold text-white flex items-center gap-2">
+            <MessageSquare className="h-4 w-4 text-amber-400" /> Movimentações
+          </h2>
+          <hr className="flex-1 border-[#1a2332]" />
         </div>
+        {(() => {
+          const mockMovements: TimelineMovement[] = [
+            { date: '2024-11-15', type: 'peticao' as const, title: 'Petição Inicial Distribuída', description: 'Distribuição automática por dependência à 2ª Vara Cível', tribunal: process.court || 'TJSP', author: 'Dr. João Silva' },
+            { date: '2024-11-20', type: 'despacho' as const, title: 'Despacho de Citação', description: 'Cite-se o réu para contestar no prazo legal de 15 dias úteis', tribunal: process.court || 'TJSP' },
+            { date: '2024-12-10', type: 'peticao' as const, title: 'Contestação Apresentada', description: 'Réu apresentou contestação com preliminar de incompetência', tribunal: process.court || 'TJSP', author: 'Dr. Maria Oliveira' },
+            { date: '2025-01-15', type: 'audiencia' as const, title: 'Audiência de Conciliação', description: 'Audiência de conciliação e mediação designada. Partes presentes, sem acordo.', tribunal: process.court || 'TJSP' },
+            { date: '2025-02-20', type: 'decisao' as const, title: 'Decisão Saneadora', description: 'Fixados os pontos controvertidos. Deferida prova testemunhal requerida por ambas as partes.', tribunal: process.court || 'TJSP' },
+            { date: '2025-03-10', type: 'publicacao' as const, title: 'Publicação no DJE', description: 'Publicação da decisão saneadora no Diário de Justiça Eletrônico', tribunal: process.court || 'TJSP' },
+          ];
+
+          const storeMovements: TimelineMovement[] = movements.map((m) => ({
+            date: m.date.split('T')[0],
+            type: ((['decisao', 'despacho', 'peticao', 'audiencia', 'publicacao'] as const).includes(m.type as TimelineMovement['type'])
+              ? m.type
+              : 'despacho') as TimelineMovement['type'],
+            title: m.description.slice(0, 60),
+            description: m.description,
+            tribunal: process.court || 'TJSP',
+          }));
+
+          const timelineData = storeMovements.length > 0 ? storeMovements : mockMovements;
+
+          return <CaseTimeline movements={timelineData} />;
+        })()}
       </div>
     </div>
   );

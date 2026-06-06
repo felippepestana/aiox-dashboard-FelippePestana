@@ -2,15 +2,16 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Sparkles, LayoutTemplate, PenLine } from 'lucide-react';
+import { ArrowLeft, Save, Sparkles, LayoutTemplate, PenLine, FileText, ClipboardList, Edit, CheckCircle } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
 import { PageHeader } from '@/components/legal/shared';
 import { PetitionTemplateSelector } from '@/components/legal/PetitionTemplateSelector';
 import { PetitionTemplateEditor } from '@/components/legal/PetitionTemplateEditor';
+import { MultiStepForm } from '@/components/legal/MultiStepForm';
 import type { PetitionType } from '@/types/legal';
 import type { PetitionTemplate } from '@/lib/petition-templates';
 
-type NewPetitionMode = 'choose' | 'template-select' | 'template-edit' | 'scratch';
+type NewPetitionMode = 'choose' | 'template-select' | 'template-edit' | 'scratch' | 'assisted';
 
 const PETITION_TYPES: { value: PetitionType; label: string }[] = [
   { value: 'inicial', label: 'Petição Inicial' },
@@ -111,7 +112,7 @@ export default function NewPetitionPage() {
         />
 
         {/* Option cards */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 max-w-2xl">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 max-w-3xl">
           {/* Template */}
           <button
             type="button"
@@ -129,6 +130,26 @@ export default function NewPetitionPage() {
             <div className="mt-4 flex items-center gap-1.5 text-xs text-amber-400">
               <Sparkles className="h-3 w-3" />
               <span>Recomendado — mais rápido</span>
+            </div>
+          </button>
+
+          {/* Modo Assistido */}
+          <button
+            type="button"
+            onClick={() => setMode('assisted')}
+            className="group rounded-xl border border-blue-500/20 bg-[#0d1320] p-6 text-left hover:border-blue-500/40 hover:bg-blue-500/5 transition-all"
+          >
+            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 mb-4 group-hover:bg-blue-500/20 transition-colors">
+              <ClipboardList className="h-6 w-6 text-blue-400" />
+            </div>
+            <h2 className="text-base font-semibold text-white mb-2">Modo Assistido</h2>
+            <p className="text-sm text-[#6b7a8d] leading-relaxed">
+              Preencha a peça passo a passo com um formulário guiado: tipo, dados, conteúdo e
+              revisão final antes de salvar.
+            </p>
+            <div className="mt-4 flex items-center gap-1.5 text-xs text-blue-400">
+              <CheckCircle className="h-3 w-3" />
+              <span>Guiado em 4 etapas</span>
             </div>
           </button>
 
@@ -241,6 +262,183 @@ export default function NewPetitionPage() {
             onSave={handleTemplateSave}
           />
         </div>
+      </div>
+    );
+  }
+
+  // ── Mode: Assisted (MultiStepForm) ───────────────────────────────────────
+
+  if (mode === 'assisted') {
+    const assistedSteps = [
+      {
+        id: 'tipo',
+        label: 'Tipo',
+        icon: <FileText className="h-4 w-4" />,
+        content: (
+          <div className="space-y-4">
+            <p className="text-sm text-[#8899aa]">Selecione o tipo de peça processual que deseja criar.</p>
+            <div>
+              <label className={labelClass}>Tipo de Peça *</label>
+              <select
+                className={fieldClass}
+                value={form.type}
+                onChange={(e) => setForm({ ...form, type: e.target.value as PetitionType })}
+              >
+                {PETITION_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Título da Peça *</label>
+              <input
+                type="text"
+                placeholder="Ex.: Petição Inicial — Ação de Cobrança"
+                className={fieldClass}
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+              />
+            </div>
+          </div>
+        ),
+        validate: () => !!form.title.trim(),
+      },
+      {
+        id: 'dados',
+        label: 'Dados',
+        icon: <ClipboardList className="h-4 w-4" />,
+        content: (
+          <div className="space-y-4">
+            <p className="text-sm text-[#8899aa]">Informe os dados básicos do processo e cliente vinculado.</p>
+            <div>
+              <label className={labelClass}>Processo Vinculado *</label>
+              <select
+                className={fieldClass}
+                value={form.processId}
+                onChange={(e) => setForm({ ...form, processId: e.target.value })}
+              >
+                <option value="">Selecione um processo</option>
+                {processes.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.cnj} — {p.title}
+                  </option>
+                ))}
+              </select>
+              {processes.length === 0 && (
+                <p className="mt-1.5 text-xs text-amber-400">
+                  Nenhum processo cadastrado. Você pode salvar sem vincular um processo.
+                </p>
+              )}
+            </div>
+            {form.processId && (() => {
+              const proc = processes.find((p) => p.id === form.processId);
+              const client = proc ? getClientById(proc.clientId) : undefined;
+              return proc ? (
+                <div className="rounded-lg border border-[#1a2332] bg-[#0a0f1a] p-4 space-y-1.5">
+                  <p className="text-xs font-semibold text-[#D4AF37] uppercase tracking-wider mb-2">Resumo do Processo</p>
+                  <p className="text-xs text-[#8899aa]"><span className="text-white">Processo:</span> {proc.title}</p>
+                  <p className="text-xs text-[#8899aa] font-mono"><span className="text-white">CNJ:</span> {proc.cnj}</p>
+                  {client && <p className="text-xs text-[#8899aa]"><span className="text-white">Cliente:</span> {client.name}</p>}
+                </div>
+              ) : null;
+            })()}
+          </div>
+        ),
+        validate: () => true,
+      },
+      {
+        id: 'conteudo',
+        label: 'Conteúdo',
+        icon: <Edit className="h-4 w-4" />,
+        content: (
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
+              <Sparkles className="h-4 w-4 text-amber-400 mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-amber-400">
+                Redija o corpo da peça. O squad <strong>case-analysis</strong> pode ser acionado após salvar para
+                auxiliar na fundamentação e pesquisa jurisprudencial.
+              </p>
+            </div>
+            <div>
+              <label className={labelClass}>Conteúdo da Peça</label>
+              <textarea
+                className={`${fieldClass} min-h-[300px] font-mono text-xs leading-relaxed`}
+                placeholder="Redija o conteúdo da peça processual aqui..."
+                value={form.content}
+                onChange={(e) => setForm({ ...form, content: e.target.value })}
+              />
+            </div>
+          </div>
+        ),
+        validate: () => true,
+      },
+      {
+        id: 'revisao',
+        label: 'Revisão',
+        icon: <CheckCircle className="h-4 w-4" />,
+        content: (
+          <div className="space-y-4">
+            <p className="text-sm text-[#8899aa]">Revise as informações antes de salvar o rascunho.</p>
+            <div className="rounded-xl border border-[#1a2332] bg-[#0a0f1a] p-5 space-y-3">
+              <div className="flex items-center justify-between border-b border-[#1a2332] pb-3">
+                <span className="text-xs font-semibold uppercase tracking-wider text-[#6b7a8d]">Resumo da Peça</span>
+                <span className="text-xs text-[#D4AF37] font-medium">Rascunho</span>
+              </div>
+              <ReviewRow label="Tipo" value={PETITION_TYPES.find((t) => t.value === form.type)?.label ?? form.type} />
+              <ReviewRow label="Título" value={form.title || '—'} />
+              <ReviewRow
+                label="Processo"
+                value={
+                  form.processId
+                    ? (processes.find((p) => p.id === form.processId)?.cnj ?? '—')
+                    : 'Não vinculado'
+                }
+              />
+              <ReviewRow
+                label="Conteúdo"
+                value={
+                  form.content
+                    ? `${form.content.slice(0, 80)}${form.content.length > 80 ? '…' : ''}`
+                    : 'Sem conteúdo'
+                }
+              />
+            </div>
+            {!form.title.trim() && (
+              <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-3 text-xs text-red-400">
+                O título da peça é obrigatório. Volte ao passo "Tipo" para preenchê-lo.
+              </div>
+            )}
+          </div>
+        ),
+        validate: () => !!form.title.trim(),
+      },
+    ];
+
+    return (
+      <div className="p-6 space-y-6">
+        <PageHeader
+          title="Nova Peça — Modo Assistido"
+          subtitle="Preencha a peça em 4 etapas guiadas"
+          breadcrumbs={baseBreadcrumbs}
+          actions={
+            <button
+              type="button"
+              onClick={() => setMode('choose')}
+              className="flex items-center gap-2 text-[#6b7a8d] hover:text-white transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          }
+        />
+        <MultiStepForm
+          steps={assistedSteps}
+          onComplete={() => {
+            handleScratchSubmit({ preventDefault: () => {} } as React.FormEvent);
+          }}
+          onCancel={() => router.push('/legal/petitions')}
+        />
       </div>
     );
   }
@@ -365,6 +563,17 @@ export default function NewPetitionPage() {
           </div>
         </div>
       </form>
+    </div>
+  );
+}
+
+// ─── Helper components ────────────────────────────────────────────────────────
+
+function ReviewRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start gap-4">
+      <span className="w-24 flex-shrink-0 text-xs text-[#6b7a8d] font-medium">{label}</span>
+      <span className="text-xs text-white break-words">{value}</span>
     </div>
   );
 }

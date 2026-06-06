@@ -8,10 +8,14 @@ import {
   Plus,
   ChevronRight,
   Clock,
+  LayoutList,
+  Columns3,
 } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
 import type { LegalArea, ProcessStatus, UrgencyLevel } from '@/types/legal';
 import { ExportPDFButton } from '@/components/legal/ExportPDFButton';
+import { ProcessKanban } from '@/components/legal/ProcessKanban';
+import type { KanbanProcess } from '@/components/legal/ProcessKanban';
 import {
   PageHeader,
   FilterBar,
@@ -113,10 +117,34 @@ type ProcessRow = {
   clientName: string;
 };
 
+function mapStatusToKanban(status: ProcessStatus): KanbanProcess['status'] {
+  switch (status) {
+    case 'active': return 'instrucao';
+    case 'suspended': return 'instrucao';
+    case 'won':
+    case 'lost':
+    case 'settled':
+    case 'closed':
+    case 'archived': return 'encerrado';
+    default: return 'analise';
+  }
+}
+
+function mapUrgencyToPriority(urgency: UrgencyLevel): KanbanProcess['priority'] {
+  switch (urgency) {
+    case 'critical':
+    case 'high': return 'alta';
+    case 'medium': return 'media';
+    case 'low': return 'baixa';
+    default: return 'media';
+  }
+}
+
 export default function ProcessesPage() {
-  const { processes, deadlines, getClientById } = useLegalStore();
+  const { processes, deadlines, getClientById, updateProcess } = useLegalStore();
   const router = useRouter();
 
+  const [activeView, setActiveView] = useState<'list' | 'kanban'>('list');
   const [filterValues, setFilterValues] = useState<FilterValues>({
     search: '',
     area: '',
@@ -176,6 +204,23 @@ export default function ProcessesPage() {
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredProcesses, getClientById]);
+
+  const kanbanProcesses: KanbanProcess[] = useMemo(() => {
+    return processes.map((p) => {
+      const client = getClientById(p.clientId);
+      return {
+        id: p.id,
+        cnj: p.cnj,
+        title: p.title,
+        client: client?.name || '--',
+        area: p.area,
+        status: mapStatusToKanban(p.status),
+        nextDeadline: getNextDeadline(p.id) ?? undefined,
+        priority: mapUrgencyToPriority(p.urgency),
+      };
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [processes, getClientById]);
 
   const columns: ColumnDef<ProcessRow>[] = [
     {
@@ -298,6 +343,30 @@ export default function ProcessesPage() {
         ]}
         actions={
           <>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setActiveView('list')}
+                title="Visualização em lista"
+                className={`p-2 rounded-md transition-colors ${
+                  activeView === 'list'
+                    ? 'text-[#D4AF37] bg-[rgba(212,175,55,0.12)]'
+                    : 'text-[#718096] bg-transparent hover:text-[#A0AEC0]'
+                }`}
+              >
+                <LayoutList className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setActiveView('kanban')}
+                title="Visualização Kanban"
+                className={`p-2 rounded-md transition-colors ${
+                  activeView === 'kanban'
+                    ? 'text-[#D4AF37] bg-[rgba(212,175,55,0.12)]'
+                    : 'text-[#718096] bg-transparent hover:text-[#A0AEC0]'
+                }`}
+              >
+                <Columns3 className="h-4 w-4" />
+              </button>
+            </div>
             <ExportPDFButton
               type="processes"
               data={{ processes: filteredProcesses, title: 'Lista de Processos' }}
@@ -314,32 +383,52 @@ export default function ProcessesPage() {
         }
       />
 
-      <FilterBar
-        filters={filterConfigs}
-        values={filterValues}
-        onFilterChange={(key, value) =>
-          setFilterValues((prev) => ({ ...prev, [key]: value }))
-        }
-        onClear={() =>
-          setFilterValues({ search: '', area: '', status: '', urgency: '' })
-        }
-      />
+      {activeView === 'list' && (
+        <>
+          <FilterBar
+            filters={filterConfigs}
+            values={filterValues}
+            onFilterChange={(key, value) =>
+              setFilterValues((prev) => ({ ...prev, [key]: value }))
+            }
+            onClear={() =>
+              setFilterValues({ search: '', area: '', status: '', urgency: '' })
+            }
+          />
 
-      {filteredProcesses.length === 0 ? (
-        <EmptyState
-          icon={<Briefcase className="h-8 w-8" />}
-          title="Nenhum processo encontrado"
-          description="Cadastre o primeiro processo para começar."
-          action={{ label: 'Cadastrar Processo', href: '/legal/processes/new' }}
-        />
-      ) : (
-        <DataTable<ProcessRow>
-          columns={columns}
-          data={tableData}
-          paginated
-          pageSize={20}
-          onRowClick={(row) => router.push(`/legal/processes/${row.id}`)}
-          emptyMessage="Nenhum processo encontrado."
+          {filteredProcesses.length === 0 ? (
+            <EmptyState
+              icon={<Briefcase className="h-8 w-8" />}
+              title="Nenhum processo encontrado"
+              description="Cadastre o primeiro processo para começar."
+              action={{ label: 'Cadastrar Processo', href: '/legal/processes/new' }}
+            />
+          ) : (
+            <DataTable<ProcessRow>
+              columns={columns}
+              data={tableData}
+              paginated
+              pageSize={20}
+              onRowClick={(row) => router.push(`/legal/processes/${row.id}`)}
+              emptyMessage="Nenhum processo encontrado."
+            />
+          )}
+        </>
+      )}
+
+      {activeView === 'kanban' && (
+        <ProcessKanban
+          processes={kanbanProcesses}
+          onStatusChange={(processId, newStatus) => {
+            const statusMap: Record<KanbanProcess['status'], ProcessStatus> = {
+              analise: 'active',
+              peticao_inicial: 'active',
+              instrucao: 'active',
+              sentenca: 'active',
+              encerrado: 'closed',
+            };
+            updateProcess(processId, { status: statusMap[newStatus] });
+          }}
         />
       )}
     </div>

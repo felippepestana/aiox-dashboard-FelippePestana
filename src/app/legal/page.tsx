@@ -20,6 +20,9 @@ import {
   PageHeader,
   StatCardGrid,
 } from '@/components/legal/shared';
+import CriticalAlerts, { CriticalAlert } from '@/components/legal/CriticalAlerts';
+import WeeklyAgenda, { AgendaEvent } from '@/components/legal/WeeklyAgenda';
+import OfficePerformanceWidget from '@/components/legal/OfficePerformanceWidget';
 
 export default function LegalDashboardPage() {
   const {
@@ -251,6 +254,123 @@ export default function LegalDashboardPage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* ── New Widgets Section ───────────────────────────────────────────────── */}
+      <div className="mb-8" />
+
+      {/* Critical Alerts */}
+      <CriticalAlerts
+        alerts={[
+          {
+            id: 'alert-1',
+            type: 'prazo_vencido',
+            title: 'Prazo de contestação vencido',
+            description: 'Processo 0001234-12.2024.8.26.0100 · 2ª Vara Cível de São Paulo',
+            processId: '0001234-12.2024.8.26.0100',
+            action: 'Ver processo',
+            actionHref: '/legal/processes',
+          },
+          {
+            id: 'alert-2',
+            type: 'prazo_hoje',
+            title: 'Prazo para recurso vence hoje',
+            description: 'Recurso de Apelação · Processo 0009876-45.2023.8.26.0050',
+            processId: '0009876-45.2023.8.26.0050',
+            action: 'Ver prazo',
+            actionHref: '/legal/deadlines',
+          },
+          {
+            id: 'alert-3',
+            type: 'audiencia_amanha',
+            title: 'Audiência de instrução amanhã às 14h',
+            description: '3ª Vara do Trabalho de São Paulo · Processo 0003210-78.2024.5.02.0003',
+            processId: '0003210-78.2024.5.02.0003',
+            action: 'Ver agenda',
+            actionHref: '/legal/processes',
+          },
+          {
+            id: 'alert-4',
+            type: 'intimacao',
+            title: 'Nova intimação — Vara Cível de São Paulo',
+            description: 'Decisão interlocutória publicada no DJe · Processo 0007654-32.2024.8.26.0100',
+            processId: '0007654-32.2024.8.26.0100',
+            action: 'Ver intimação',
+            actionHref: '/legal/processes',
+          },
+        ] satisfies CriticalAlert[]}
+      />
+
+      {/* Weekly Agenda + Office Performance */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <WeeklyAgenda
+          className="lg:col-span-2"
+          events={[
+            {
+              date: '2026-06-08',
+              time: '09:00',
+              title: 'Audiência de Instrução — 2ª Vara Cível',
+              type: 'audiencia',
+              location: 'Fórum Central de São Paulo',
+              processId: '0001234-12.2024.8.26.0100',
+            },
+            {
+              date: '2026-06-09',
+              time: '10:30',
+              title: 'Prazo Fatal — Recurso de Apelação',
+              type: 'prazo_fatal',
+              processId: '0009876-45.2023.8.26.0050',
+            },
+            {
+              date: '2026-06-09',
+              time: '15:00',
+              title: 'Reunião com cliente — Grupo Alphaville',
+              type: 'reuniao',
+              location: 'Escritório — Sala de Reuniões 2',
+            },
+            {
+              date: '2026-06-10',
+              time: '14:00',
+              title: 'Audiência de Conciliação — 5ª Vara do Trabalho',
+              type: 'audiencia',
+              location: 'Tribunal do Trabalho — SP',
+              processId: '0003210-78.2024.5.02.0003',
+            },
+            {
+              date: '2026-06-11',
+              time: '09:00',
+              title: 'Prazo Fatal — Embargos de Declaração',
+              type: 'prazo_fatal',
+              processId: '0007654-32.2024.8.26.0100',
+            },
+            {
+              date: '2026-06-12',
+              time: '11:00',
+              title: 'Diligência — Cartório 3º Ofício de Registros',
+              type: 'diligencia',
+              location: 'Cartório 3º Ofício — Centro',
+            },
+            {
+              date: '2026-06-13',
+              time: '16:00',
+              title: 'Reunião de Equipe — Revisão de Processos',
+              type: 'reuniao',
+              location: 'Escritório — Sala Principal',
+            },
+          ] satisfies AgendaEvent[]}
+        />
+
+        <OfficePerformanceWidget
+          className="lg:col-span-1"
+          metrics={{
+            casesWon: 47,
+            casesLost: 12,
+            casesSettled: 23,
+            avgDurationDays: 142,
+            revenue: 38500000,
+            clientSatisfaction: 87,
+          }}
+        />
       </div>
     </div>
   );

@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import type { MagistrateProfile } from '@/lib/legal-intelligence';
 import { PageHeader } from '@/components/legal/shared';
+import { JudgeRadarChart } from '@/components/legal/JudgeRadarChart';
 
 interface VotingPattern {
   area: string;
@@ -453,6 +454,63 @@ export default function JudgeDetailPage() {
               <Scale className="h-5 w-5 text-[#6b7a8d] mx-auto mb-2" />
               <p className={`text-2xl font-bold ${getSentimentColor(judge.sentiment)}`}>{judge.sentiment}%</p>
               <p className="text-xs text-[#6b7a8d]">Sentimento</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Radar Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <JudgeRadarChart
+          judgeName={judge.name}
+          data={{
+            favorReu: 100 - judge.favorableRate,
+            favorAutor: judge.favorableRate,
+            acordos: Math.round(judge.favorableRate * 0.65),
+            sentencas: judge.sentiment,
+            tempoMedio: Math.max(0, 100 - Math.round((judge.caseCount / 60))),
+            reformas: Math.round((100 - judge.sentiment) * 0.3),
+          }}
+        />
+        <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6 flex flex-col justify-center gap-4">
+          <h2 className="text-base font-semibold text-white">Resumo Estatístico</h2>
+          <div className="space-y-3">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-[#6b7a8d]">Taxa Favorável ao Autor</span>
+                <span className="text-xs font-medium text-green-400">{judge.favorableRate}%</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-[#1a2332]">
+                <div className="h-1.5 rounded-full bg-green-500" style={{ width: `${judge.favorableRate}%` }} />
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-[#6b7a8d]">Taxa Favorável ao Réu</span>
+                <span className="text-xs font-medium text-red-400">{100 - judge.favorableRate}%</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-[#1a2332]">
+                <div className="h-1.5 rounded-full bg-red-500" style={{ width: `${100 - judge.favorableRate}%` }} />
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-[#6b7a8d]">Score de Sentimento</span>
+                <span className={`text-xs font-medium ${getSentimentColor(judge.sentiment)}`}>{judge.sentiment}%</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-[#1a2332]">
+                <div className={`h-1.5 rounded-full ${getSentimentBarColor(judge.sentiment)}`} style={{ width: `${judge.sentiment}%` }} />
+              </div>
+            </div>
+            <div className="pt-2 border-t border-[#1a2332] grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-xs text-[#6b7a8d]">Total de Processos</p>
+                <p className="text-sm font-semibold text-white">{judge.caseCount.toLocaleString('pt-BR')}</p>
+              </div>
+              <div>
+                <p className="text-xs text-[#6b7a8d]">Duração Média</p>
+                <p className="text-sm font-semibold text-white">{judge.avgDuration}</p>
+              </div>
             </div>
           </div>
         </div>
