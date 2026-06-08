@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase';
 import { getPaymentInfo, getSubscriptionInfo } from '@/lib/mercadopago';
 
+function planFromReason(reason: string | undefined): string {
+  if (!reason) return 'professional';
+  if (reason.toLowerCase().includes('enterprise')) return 'enterprise';
+  return 'professional';
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -23,11 +29,15 @@ export async function POST(request: NextRequest) {
       const supabase = createServerClient();
 
       if (payment.status === 'approved') {
-        await supabase.from('profiles').update({
+        const { error: updateError } = await supabase.from('profiles').update({
           subscription_status: 'active',
           subscription_plan: 'professional',
           mp_customer_id: payment.payer?.id?.toString() || null,
         }).eq('id', userId);
+
+        if (updateError) {
+          throw new Error(`Failed to update profile: ${updateError.message}`);
+        }
       }
     }
 
@@ -47,11 +57,16 @@ export async function POST(request: NextRequest) {
         pending: 'trialing',
       };
 
-      await supabase.from('profiles').update({
+      const { error: updateError } = await supabase.from('profiles').update({
         subscription_status: statusMap[subscription.status] || 'free',
+        subscription_plan: planFromReason(subscription.reason),
         subscription_preapproval_id: subscription.id,
         subscription_current_period_end: subscription.next_payment_date || null,
       }).eq('id', userId);
+
+      if (updateError) {
+        throw new Error(`Failed to update profile subscription: ${updateError.message}`);
+      }
     }
 
     return NextResponse.json({ received: true });

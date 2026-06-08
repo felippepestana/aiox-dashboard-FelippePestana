@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 
 export default function GlobalError({
   error,
@@ -10,16 +11,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Optional Sentry capture. The indirect specifier keeps the bundler and
-    // type-checker from resolving the package until it's actually installed;
-    // until then this falls back to console.error.
-    try {
-      const sentryModule = '@sentry/nextjs';
-      const Sentry = require(sentryModule);
-      Sentry.captureException(error);
-    } catch {
-      console.error('Unhandled error:', error);
-    }
+    Sentry.captureException(error);
   }, [error]);
 
   return (

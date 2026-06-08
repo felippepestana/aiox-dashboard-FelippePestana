@@ -193,16 +193,20 @@ function SubscriptionPanel() {
               <p className="text-sm font-semibold text-white">
                 {PLAN_LABELS[data.plan] ?? data.plan}
               </p>
-              {data.currentPeriodEnd && (
-                <p className="text-xs text-[#6b7a8d]">
-                  Próx. cobrança:{' '}
-                  {new Date(data.currentPeriodEnd).toLocaleDateString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                  })}
-                </p>
-              )}
+              {(() => {
+                const date = data.currentPeriodEnd ? new Date(data.currentPeriodEnd) : null;
+                if (!date || isNaN(date.getTime())) return null;
+                return (
+                  <p className="text-xs text-[#6b7a8d]">
+                    Próx. cobrança:{' '}
+                    {date.toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                    })}
+                  </p>
+                );
+              })()}
             </div>
 
             {/* Status badge */}

@@ -373,7 +373,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
     <div className="flex h-screen bg-[#060d1a] text-white overflow-hidden">
       {/* Mobile Header */}
       <div className="fixed top-0 left-0 right-0 z-40 flex h-14 items-center justify-between border-b border-[#1a2d52]/60 bg-[#0a1628] px-4 lg:hidden">
-        <button onClick={() => setMobileOpen(true)} className="text-[#4A5568] hover:text-white">
+        <button onClick={() => setMobileOpen(true)} className="text-[#4A5568] hover:text-white" aria-label="Abrir menu">
           <Menu className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-2">

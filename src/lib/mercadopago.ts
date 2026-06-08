@@ -102,7 +102,10 @@ export async function getPaymentInfo(paymentId: string) {
     headers: { 'Authorization': `Bearer ${accessToken}` },
   });
 
-  if (!response.ok) return null;
+  if (!response.ok) {
+    if (response.status === 404) return null;
+    throw new Error(`Mercado Pago API error (${response.status})`);
+  }
   return response.json();
 }
 
@@ -114,6 +117,9 @@ export async function getSubscriptionInfo(preapprovalId: string) {
     headers: { 'Authorization': `Bearer ${accessToken}` },
   });
 
-  if (!response.ok) return null;
+  if (!response.ok) {
+    if (response.status === 404) return null;
+    throw new Error(`Mercado Pago API error (${response.status})`);
+  }
   return response.json();
 }

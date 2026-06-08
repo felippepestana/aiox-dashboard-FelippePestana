@@ -584,6 +584,7 @@ const PLANS = [
     ],
     cta: 'Assinar Agora',
     href: '/login',
+    checkoutPlan: 'professional',
     popular: true,
   },
   {
@@ -600,9 +601,62 @@ const PLANS = [
     ],
     cta: 'Falar com Vendas',
     href: '/login',
+    checkoutPlan: 'enterprise',
     popular: false,
   },
 ];
+
+function PricingCTA({ plan }: { plan: (typeof PLANS)[number] }) {
+  const [loading, setLoading] = useState(false);
+
+  const baseClass = plan.popular
+    ? 'bg-[#D4AF37] text-[#060d1a] hover:bg-[#e0c040] hover:shadow-[0_0_20px_rgba(212,175,55,0.3)]'
+    : 'border border-[rgba(192,192,192,0.2)] text-[#C0C0C0] hover:border-[rgba(212,175,55,0.4)] hover:text-[#D4AF37]';
+
+  if (!plan.checkoutPlan) {
+    return (
+      <Link
+        href={plan.href}
+        className={`block text-center font-semibold py-3 px-6 rounded-xl text-sm transition-all duration-200 ${baseClass}`}
+      >
+        {plan.cta}
+      </Link>
+    );
+  }
+
+  async function handleCheckout() {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/payments/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: plan.checkoutPlan }),
+      });
+      if (res.status === 401) {
+        window.location.href = '/login';
+        return;
+      }
+      const data = await res.json();
+      if (data.initPoint) {
+        window.location.href = data.initPoint;
+      }
+    } catch {
+      window.location.href = '/login';
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <button
+      onClick={handleCheckout}
+      disabled={loading}
+      className={`w-full text-center font-semibold py-3 px-6 rounded-xl text-sm transition-all duration-200 disabled:opacity-50 ${baseClass}`}
+    >
+      {loading ? 'Redirecionando…' : plan.cta}
+    </button>
+  );
+}
 
 function Pricing() {
   const { ref, inView } = useInView();
@@ -664,16 +718,7 @@ function Pricing() {
                 ))}
               </ul>
 
-              <Link
-                href={plan.href}
-                className={`text-center font-semibold py-3 px-6 rounded-xl text-sm transition-all duration-200 ${
-                  plan.popular
-                    ? 'bg-[#D4AF37] text-[#060d1a] hover:bg-[#e0c040] hover:shadow-[0_0_20px_rgba(212,175,55,0.3)]'
-                    : 'border border-[rgba(192,192,192,0.2)] text-[#C0C0C0] hover:border-[rgba(212,175,55,0.4)] hover:text-[#D4AF37]'
-                }`}
-              >
-                {plan.cta}
-              </Link>
+              <PricingCTA plan={plan} />
             </div>
           ))}
         </div>
@@ -928,17 +973,40 @@ function Footer() {
 
 /* ─────────────────────────────────────── page ────────────────────────────── */
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "APEX Legal Performance",
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  url: "https://apex.legal",
+  description:
+    "Plataforma jurídica com inteligência artificial para gestão de processos, prazos, honorários e estratégia para escritórios de advocacia brasileiros.",
+  inLanguage: "pt-BR",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "BRL",
+  },
+};
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#060d1a] text-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Navbar />
-      <Hero />
-      <StatsBar />
-      <FeaturesGrid />
-      <AIShowcase />
-      <Pricing />
-      <Testimonials />
-      <CTASection />
+      <main>
+        <Hero />
+        <StatsBar />
+        <FeaturesGrid />
+        <AIShowcase />
+        <Pricing />
+        <Testimonials />
+        <CTASection />
+      </main>
       <Footer />
     </div>
   );

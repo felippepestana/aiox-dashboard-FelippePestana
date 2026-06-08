@@ -237,12 +237,13 @@ export async function callAIStream(
     .filter(m => m.role !== 'system')
     .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }));
 
+  const abortController = new AbortController();
   const stream = client.messages.stream({
     model: model.id,
     max_tokens: options?.maxTokens || model.maxTokens,
     system: [{ type: 'text', text: getSystemPrompt(taskType), cache_control: { type: 'ephemeral' } }],
     messages: anthropicMessages,
-  });
+  }, { signal: abortController.signal });
 
   const encoder = new TextEncoder();
   return new ReadableStream({
@@ -262,8 +263,11 @@ export async function callAIStream(
         controller.enqueue(encoder.encode('data: [DONE]\n\n'));
         controller.close();
       } catch (error) {
-        controller.error(error);
+        if (!abortController.signal.aborted) controller.error(error);
       }
+    },
+    cancel() {
+      abortController.abort();
     },
   });
 }
