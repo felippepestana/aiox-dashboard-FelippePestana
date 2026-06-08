@@ -11,6 +11,7 @@ import { useDeadlineAlerts } from '@/hooks/useDeadlineAlerts';
 import { useHydration } from '@/hooks/useHydration';
 import { DeadlineAlerts } from '@/components/legal/DeadlineAlerts';
 import { DeadlineToast } from '@/components/legal/DeadlineToast';
+import { NotificationToast } from '@/components/legal/NotificationToast';
 import { MobileBottomNav } from '@/components/legal/MobileBottomNav';
 import { PWAInstallPrompt } from '@/components/legal/PWAInstallPrompt';
 import { OfflineIndicator } from '@/components/legal/OfflineIndicator';
@@ -19,6 +20,7 @@ import OnboardingWizard from '@/components/legal/OnboardingWizard';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { getNavForRole, FOOTER_NAV } from '@/lib/navigation-config';
 import { useUserRole } from '@/lib/roles';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import {
   Scale,
   Briefcase,
@@ -331,20 +333,23 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
                 <span className="flex-1 text-left">⌘K para busca rápida</span>
               </button>
 
-              <button
-                onClick={async () => {
-                  await fetch('/api/auth/logout', { method: 'POST' });
-                  window.location.href = '/login';
-                }}
-                className="flex items-center gap-2 text-[11px] text-[#4A5568] hover:text-red-400 transition-colors w-full"
-              >
-                <LogOut className="h-3 w-3" />
-                <span>Sair</span>
-              </button>
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={async () => {
+                    await fetch('/api/auth/logout', { method: 'POST' });
+                    window.location.href = '/login';
+                  }}
+                  className="flex items-center gap-2 text-[11px] text-[#4A5568] hover:text-red-400 transition-colors"
+                >
+                  <LogOut className="h-3 w-3" />
+                  <span>Sair</span>
+                </button>
+                <ThemeToggle />
+              </div>
             </div>
           </>
         ) : (
-          /* Collapsed state: show gear icon only */
+          /* Collapsed state: show gear icon + theme toggle */
           <div className="flex flex-col items-center py-2 gap-1">
             <button
               onClick={() => setCollapsed(false)}
@@ -354,6 +359,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
             >
               <Settings className="h-3.5 w-3.5" />
             </button>
+            <ThemeToggle />
           </div>
         )}
 
@@ -386,6 +392,8 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
           <span className="text-sm font-semibold text-white">APEX</span>
         </div>
         <div className="flex items-center gap-2">
+          {/* Theme toggle */}
+          <ThemeToggle />
           {/* Alert bell button */}
           <button
             onClick={() => setAlertsOpen((v) => !v)}
@@ -447,6 +455,9 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
 
       {/* Session toast for critical deadlines */}
       <DeadlineToast />
+
+      {/* Supabase realtime notifications */}
+      <NotificationToast userId={null} />
 
       {/* Mobile bottom navigation */}
       <MobileBottomNav onOpenSidebar={() => setMobileOpen(true)} />

@@ -4,6 +4,45 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   THEME TOGGLE - CSS variables for dark/light switching
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root, [data-theme="dark"] {
+  --bg-primary: #060d1a;
+  --bg-secondary: #0a0f1a;
+  --bg-elevated: #0d1320;
+  --bg-card: #0d1f3c;
+  --bg-hover: #1a2332;
+  --border-primary: #1a2332;
+  --border-accent: rgba(212, 175, 55, 0.35);
+  --text-primary: #ffffff;
+  --text-secondary: #A0AEC0;
+  --text-muted: #6b7a8d;
+  --accent-gold: #D4AF37;
+  --accent-silver: #C0C0C0;
+}
+
+[data-theme="light"] {
+  --bg-primary: #f8f9fc;
+  --bg-secondary: #ffffff;
+  --bg-elevated: #f1f3f8;
+  --bg-card: #ffffff;
+  --bg-hover: #e8ecf4;
+  --border-primary: #dde3ed;
+  --border-accent: rgba(180, 140, 20, 0.4);
+  --text-primary: #1a202c;
+  --text-secondary: #4a5568;
+  --text-muted: #718096;
+  --accent-gold: #b8941f;
+  --accent-silver: #4a5568;
+}
+
+[data-theme="light"] body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
 /* Deadline toast progress bar animation */
 @keyframes aiox-deadline-shrink {
   from { width: 100%; }

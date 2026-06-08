@@ -3,12 +3,13 @@
 // Cache-first for static assets; network-first for API calls.
 // =============================================================================
 
-const CACHE_NAME = 'aiox-legal-v1';
+const CACHE_NAME = 'apex-legal-v1';
 const OFFLINE_URL = '/offline';
 
 // Static assets to cache on install (app shell)
 const APP_SHELL = [
   '/',
+  '/login',
   '/legal',
   '/offline',
   '/manifest.json',
