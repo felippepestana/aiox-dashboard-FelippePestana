@@ -1,42 +1,46 @@
-import { NextResponse } from 'next/server';
-import { DataJudAdapter } from '@/lib/court/datajud-adapter';
-import { CourtAdapterError, isValidCNJ } from '@/lib/court/court-adapter';
+// =============================================================================
+// GET /api/legal/court/datajud
+// DataJud public API — search for a Brazilian judicial process by CNJ number
+// or run an advanced tribunal query.
+//
+// This route is used by the new-process form for auto-fill.
+//
+// Query Parameters:
+//   cnj       (string)  — CNJ number for direct lookup (NNNNNNN-DD.AAAA.J.TR.OOOO)
+//   tribunal  (string)  — Tribunal code for advanced query (e.g., 'TJSP', 'STJ')
+//   classe    (string)  — Classe processual filter
+//   assunto   (string)  — Subject matter filter
+//   dataInicio (string) — Start date filter (ISO 8601)
+//   dataFim   (string)  — End date filter (ISO 8601)
+//   page      (number)  — Page number for pagination (default: 0)
+//
+// Responses:
+//   200  { success: true, mode: 'cnj_search', data: DataJudProcessInfo, movements: ProcessMovement[] }
+//   200  { success: true, mode: 'advanced_query', results, total, page, tribunal, filters }
+//   400  Missing or invalid parameters
+//   404  Process not found
+//   503  DATAJUD_API_KEY not configured (when cnj search is requested)
+// =============================================================================
 
-/**
- * GET /api/legal/court/datajud
- *
- * Query the DataJud API (CNJ public API for 144M+ judicial processes).
- *
- * Supports two modes:
- * 1. Direct CNJ search: provide `cnj` parameter
- * 2. Advanced query: provide `tribunal` + optional `classe`, `assunto`, `page`
- *
- * Query Parameters:
- * - cnj (optional): CNJ process number for direct lookup
- * - tribunal (optional): Tribunal code for advanced search (e.g., 'TJSP', 'STJ')
- * - classe (optional): Classe processual filter (e.g., 'Procedimento Comum Civel')
- * - assunto (optional): Subject matter filter
- * - dataInicio (optional): Start date filter (ISO 8601)
- * - dataFim (optional): End date filter (ISO 8601)
- * - page (optional): Page number for pagination (default: 0)
- *
- * Responses:
- * - 200: Query results
- * - 400: Invalid parameters
- * - 404: Process not found (CNJ search mode)
- * - 500: Internal server error
- */
+import { NextResponse } from 'next/server';
+import { searchByCNJ, getMovements, DataJudError } from '@/lib/court/datajud';
+import { isValidCNJ } from '@/lib/court/cnj-utils';
+import { DataJudAdapter } from '@/lib/court/datajud-adapter';
+import { CourtAdapterError } from '@/lib/court/court-adapter';
+
+// ─── GET handler ──────────────────────────────────────────────────────────────
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const cnj = searchParams.get('cnj');
+  const cnj      = searchParams.get('cnj');
   const tribunal = searchParams.get('tribunal');
-  const classe = searchParams.get('classe');
-  const assunto = searchParams.get('assunto');
+  const classe   = searchParams.get('classe');
+  const assunto  = searchParams.get('assunto');
   const dataInicio = searchParams.get('dataInicio');
-  const dataFim = searchParams.get('dataFim');
-  const page = parseInt(searchParams.get('page') || '0', 10);
+  const dataFim  = searchParams.get('dataFim');
+  const page     = parseInt(searchParams.get('page') || '0', 10);
 
-  // Need at least cnj or tribunal
+  // At least one search mode is required
   if (!cnj && !tribunal) {
     return NextResponse.json(
       {
@@ -47,29 +51,35 @@ export async function GET(request: Request) {
     );
   }
 
-  try {
-    const datajud = new DataJudAdapter();
-    await datajud.authenticate({
-      system: 'datajud',
-      username: 'api-user',
-      apiKey: process.env.DATAJUD_API_KEY || 'public-key',
-    });
+  // ─── Mode 1: Direct CNJ search ───────────────────────────────────────────
 
-    // Mode 1: Direct CNJ search
-    if (cnj) {
-      if (!isValidCNJ(cnj)) {
-        return NextResponse.json(
-          {
-            error: 'Invalid CNJ format',
-            message: `"${cnj}" does not match the expected format: NNNNNNN-DD.AAAA.J.TR.OOOO`,
-          },
-          { status: 400 },
-        );
-      }
+  if (cnj) {
+    if (!isValidCNJ(cnj)) {
+      return NextResponse.json(
+        {
+          error: 'Invalid CNJ format',
+          message: `"${cnj}" does not match the expected format: NNNNNNN-DD.AAAA.J.TR.OOOO`,
+        },
+        { status: 400 },
+      );
+    }
 
-      const result = await datajud.searchProcess(cnj);
+    const apiKey = process.env.DATAJUD_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        {
+          error: 'DATAJUD_API_KEY not configured',
+          message: 'The DataJud API key is not set on the server. Configure DATAJUD_API_KEY in your environment.',
+        },
+        { status: 503 },
+      );
+    }
 
-      if (!result) {
+    try {
+      // Fetch process metadata
+      const processInfo = await searchByCNJ(cnj, apiKey);
+
+      if (!processInfo) {
         return NextResponse.json(
           {
             error: 'Process not found',
@@ -80,48 +90,60 @@ export async function GET(request: Request) {
         );
       }
 
-      // Also fetch movements for the process
+      // Fetch movements — non-fatal if this fails
       let movements: unknown[] = [];
       try {
-        movements = await datajud.getMovements(cnj);
+        movements = await getMovements(cnj, apiKey, cnj);
       } catch {
-        movements = [];
+        // Return process metadata even without movements
       }
 
       return NextResponse.json({
         success: true,
         mode: 'cnj_search',
-        data: {
-          process: result,
-          movements,
-        },
+        data: processInfo,
+        movements,
       });
+    } catch (error) {
+      if (error instanceof DataJudError) {
+        const status = error.status ?? 500;
+        return NextResponse.json(
+          { error: error.message },
+          { status: status >= 400 && status < 600 ? status : 500 },
+        );
+      }
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : 'Internal server error' },
+        { status: 500 },
+      );
     }
+  }
 
-    // Mode 2: Advanced tribunal query
-    if (tribunal) {
+  // ─── Mode 2: Advanced tribunal query (uses class-based adapter) ───────────
+
+  if (tribunal) {
+    try {
+      const datajud = new DataJudAdapter();
+      await datajud.authenticate({
+        system: 'datajud',
+        username: 'api-user',
+        apiKey: process.env.DATAJUD_API_KEY || 'public-key',
+      });
+
       // Build Elasticsearch query
       const mustClauses: Record<string, unknown>[] = [];
 
       if (classe) {
-        mustClauses.push({
-          match: { 'classe.nome': classe },
-        });
+        mustClauses.push({ match: { 'classe.nome': classe } });
       }
-
       if (assunto) {
-        mustClauses.push({
-          match: { 'assuntos.nome': assunto },
-        });
+        mustClauses.push({ match: { 'assuntos.nome': assunto } });
       }
-
       if (dataInicio || dataFim) {
         const range: Record<string, string> = {};
         if (dataInicio) range.gte = dataInicio;
-        if (dataFim) range.lte = dataFim;
-        mustClauses.push({
-          range: { dataAjuizamento: range },
-        });
+        if (dataFim)    range.lte = dataFim;
+        mustClauses.push({ range: { dataAjuizamento: range } });
       }
 
       const esQuery: Record<string, unknown> = mustClauses.length > 0
@@ -139,26 +161,22 @@ export async function GET(request: Request) {
         total: result.total,
         page,
       });
-    }
-  } catch (error) {
-    if (error instanceof CourtAdapterError) {
-      const statusCode = error.statusCode || 500;
+    } catch (error) {
+      if (error instanceof CourtAdapterError) {
+        const statusCode = error.statusCode || 500;
+        return NextResponse.json(
+          {
+            error: error.code,
+            message: error.message,
+            retryable: error.retryable,
+          },
+          { status: statusCode >= 400 && statusCode < 600 ? statusCode : 500 },
+        );
+      }
       return NextResponse.json(
-        {
-          error: error.code,
-          message: error.message,
-          retryable: error.retryable,
-        },
-        { status: statusCode >= 400 && statusCode < 600 ? statusCode : 500 },
+        { error: error instanceof Error ? error.message : 'Internal server error' },
+        { status: 500 },
       );
     }
-
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'An unexpected error occurred',
-      },
-      { status: 500 },
-    );
   }
 }

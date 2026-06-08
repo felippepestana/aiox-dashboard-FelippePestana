@@ -7,6 +7,8 @@
  * - Complex (deep strategy, full petition): claude-opus or gpt-4o (~$0.05)
  */
 
+import { trackAIUsage } from './ai-usage';
+
 export type TaskComplexity = 'simple' | 'medium' | 'complex';
 
 export type TaskType =
@@ -96,10 +98,79 @@ const LEGAL_SYSTEM_PROMPT = `Você é um assistente jurídico especializado em d
 - Prazos processuais aplicáveis
 - Recomendações práticas para o advogado`;
 
+export function getSystemPrompt(taskType: TaskType): string {
+  const baseContext = `Você é o APEX, assistente jurídico especializado em direito brasileiro, desenvolvido para escritórios de advocacia.`;
+
+  const prompts: Record<string, string> = {
+    chat_response: `${baseContext}
+Responda de forma clara e objetiva em português brasileiro.
+Sempre fundamente com: artigos de lei (CPC, CC, CLT, CDC, CF/88), jurisprudência (STF, STJ, TST), súmulas e OJs.
+Quando relevante, mencione prazos processuais e consequências práticas.
+Se não tiver certeza, informe e sugira consultar a legislação específica.`,
+
+    document_analysis: `${baseContext}
+Você está analisando um documento jurídico. Extraia e organize:
+1. TIPO DO DOCUMENTO e área do direito
+2. PARTES ENVOLVIDAS (autor, réu, terceiros, advogados, juiz)
+3. FATOS RELEVANTES resumidos
+4. QUESTÕES JURÍDICAS identificadas
+5. LEGISLAÇÃO APLICÁVEL (artigos específicos)
+6. RISCOS E OPORTUNIDADES para cada polo
+7. CLÁUSULAS CRÍTICAS (se contrato)
+8. RECOMENDAÇÕES ESTRATÉGICAS com prazos
+Seja preciso e objetivo. Use formatação com títulos e listas.`,
+
+    petition_generation: `${baseContext}
+Você está gerando uma petição jurídica. Siga rigorosamente:
+1. Endereçamento correto ao juízo competente
+2. Qualificação completa das partes
+3. Fundamentação fática detalhada
+4. Fundamentação jurídica com citação precisa de artigos, jurisprudência e doutrina
+5. Pedidos claros, específicos e quantificados quando aplicável
+6. Valor da causa quando necessário
+7. Requerimentos finais (citação, produção de provas, etc.)
+Use linguagem forense adequada. Cite jurisprudência real (STF, STJ) quando possível.
+Formate com seções numeradas e parágrafos bem estruturados.`,
+
+    strategy_analysis: `${baseContext}
+Você está realizando uma análise estratégica jurídica. Considere:
+1. PONTOS FORTES da posição jurídica
+2. PONTOS FRACOS e vulnerabilidades
+3. JURISPRUDÊNCIA RELEVANTE (tendência dos tribunais)
+4. RISCOS identificados com probabilidade estimada
+5. ESTRATÉGIAS RECOMENDADAS em ordem de prioridade
+6. PRÓXIMOS PASSOS com cronograma sugerido
+7. CUSTO-BENEFÍCIO de cada estratégia
+Seja analítico e prático. Forneça recomendações acionáveis.`,
+
+    precedent_search: `${baseContext}
+Você está pesquisando precedentes jurídicos. Para cada precedente relevante, forneça:
+1. Tribunal e número do processo/recurso
+2. Relator
+3. Data do julgamento
+4. Ementa resumida
+5. Tese jurídica firmada
+6. Aplicabilidade ao caso em análise
+Organize por relevância. Priorize: STF > STJ > TRFs/TJs.`,
+
+    clause_review: `${baseContext}
+Você está revisando cláusulas contratuais. Para cada cláusula relevante:
+1. IDENTIFICAÇÃO (número e título)
+2. CLASSIFICAÇÃO DE RISCO (alto/médio/baixo)
+3. ANÁLISE da validade e eficácia
+4. CONFORMIDADE com legislação vigente (CDC, CC, CLT)
+5. CLÁUSULAS ABUSIVAS identificadas (se houver)
+6. SUGESTÃO DE REDAÇÃO alternativa quando necessário
+Seja minucioso. Destaque cláusulas que podem ser questionadas judicialmente.`,
+  };
+
+  return prompts[taskType] ?? prompts.chat_response;
+}
+
 export async function callAI(
   messages: AIMessage[],
   taskType: TaskType = 'chat_response',
-  options?: { maxTokens?: number; temperature?: number }
+  options?: { maxTokens?: number; temperature?: number; userId?: string }
 ): Promise<AIResponse> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
@@ -145,6 +216,17 @@ export async function callAI(
   const tokensUsed = (data.usage?.prompt_tokens || 0) + (data.usage?.completion_tokens || 0);
   const estimatedCost = (tokensUsed / 1000) * model.costPer1kTokens;
 
+  // Fire-and-forget usage tracking (non-blocking)
+  trackAIUsage({
+    user_id: options?.userId || 'anonymous',
+    task_type: taskType,
+    model: model.name,
+    complexity,
+    tokens_used: tokensUsed,
+    cost_usd: estimatedCost,
+    duration_ms: durationMs,
+  }).catch(() => {}); // Swallow errors
+
   return {
     content,
     model: model.name,
@@ -153,6 +235,44 @@ export async function callAI(
     estimatedCost,
     durationMs,
   };
+}
+
+export async function callAIStream(
+  messages: AIMessage[],
+  taskType: TaskType = 'chat_response',
+  options?: { maxTokens?: number; temperature?: number }
+): Promise<ReadableStream<Uint8Array>> {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) throw new Error('OPENROUTER_API_KEY not configured');
+
+  const complexity = classifyComplexity(taskType, messages.map(m => m.content).join('').length);
+  const model = MODELS[complexity];
+
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://legalperformance.app',
+      'X-Title': 'APEX Legal Performance',
+    },
+    body: JSON.stringify({
+      model: model.id,
+      messages: [
+        { role: 'system', content: getSystemPrompt(taskType) },
+        ...messages.map(m => ({ role: m.role, content: m.content })),
+      ],
+      max_tokens: options?.maxTokens || model.maxTokens,
+      temperature: options?.temperature ?? 0.3,
+      stream: true,
+    }),
+  });
+
+  if (!response.ok || !response.body) {
+    throw new Error(`AI API error: ${response.status}`);
+  }
+
+  return response.body;
 }
 
 export async function analyzePDF(

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   PieChart,
   Filter,
@@ -16,6 +16,9 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Minus,
+  Activity,
+  Zap,
+  Bot,
 } from 'lucide-react';
 import { PageHeader } from '@/components/legal/shared';
 import { JurimetriaPanel } from '@/components/legal/JurimetriaPanel';
@@ -490,12 +493,277 @@ function AiPredictionPanel({ area, tipoAcao }: { area: string; tipoAcao: string 
   );
 }
 
+// ─── AI Jurimetric Analysis Panel ────────────────────────────────────────────
+
+function AIJurimetricAnalysis() {
+  const [analysisQuery, setAnalysisQuery] = useState('');
+  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+
+  const handleAnalysis = async () => {
+    if (!analysisQuery.trim()) return;
+    setAnalyzing(true);
+    setAnalysisError(null);
+    try {
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: 'user',
+              content: `Faça uma análise jurimetrica sobre: ${analysisQuery}. Inclua: taxa de sucesso estimada por tipo de ação, tempo médio de tramitação, tribunais mais favoráveis, argumentos mais eficazes, e tendências recentes da jurisprudência.`,
+            },
+          ],
+          taskType: 'strategy_analysis',
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || `Erro ${res.status}`);
+      setAnalysisResult(data.content || data.message || '');
+    } catch (err) {
+      setAnalysisError(err instanceof Error ? err.message : 'Erro ao gerar análise');
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  function renderMarkdown(text: string) {
+    return text.split('\n').map((line, i) => {
+      // Bold text: **text**
+      const parts = line.split(/(\*\*[^*]+\*\*)/g).map((part, j) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return <strong key={j} className="text-white font-semibold">{part.slice(2, -2)}</strong>;
+        }
+        return part;
+      });
+      if (line.trim() === '') return <br key={i} />;
+      return (
+        <p key={i} className="text-sm text-[#c0c8d4] leading-relaxed mb-1">
+          {parts}
+        </p>
+      );
+    });
+  }
+
+  return (
+    <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-6">
+      <div className="flex items-center gap-2 mb-4">
+        <Bot className="h-5 w-5 text-amber-400" />
+        <h3 className="text-sm font-semibold text-amber-400">Análise Jurimetrica com IA</h3>
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-xs font-medium text-[#6b7a8d] mb-1.5 uppercase tracking-wider">
+          Tema ou Área para Análise
+        </label>
+        <textarea
+          value={analysisQuery}
+          onChange={(e) => setAnalysisQuery(e.target.value)}
+          placeholder="Digite o tema ou área para análise jurimetrica (ex: dano moral por negativação indevida, rescisão contratual por inadimplemento, plano de saúde e tratamento oncológico)..."
+          className="w-full rounded-lg bg-[#0a0f1a] border border-amber-500/30 px-4 py-2.5 text-sm text-white placeholder:text-[#6b7a8d] focus:outline-none focus:border-amber-500/60 resize-none"
+          rows={3}
+        />
+      </div>
+
+      <button
+        onClick={handleAnalysis}
+        disabled={analyzing || !analysisQuery.trim()}
+        className="flex items-center gap-2 rounded-lg bg-amber-500 px-5 py-2.5 text-sm font-semibold text-black hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-4"
+      >
+        {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+        {analyzing ? 'Analisando...' : 'Analisar com IA'}
+      </button>
+
+      {analysisError && (
+        <div className="flex items-center gap-2 rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 mb-4">
+          <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0" />
+          <p className="text-sm text-red-400">{analysisError}</p>
+        </div>
+      )}
+
+      {analyzing && !analysisResult && (
+        <div className="space-y-3 animate-pulse">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="space-y-1.5">
+              <div className="h-3 rounded bg-[#1a2332]" style={{ width: `${70 + i * 5}%` }} />
+              <div className="h-3 rounded bg-[#1a2332]" style={{ width: `${50 + i * 7}%` }} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {analysisResult && !analyzing && (
+        <div className="rounded-xl border border-[#1a2332] bg-[#0a0f1a] p-5 space-y-1">
+          {renderMarkdown(analysisResult)}
+          <p className="text-[10px] text-[#6b7a8d] pt-3 border-t border-[#1a2332] mt-3">
+            Análise gerada por IA. Não constitui parecer jurídico. Consulte sempre um profissional habilitado.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── AI Usage Stats ───────────────────────────────────────────────────────────
+
+interface UsageSummary {
+  totalTokens: number;
+  totalCost: number;
+  records: { task_type: string; model: string; tokens_used: number; cost_usd: number; created_at: string }[];
+  byTaskType: Record<string, { count: number; tokens: number; cost: number }>;
+  byModel: Record<string, { count: number; tokens: number; cost: number }>;
+}
+
+function AIUsageStats() {
+  const [usage, setUsage] = useState<UsageSummary | null>(null);
+  const [loadingUsage, setLoadingUsage] = useState(false);
+  const [usageError, setUsageError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoadingUsage(true);
+    fetch('/api/ai/usage?days=30')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) throw new Error(data.message || data.error);
+        setUsage(data as UsageSummary);
+      })
+      .catch((err) => setUsageError(err.message))
+      .finally(() => setLoadingUsage(false));
+  }, []);
+
+  const totalQueries = usage ? usage.records.length : 0;
+  const topTaskTypes = usage
+    ? Object.entries(usage.byTaskType)
+        .sort((a, b) => b[1].count - a[1].count)
+        .slice(0, 5)
+    : [];
+  const topModels = usage
+    ? Object.entries(usage.byModel)
+        .sort((a, b) => b[1].count - a[1].count)
+        .slice(0, 3)
+    : [];
+  const maxCount = topTaskTypes.length > 0 ? topTaskTypes[0][1].count : 1;
+
+  return (
+    <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6">
+      <div className="flex items-center gap-2 mb-5">
+        <Activity className="h-5 w-5 text-amber-400" />
+        <h3 className="text-sm font-semibold text-white">Uso de IA — Últimos 30 Dias</h3>
+      </div>
+
+      {loadingUsage && (
+        <div className="grid grid-cols-3 gap-4 animate-pulse">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-xl border border-[#1a2332] bg-[#0a0f1a] p-4">
+              <div className="h-3 w-20 rounded bg-[#1a2332] mb-2" />
+              <div className="h-6 w-16 rounded bg-[#1a2332]" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {usageError && !loadingUsage && (
+        <div className="flex items-center gap-2 rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3">
+          <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0" />
+          <p className="text-sm text-red-400">{usageError}</p>
+        </div>
+      )}
+
+      {usage && !loadingUsage && (
+        <div className="space-y-5">
+          {/* KPI Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="rounded-xl border border-[#1a2332] bg-[#0a0f1a] p-4">
+              <div className="flex items-center gap-2 mb-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                <span className="text-xs text-[#6b7a8d] uppercase tracking-wider">Consultas</span>
+              </div>
+              <p className="text-2xl font-bold text-white">{totalQueries.toLocaleString('pt-BR')}</p>
+              <p className="text-xs text-[#6b7a8d] mt-0.5">requisições totais</p>
+            </div>
+            <div className="rounded-xl border border-[#1a2332] bg-[#0a0f1a] p-4">
+              <div className="flex items-center gap-2 mb-1.5">
+                <Zap className="h-3.5 w-3.5 text-blue-400" />
+                <span className="text-xs text-[#6b7a8d] uppercase tracking-wider">Tokens</span>
+              </div>
+              <p className="text-2xl font-bold text-white">
+                {usage.totalTokens >= 1000
+                  ? `${(usage.totalTokens / 1000).toFixed(1)}k`
+                  : usage.totalTokens.toLocaleString('pt-BR')}
+              </p>
+              <p className="text-xs text-[#6b7a8d] mt-0.5">tokens consumidos</p>
+            </div>
+            <div className="rounded-xl border border-[#1a2332] bg-[#0a0f1a] p-4">
+              <div className="flex items-center gap-2 mb-1.5">
+                <DollarSign className="h-3.5 w-3.5 text-green-400" />
+                <span className="text-xs text-[#6b7a8d] uppercase tracking-wider">Custo</span>
+              </div>
+              <p className="text-2xl font-bold text-white">
+                ${usage.totalCost.toFixed(4)}
+              </p>
+              <p className="text-xs text-[#6b7a8d] mt-0.5">custo estimado (USD)</p>
+            </div>
+          </div>
+
+          {/* Task type breakdown bar chart */}
+          {topTaskTypes.length > 0 && (
+            <div>
+              <h4 className="text-xs font-semibold text-[#6b7a8d] uppercase tracking-wider mb-3">Por Tipo de Tarefa</h4>
+              <div className="space-y-2.5">
+                {topTaskTypes.map(([taskType, stats]) => (
+                  <div key={taskType}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-[#c0c8d4] capitalize">{taskType.replace(/_/g, ' ')}</span>
+                      <span className="text-xs font-semibold text-amber-400">{stats.count}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-[#1a2332]">
+                      <div
+                        className="h-2 rounded-full bg-amber-500 transition-all"
+                        style={{ width: `${(stats.count / maxCount) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Model breakdown */}
+          {topModels.length > 0 && (
+            <div>
+              <h4 className="text-xs font-semibold text-[#6b7a8d] uppercase tracking-wider mb-3">Por Modelo</h4>
+              <div className="flex flex-wrap gap-2">
+                {topModels.map(([model, stats]) => (
+                  <div
+                    key={model}
+                    className="rounded-lg border border-[#1a2332] bg-[#0a0f1a] px-3 py-2 flex items-center gap-2"
+                  >
+                    <Bot className="h-3.5 w-3.5 text-amber-400" />
+                    <span className="text-xs text-white">{model}</span>
+                    <span className="text-xs text-[#6b7a8d]">{stats.count}x</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {totalQueries === 0 && (
+            <p className="text-sm text-[#6b7a8d] text-center py-4">Nenhuma consulta registrada nos últimos {30} dias.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function JurimetriaPage() {
   const [area, setArea] = useState('civil');
   const [tipoAcao, setTipoAcao] = useState('indenizacao');
-  const [activeTab, setActiveTab] = useState<'tribunais' | 'areas' | 'duracao' | 'predicao'>('tribunais');
+  const [activeTab, setActiveTab] = useState<'tribunais' | 'areas' | 'duracao' | 'predicao' | 'analise'>('tribunais');
 
   const stats = useMemo(() => getMockStats(area, tipoAcao), [area, tipoAcao]);
   const areaLabel = AREAS.find((a) => a.value === area)?.label || area;
@@ -512,6 +780,7 @@ export default function JurimetriaPage() {
     { id: 'areas', label: 'Por Area' },
     { id: 'duracao', label: 'Duracao' },
     { id: 'predicao', label: 'Predicao IA' },
+    { id: 'analise', label: 'Analise IA' },
   ] as const;
 
   return (
@@ -762,6 +1031,13 @@ export default function JurimetriaPage() {
       {activeTab === 'predicao' && (
         <AiPredictionPanel area={areaLabel} tipoAcao={tipoLabel} />
       )}
+
+      {activeTab === 'analise' && (
+        <AIJurimetricAnalysis />
+      )}
+
+      {/* AI Usage Stats — always shown at the bottom */}
+      <AIUsageStats />
     </div>
   );
 }

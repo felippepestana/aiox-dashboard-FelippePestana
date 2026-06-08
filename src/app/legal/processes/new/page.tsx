@@ -43,7 +43,18 @@ interface DataJudResult {
   orgaoJulgador: string;
   dataAjuizamento: string;
   grau: string;
-  movimentos: { codigo: number; nome: string; dataHora: string }[];
+  ultimaAtualizacao: string;
+  nivelSigilo: number;
+}
+
+interface DataJudMovimento {
+  id: string;
+  processId: string;
+  date: string;
+  description: string;
+  type: string;
+  source: string;
+  isRead: boolean;
 }
 
 function formatCnj(value: string): string {
@@ -109,6 +120,7 @@ export default function NewProcessPage() {
   const [cnjInput, setCnjInput] = useState('');
   const [searchStatus, setSearchStatus] = useState<CnjSearchStatus>('idle');
   const [datajudResult, setDatajudResult] = useState<DataJudResult | null>(null);
+  const [datajudMovimentos, setDatajudMovimentos] = useState<DataJudMovimento[]>([]);
   const [preFilledFromCnj, setPreFilledFromCnj] = useState(false);
 
   const [form, setForm] = useState({
@@ -143,9 +155,11 @@ export default function NewProcessPage() {
       const response = await fetch(`/api/legal/court/datajud?cnj=${encodeURIComponent(cnjInput)}`);
       const data = await response.json();
 
-      if (data.success && data.data?.process) {
-        const process = data.data.process as DataJudResult;
+      // New response shape: { success, mode: 'cnj_search', data: DataJudProcessInfo, movements: ProcessMovement[] }
+      if (data.success && data.data) {
+        const process = data.data as DataJudResult;
         setDatajudResult(process);
+        setDatajudMovimentos((data.movements as DataJudMovimento[]) || []);
         setSearchStatus('found');
 
         const assuntos = process.assuntos || [];
@@ -154,7 +168,7 @@ export default function NewProcessPage() {
         const state = inferState(process.tribunal || '');
         const orgao = process.orgaoJulgador || '';
         const varaMatch = orgao.match(/(\d+[ªa]?\s*Vara[^-]*)/i);
-        const comarcaMatch = orgao.match(/(?:Comarca|Foro|Secao)\s+(?:de\s+)?(.+?)$/i);
+        const comarcaMatch = orgao.match(/(?:Comarca|Foro|Secao|Seção)\s+(?:de\s+)?(.+?)$/i);
 
         setForm(prev => ({
           ...prev,
@@ -188,13 +202,13 @@ export default function NewProcessPage() {
       tags: datajudResult ? ['datajud-vinculado', 'sync-ativo'] : [],
     });
 
-    if (datajudResult?.movimentos) {
-      for (const mov of datajudResult.movimentos.slice(0, 20)) {
+    if (datajudMovimentos.length > 0) {
+      for (const mov of datajudMovimentos.slice(0, 20)) {
         addMovement({
           processId,
-          date: mov.dataHora || new Date().toISOString(),
-          description: mov.nome || 'Movimentação',
-          type: String(mov.codigo || ''),
+          date: mov.date || new Date().toISOString(),
+          description: mov.description || 'Movimentação',
+          type: mov.type || '',
           source: 'datajud',
           isRead: false,
         });
@@ -273,8 +287,8 @@ export default function NewProcessPage() {
               {datajudResult && (
                 <div className="mt-2 text-xs text-[#6b7a8d]">
                   <span className="text-white">{datajudResult.classe}</span> — {datajudResult.tribunal} — {datajudResult.orgaoJulgador}
-                  {datajudResult.movimentos && (
-                    <span className="ml-2 text-amber-400">({datajudResult.movimentos.length} movimentações importadas)</span>
+                  {datajudMovimentos.length > 0 && (
+                    <span className="ml-2 text-amber-400">({datajudMovimentos.length} movimentações importadas)</span>
                   )}
                 </div>
               )}

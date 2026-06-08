@@ -100,6 +100,7 @@ export default function ChatPage() {
   const [showPoloModal, setShowPoloModal] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const streamingIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -119,19 +120,77 @@ export default function ChatPage() {
     setChatInput('');
     setIsTyping(true);
 
-    // Try real AI first, fallback to local keyword-matching
     (async () => {
+      const contextMsg = docContext?.analyzed
+        ? `[Contexto: documento "${docContext.fileName}" analisado como ${docContext.polo === 'autor' ? 'polo ativo' : 'polo passivo'}] `
+        : '';
+
+      const aiMessages = messages
+        .filter(m => m.role !== 'system')
+        .slice(-10)
+        .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }));
+      aiMessages.push({ role: 'user', content: contextMsg + input });
+
+      // --- Attempt streaming ---
       try {
-        const contextMsg = docContext?.analyzed
-          ? `[Contexto: documento "${docContext.fileName}" analisado como ${docContext.polo === 'autor' ? 'polo ativo' : 'polo passivo'}] `
-          : '';
+        const streamRes = await fetch('/api/ai/chat/stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: aiMessages, taskType: 'chat_response' }),
+        });
 
-        const aiMessages = messages
-          .filter(m => m.role !== 'system')
-          .slice(-10)
-          .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }));
-        aiMessages.push({ role: 'user', content: contextMsg + input });
+        if (!streamRes.ok || !streamRes.body) throw new Error('Stream unavailable');
 
+        // Insert a placeholder assistant message to stream into
+        const assistantId = `ai-stream-${Date.now()}`;
+        streamingIdRef.current = assistantId;
+        setMessages(prev => [...prev, {
+          id: assistantId,
+          role: 'assistant',
+          content: '',
+          timestamp: new Date(),
+        }]);
+        setIsTyping(false);
+
+        const reader = streamRes.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n').filter(line => line.startsWith('data: '));
+          for (const line of lines) {
+            const data = line.slice(6); // Remove "data: "
+            if (data === '[DONE]') continue;
+            try {
+              const parsed = JSON.parse(data);
+              const content = parsed.choices?.[0]?.delta?.content;
+              if (content) {
+                fullText += content;
+                setMessages(prev => prev.map(m =>
+                  m.id === assistantId ? { ...m, content: fullText } : m
+                ));
+              }
+            } catch { /* skip malformed chunks */ }
+          }
+        }
+
+        streamingIdRef.current = null;
+        return; // streaming succeeded — skip fallbacks below
+      } catch {
+        // Streaming failed — clear any partial placeholder before trying non-streaming
+        if (streamingIdRef.current) {
+          setMessages(prev => prev.filter(m => m.id !== streamingIdRef.current));
+          streamingIdRef.current = null;
+        }
+        setIsTyping(true);
+      }
+
+      // --- Fallback: non-streaming /api/ai/chat ---
+      try {
         const res = await fetch('/api/ai/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

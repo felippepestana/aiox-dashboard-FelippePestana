@@ -18,6 +18,8 @@ import {
   Minus,
   AlertCircle,
   Loader2,
+  Brain,
+  FileText,
 } from 'lucide-react';
 import type { PrecedentResult, PrecedentFilters, Favorability } from '@/lib/legal-intelligence';
 import { PageHeader, EmptyState } from '@/components/legal/shared';
@@ -298,6 +300,249 @@ function PrecedentCard({ precedent }: { precedent: PrecedentResult & { id?: stri
   );
 }
 
+// ─── AI Deep Precedent Search ─────────────────────────────────────────────────
+
+interface AIParsedPrecedent {
+  tribunal: string;
+  caseNumber: string;
+  relator: string;
+  ementa: string;
+  tese: string;
+  relevance: string;
+}
+
+function parseAIPrecedents(text: string): AIParsedPrecedent[] {
+  // Try to split by numbered items (1., 2., etc.) or by "Tribunal:" blocks
+  const blocks = text
+    .split(/(?=\n\d+\.\s|\n---|\n\*\*\d+\.)/g)
+    .map((b) => b.trim())
+    .filter((b) => b.length > 20);
+
+  if (blocks.length <= 1) {
+    // Return as single raw block
+    return [
+      {
+        tribunal: '',
+        caseNumber: '',
+        relator: '',
+        ementa: text.trim(),
+        tese: '',
+        relevance: '',
+      },
+    ];
+  }
+
+  return blocks.map((block) => {
+    const extract = (patterns: RegExp[]) => {
+      for (const p of patterns) {
+        const m = block.match(p);
+        if (m) return m[1].trim();
+      }
+      return '';
+    };
+
+    return {
+      tribunal: extract([/Tribunal[:\s]+([^\n]+)/i, /\b(STF|STJ|TST|TRF\d|TJ\w+)\b/]),
+      caseNumber: extract([/(?:Processo|Número|Recurso)[:\s]+([^\n]+)/i, /([A-Z]+\s[\d./-]+\/[A-Z]{2})/]),
+      relator: extract([/Relator[:\s]+([^\n]+)/i]),
+      ementa: extract([/(?:Ementa|Resumo|Decisão)[:\s]+([^\n]+(?:\n(?!\d+\.)[^\n]+)*)/i]) || block.slice(0, 300),
+      tese: extract([/(?:Tese|Ratio decidendi|Fundamento)[:\s]+([^\n]+)/i]),
+      relevance: extract([/(?:Relevância|Aplicabilidade)[:\s]+([^\n]+)/i]),
+    };
+  });
+}
+
+function AIPrecedentCard({ precedent, index }: { precedent: AIParsedPrecedent; index: number }) {
+  const [expanded, setExpanded] = useState(false);
+  const courtColor = getCourtBadgeColor(precedent.tribunal);
+
+  return (
+    <div className="rounded-xl border border-amber-500/10 bg-[#0d1320] p-5 hover:border-amber-500/20 transition-colors">
+      <div className="flex items-start gap-3 mb-3">
+        <div className="flex-shrink-0 w-7 h-7 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+          <span className="text-xs font-bold text-amber-400">{index + 1}</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            {precedent.tribunal && (
+              <span className={`rounded-lg border px-2 py-0.5 text-xs font-bold flex-shrink-0 ${courtColor}`}>
+                {precedent.tribunal}
+              </span>
+            )}
+            {precedent.caseNumber && (
+              <span className="text-sm font-semibold text-white truncate">{precedent.caseNumber}</span>
+            )}
+          </div>
+          {precedent.relator && (
+            <div className="flex items-center gap-1.5 text-xs text-[#6b7a8d]">
+              <User className="h-3 w-3" />
+              <span>{precedent.relator}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <p className={`text-sm text-[#c0c8d4] leading-relaxed mb-3 ${!expanded ? 'line-clamp-4' : ''}`}>
+        {precedent.ementa}
+      </p>
+
+      {precedent.tese && (
+        <div className={`rounded-lg bg-amber-500/5 border border-amber-500/10 px-3 py-2 mb-3 ${!expanded ? 'hidden' : ''}`}>
+          <p className="text-xs font-semibold text-amber-400 mb-1">Tese Jurídica</p>
+          <p className="text-xs text-[#c0c8d4]">{precedent.tese}</p>
+        </div>
+      )}
+
+      {precedent.relevance && expanded && (
+        <div className="rounded-lg bg-green-500/5 border border-green-500/10 px-3 py-2 mb-3">
+          <p className="text-xs font-semibold text-green-400 mb-1">Aplicabilidade</p>
+          <p className="text-xs text-[#c0c8d4]">{precedent.relevance}</p>
+        </div>
+      )}
+
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex items-center gap-1 rounded-lg bg-[#1a2332] px-3 py-1.5 text-xs text-[#6b7a8d] hover:text-white hover:bg-[#2a3342] transition-colors"
+      >
+        {expanded ? (
+          <><ChevronUp className="h-3.5 w-3.5" /> Recolher</>
+        ) : (
+          <><ChevronDown className="h-3.5 w-3.5" /> Ver Detalhes</>
+        )}
+      </button>
+    </div>
+  );
+}
+
+function AIPrecedentSearchPanel() {
+  const [query, setQuery] = useState('');
+  const [rawResult, setRawResult] = useState<string | null>(null);
+  const [parsedPrecedents, setParsedPrecedents] = useState<AIParsedPrecedent[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSearch() {
+    if (!query.trim()) return;
+    setLoading(true);
+    setError(null);
+    setRawResult(null);
+    setParsedPrecedents([]);
+
+    try {
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: 'user',
+              content: `Pesquise e liste os principais precedentes jurídicos sobre: ${query}. Para cada precedente, forneça: tribunal, número do processo, relator, ementa resumida, tese jurídica firmada e aplicabilidade ao tema. Organize por relevância (STF > STJ > TST > TRFs/TJs). Liste pelo menos 5 precedentes se existirem.`,
+            },
+          ],
+          taskType: 'precedent_search',
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || `Erro ${res.status}`);
+      const content = data.content || data.message || '';
+      setRawResult(content);
+      setParsedPrecedents(parseAIPrecedents(content));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao buscar precedentes');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleClear() {
+    setRawResult(null);
+    setParsedPrecedents([]);
+    setError(null);
+    setQuery('');
+  }
+
+  return (
+    <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-6">
+      <div className="flex items-center gap-2 mb-4">
+        <Brain className="h-4 w-4 text-blue-400" />
+        <span className="text-sm font-semibold text-blue-400">Busca Profunda de Precedentes por IA</span>
+        {rawResult && (
+          <button
+            onClick={handleClear}
+            className="ml-auto text-xs text-[#6b7a8d] hover:text-white border border-[#1a2332] rounded-lg px-3 py-1 transition-colors"
+          >
+            Limpar
+          </button>
+        )}
+      </div>
+
+      <div className="flex gap-3 mb-4">
+        <div className="relative flex-1">
+          <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-400/60" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            placeholder="Buscar precedentes sobre... (ex: dano moral por negativação indevida, teletrabalho horas extras, LGPD vazamento de dados)..."
+            className="w-full rounded-lg bg-[#0a0f1a] border border-blue-500/30 pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-[#6b7a8d] focus:outline-none focus:border-blue-500/60"
+          />
+        </div>
+        <button
+          onClick={handleSearch}
+          disabled={loading || !query.trim()}
+          className="flex items-center gap-2 rounded-lg bg-blue-500/10 border border-blue-500/30 px-4 py-2.5 text-sm font-medium text-blue-400 hover:bg-blue-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Brain className="h-4 w-4" />}
+          {loading ? 'Buscando...' : 'Buscar com IA'}
+        </button>
+      </div>
+
+      {error && (
+        <div className="flex items-center gap-2 rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 mb-4">
+          <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0" />
+          <p className="text-sm text-red-400">{error}</p>
+        </div>
+      )}
+
+      {loading && (
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-5 animate-pulse">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="h-7 w-7 rounded-full bg-[#1a2332]" />
+                <div className="flex gap-2">
+                  <div className="h-5 w-10 rounded-lg bg-[#1a2332]" />
+                  <div className="h-5 w-32 rounded bg-[#1a2332]" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <div className="h-3 w-full rounded bg-[#1a2332]" />
+                <div className="h-3 w-5/6 rounded bg-[#1a2332]" />
+                <div className="h-3 w-4/6 rounded bg-[#1a2332]" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!loading && parsedPrecedents.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-xs text-[#6b7a8d]">
+            <span className="text-blue-400 font-semibold">{parsedPrecedents.length}</span> precedente{parsedPrecedents.length !== 1 ? 's' : ''} encontrado{parsedPrecedents.length !== 1 ? 's' : ''} por IA
+          </p>
+          {parsedPrecedents.map((p, idx) => (
+            <AIPrecedentCard key={idx} precedent={p} index={idx} />
+          ))}
+          <p className="text-[10px] text-[#6b7a8d]">
+            Resultados gerados por IA. Verifique sempre nos sistemas oficiais dos tribunais (STF, STJ, CNJ).
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function PrecedentsPage() {
@@ -443,6 +688,9 @@ export default function PrecedentsPage() {
           </div>
         )}
       </div>
+
+      {/* AI Deep Precedent Search */}
+      <AIPrecedentSearchPanel />
 
       {/* Standard Filters */}
       <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6">

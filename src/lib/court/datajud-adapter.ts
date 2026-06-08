@@ -293,7 +293,9 @@ export class DataJudAdapter implements CourtAdapter {
 
   constructor(config?: Partial<DataJudConfig>) {
     this.config = { ...DEFAULT_DATAJUD_CONFIG, ...config };
-    this.useMockData = process.env.NODE_ENV === 'development' || !process.env.DATAJUD_API_KEY;
+    // Use mock data only when no API key is available.
+    // In development with a real key, real API calls are made.
+    this.useMockData = !process.env.DATAJUD_API_KEY;
   }
 
   // ─── Authentication ─────────────────────────────────────────────────────
