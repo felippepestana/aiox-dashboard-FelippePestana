@@ -54,9 +54,6 @@ const MODEL_CONFIG: Record<TaskComplexity, ModelConfig> = {
   },
 };
 
-// Keep MODELS as an alias for backwards-compatibility with any internal references
-const MODELS = MODEL_CONFIG;
-
 const TASK_COMPLEXITY_MAP: Record<TaskType, TaskComplexity> = {
   chat_response: 'simple',
   deadline_calculation: 'simple',

@@ -7,8 +7,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { type, data } = body;
 
+    if (!data?.id || !/^\d+$/.test(String(data.id))) {
+      return NextResponse.json({ received: true });
+    }
+
+    const id = String(data.id);
+
     if (type === 'payment') {
-      const payment = await getPaymentInfo(data.id);
+      const payment = await getPaymentInfo(id);
       if (!payment) return NextResponse.json({ received: true });
 
       const userId = payment.external_reference;
@@ -26,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (type === 'subscription_preapproval') {
-      const subscription = await getSubscriptionInfo(data.id);
+      const subscription = await getSubscriptionInfo(id);
       if (!subscription) return NextResponse.json({ received: true });
 
       const userId = subscription.external_reference;
