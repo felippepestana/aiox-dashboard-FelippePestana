@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   CreditCard,
   Plus,
@@ -15,6 +15,7 @@ import {
   Trash2,
   FileText,
   Loader2,
+  ArrowUpCircle,
 } from 'lucide-react';
 import { useLegalFinancialStore } from '@/stores/legal-financial-store';
 import { useLegalStore } from '@/stores/legal-store';
@@ -104,6 +105,135 @@ function emptyForm() {
     notes: '',
     items: [{ ...EMPTY_ITEM }],
   };
+}
+
+// ─── Subscription Panel ───────────────────────────────────────────────────────
+
+interface SubscriptionData {
+  plan: string;
+  status: string;
+  currentPeriodEnd: string | null;
+}
+
+const PLAN_LABELS: Record<string, string> = {
+  starter: 'Starter (Gratuito)',
+  professional: 'Professional — R$ 197/mês',
+  enterprise: 'Enterprise',
+};
+
+const STATUS_BADGE: Record<string, { label: string; className: string }> = {
+  active:    { label: 'Ativa',       className: 'bg-green-500/10 text-green-400 border-green-500/20' },
+  trialing:  { label: 'Período de teste', className: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+  past_due:  { label: 'Pagamento pendente', className: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' },
+  canceled:  { label: 'Cancelada',   className: 'bg-red-500/10 text-red-400 border-red-500/20' },
+  free:      { label: 'Plano Gratuito', className: 'bg-[#1a2332] text-[#6b7a8d] border-[#1a2332]' },
+};
+
+function SubscriptionPanel() {
+  const [data, setData] = useState<SubscriptionData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [upgrading, setUpgrading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/payments/subscription')
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.error) setError(json.error);
+        else setData(json);
+      })
+      .catch(() => setError('Não foi possível carregar os dados da assinatura.'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function handleUpgrade() {
+    setUpgrading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/payments/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: 'professional' }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error || 'Erro ao criar checkout.');
+        return;
+      }
+      window.location.href = json.initPoint;
+    } catch {
+      setError('Erro de conexão. Tente novamente.');
+    } finally {
+      setUpgrading(false);
+    }
+  }
+
+  const statusBadge = data ? (STATUS_BADGE[data.status] ?? STATUS_BADGE.free) : null;
+  const isStarter = !data || data.plan === 'starter' || data.status === 'free';
+
+  return (
+    <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h2 className="text-base font-semibold text-white mb-0.5">Sua Assinatura</h2>
+          <p className="text-xs text-[#6b7a8d]">Gerencie seu plano APEX Legal</p>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center gap-2 text-[#6b7a8d] text-sm">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Carregando…
+          </div>
+        ) : error ? (
+          <p className="text-xs text-red-400">{error}</p>
+        ) : data ? (
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Plan name */}
+            <div className="text-right">
+              <p className="text-sm font-semibold text-white">
+                {PLAN_LABELS[data.plan] ?? data.plan}
+              </p>
+              {data.currentPeriodEnd && (
+                <p className="text-xs text-[#6b7a8d]">
+                  Próx. cobrança:{' '}
+                  {new Date(data.currentPeriodEnd).toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                  })}
+                </p>
+              )}
+            </div>
+
+            {/* Status badge */}
+            {statusBadge && (
+              <span
+                className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${statusBadge.className}`}
+              >
+                {statusBadge.label}
+              </span>
+            )}
+
+            {/* Upgrade button — only for starter/free */}
+            {isStarter && (
+              <button
+                onClick={handleUpgrade}
+                disabled={upgrading}
+                className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black hover:bg-amber-400 disabled:opacity-50 transition-colors"
+              >
+                {upgrading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ArrowUpCircle className="h-4 w-4" />
+                )}
+                Fazer Upgrade
+              </button>
+            )}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -220,6 +350,8 @@ export default function BillingPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] p-6 lg:p-8 space-y-6">
+
+      <SubscriptionPanel />
 
       <PageHeader
         title="Faturamento"

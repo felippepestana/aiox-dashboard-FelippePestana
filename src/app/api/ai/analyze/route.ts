@@ -124,9 +124,9 @@ ${content.slice(0, 50000)}`,
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
 
-    if (message.includes('OPENROUTER_API_KEY')) {
+    if (message.includes('ANTHROPIC_API_KEY')) {
       return NextResponse.json(
-        { error: 'AI not configured', message: 'OpenRouter API key missing' },
+        { error: 'AI not configured', message: 'Anthropic API key missing' },
         { status: 503 }
       );
     }

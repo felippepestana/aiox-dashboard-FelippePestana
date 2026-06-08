@@ -5,4 +5,20 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['chokidar'],
 };
 
-export default nextConfig;
+// Wrap with Sentry if available
+let finalConfig: NextConfig = nextConfig;
+try {
+  const { withSentryConfig } = require('@sentry/nextjs');
+  finalConfig = withSentryConfig(nextConfig, {
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+    silent: !process.env.CI,
+    widenClientFileUpload: true,
+    tunnelRoute: '/monitoring',
+    disableLogger: true,
+  });
+} catch {
+  // Sentry not installed — use base config
+}
+
+export default finalConfig;

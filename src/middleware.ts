@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const PROTECTED_PREFIXES = ['/legal', '/dental', '/kanban'];
 
-const PUBLIC_PATHS = ['/login', '/api/auth'];
+const PUBLIC_PATHS = ['/login', '/api/auth', '/api/payments/webhook'];
 
 // ─── Security headers ─────────────────────────────────────────────────────────
 

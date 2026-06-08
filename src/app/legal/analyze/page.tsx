@@ -244,17 +244,17 @@ export default function AnalyzePage() {
     const fileName = files[0]?.name || 'documento.pdf';
     const poloLabel = selectedPolo === 'autor' ? 'Autor' : selectedPolo === 'reu' ? 'Réu' : 'Terceiro';
     const result: AnalysisResult = {
-      summary: `Documento "${fileName}" recebido para análise sob a perspectiva do ${poloLabel}. A IA está indisponível no momento — configure a OPENROUTER_API_KEY para análise completa com inteligência artificial.`,
+      summary: `Documento "${fileName}" recebido para análise sob a perspectiva do ${poloLabel}. A IA está indisponível no momento — configure a ANTHROPIC_API_KEY para análise completa com inteligência artificial.`,
       docType: 'Documento Jurídico',
       legalArea: 'A determinar',
       complexity: 5,
       entities: [],
       clauses: [],
       strategy: {
-        recommendation: `Configure a chave da API OpenRouter para obter análise estratégica real com IA para o ${poloLabel}.`,
+        recommendation: `Configure a chave da API Anthropic para obter análise estratégica real com IA para o ${poloLabel}.`,
         strengths: [],
         weaknesses: [],
-        nextSteps: ['1. Configure OPENROUTER_API_KEY no arquivo .env', '2. Reenvie o documento para análise com IA'],
+        nextSteps: ['1. Configure ANTHROPIC_API_KEY no arquivo .env', '2. Reenvie o documento para análise com IA'],
         riskLevel: 'medium',
         estimatedSuccessRate: 50,
       },
@@ -326,7 +326,7 @@ export default function AnalyzePage() {
     const assistantMsg: ChatMessage = {
       id: `assistant-${Date.now()}`,
       role: 'assistant',
-      content: `Recebi sua pergunta sobre "${input.slice(0, 50)}...". A IA está indisponível no momento. Configure a OPENROUTER_API_KEY para respostas inteligentes.`,
+      content: `Recebi sua pergunta sobre "${input.slice(0, 50)}...". A IA está indisponível no momento. Configure a ANTHROPIC_API_KEY para respostas inteligentes.`,
       timestamp: new Date().toISOString(),
     };
     setMessages(prev => [...prev, assistantMsg]);
@@ -390,7 +390,7 @@ export default function AnalyzePage() {
     setMessages(prev => [...prev, {
       id: `assistant-file-${Date.now()}`,
       role: 'assistant',
-      content: `Recebi o documento **"${file.name}"** (${(file.size / 1024).toFixed(0)} KB). Configure a OPENROUTER_API_KEY para análise conjunta com IA.`,
+      content: `Recebi o documento **"${file.name}"** (${(file.size / 1024).toFixed(0)} KB). Configure a ANTHROPIC_API_KEY para análise conjunta com IA.`,
       timestamp: new Date().toISOString(),
     }]);
     setIsTyping(false);

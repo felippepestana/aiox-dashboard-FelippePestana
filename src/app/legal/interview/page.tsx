@@ -730,7 +730,7 @@ Notas: "${session.notes}"`,
         setSummary(data.content as string);
       } else {
         setSummary(
-          `Resumo automático indisponível. Configure a OPENROUTER_API_KEY para usar a IA.`
+          `Resumo automático indisponível. Configure a ANTHROPIC_API_KEY para usar a IA.`
         );
       }
     } catch {

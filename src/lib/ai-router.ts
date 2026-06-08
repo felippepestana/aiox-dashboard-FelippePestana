@@ -1,12 +1,13 @@
 /**
- * AI Router — Intelligent LLM routing via OpenRouter
+ * AI Router — Intelligent LLM routing via Anthropic SDK
  *
  * Analyzes task complexity and routes to the cheapest capable model:
  * - Simple (quick lookup, format): claude-haiku (~$0.001)
- * - Medium (analysis, drafting): claude-sonnet (~$0.01)
- * - Complex (deep strategy, full petition): claude-opus or gpt-4o (~$0.05)
+ * - Medium (analysis, drafting): claude-sonnet (~$0.003)
+ * - Complex (deep strategy, full petition): claude-opus (~$0.005)
  */
 
+import Anthropic from '@anthropic-ai/sdk';
 import { trackAIUsage } from './ai-usage';
 
 export type TaskComplexity = 'simple' | 'medium' | 'complex';
@@ -21,7 +22,7 @@ export type TaskType =
   | 'deadline_calculation'
   | 'summary';
 
-interface ModelConfig {
+export interface ModelConfig {
   id: string;
   name: string;
   costPer1kTokens: number;
@@ -29,29 +30,32 @@ interface ModelConfig {
   supportsVision: boolean;
 }
 
-const MODELS: Record<TaskComplexity, ModelConfig> = {
+const MODEL_CONFIG: Record<TaskComplexity, ModelConfig> = {
   simple: {
-    id: 'anthropic/claude-3.5-haiku',
+    id: 'claude-haiku-4-5',
     name: 'Claude Haiku',
     costPer1kTokens: 0.001,
     maxTokens: 8192,
     supportsVision: false,
   },
   medium: {
-    id: 'anthropic/claude-sonnet-4',
+    id: 'claude-sonnet-4-6',
     name: 'Claude Sonnet',
     costPer1kTokens: 0.003,
     maxTokens: 16384,
     supportsVision: true,
   },
   complex: {
-    id: 'anthropic/claude-opus-4',
+    id: 'claude-opus-4-6',
     name: 'Claude Opus',
-    costPer1kTokens: 0.015,
+    costPer1kTokens: 0.005,
     maxTokens: 32768,
     supportsVision: true,
   },
 };
+
+// Keep MODELS as an alias for backwards-compatibility with any internal references
+const MODELS = MODEL_CONFIG;
 
 const TASK_COMPLEXITY_MAP: Record<TaskType, TaskComplexity> = {
   chat_response: 'simple',
@@ -64,6 +68,15 @@ const TASK_COMPLEXITY_MAP: Record<TaskType, TaskComplexity> = {
   strategy_analysis: 'complex',
 };
 
+// Lazy singleton Anthropic client
+let _client: Anthropic | null = null;
+function getClient(): Anthropic {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not configured. Add it to .env file.');
+  if (!_client) _client = new Anthropic({ apiKey });
+  return _client;
+}
+
 export function classifyComplexity(taskType: TaskType, inputLength: number): TaskComplexity {
   const baseComplexity = TASK_COMPLEXITY_MAP[taskType];
 
@@ -75,7 +88,7 @@ export function classifyComplexity(taskType: TaskType, inputLength: number): Tas
 
 export function getModelForTask(taskType: TaskType, inputLength: number = 0): ModelConfig {
   const complexity = classifyComplexity(taskType, inputLength);
-  return MODELS[complexity];
+  return MODEL_CONFIG[complexity];
 }
 
 export interface AIMessage {
@@ -91,12 +104,6 @@ export interface AIResponse {
   estimatedCost: number;
   durationMs: number;
 }
-
-const LEGAL_SYSTEM_PROMPT = `Você é um assistente jurídico especializado em direito brasileiro. Responda sempre em português brasileiro, com fundamentação legal precisa (artigos, leis, jurisprudência). Seja objetivo e prático. Quando relevante, cite:
-- Dispositivos legais (CPC, CC, CLT, CDC, CF/88)
-- Jurisprudência do STF e STJ (súmulas, temas repetitivos)
-- Prazos processuais aplicáveis
-- Recomendações práticas para o advogado`;
 
 export function getSystemPrompt(taskType: TaskType): string {
   const baseContext = `Você é o APEX, assistente jurídico especializado em direito brasileiro, desenvolvido para escritórios de advocacia.`;
@@ -172,48 +179,31 @@ export async function callAI(
   taskType: TaskType = 'chat_response',
   options?: { maxTokens?: number; temperature?: number; userId?: string }
 ): Promise<AIResponse> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    throw new Error('OPENROUTER_API_KEY not configured. Add it to .env file.');
-  }
-
+  const client = getClient();
   const inputLength = messages.reduce((sum, m) => sum + m.content.length, 0);
-  const model = getModelForTask(taskType, inputLength);
   const complexity = classifyComplexity(taskType, inputLength);
+  const model = MODEL_CONFIG[complexity];
+  const systemPrompt = getSystemPrompt(taskType);
 
-  const allMessages: AIMessage[] = [
-    { role: 'system', content: LEGAL_SYSTEM_PROMPT },
-    ...messages,
-  ];
+  const anthropicMessages = messages
+    .filter(m => m.role !== 'system')
+    .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }));
 
   const startTime = Date.now();
 
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-      'X-Title': 'APEX Legal Performance',
-    },
-    body: JSON.stringify({
-      model: model.id,
-      messages: allMessages,
-      max_tokens: options?.maxTokens || model.maxTokens,
-      temperature: options?.temperature ?? 0.3,
-    }),
+  const response = await client.messages.create({
+    model: model.id,
+    max_tokens: options?.maxTokens || model.maxTokens,
+    system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
+    messages: anthropicMessages,
   });
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`OpenRouter API error (${response.status}): ${error}`);
-  }
-
-  const data = await response.json();
   const durationMs = Date.now() - startTime;
-
-  const content = data.choices?.[0]?.message?.content || '';
-  const tokensUsed = (data.usage?.prompt_tokens || 0) + (data.usage?.completion_tokens || 0);
+  const content = response.content
+    .filter(block => block.type === 'text')
+    .map(block => (block as Anthropic.TextBlock).text)
+    .join('');
+  const tokensUsed = (response.usage.input_tokens || 0) + (response.usage.output_tokens || 0);
   const estimatedCost = (tokensUsed / 1000) * model.costPer1kTokens;
 
   // Fire-and-forget usage tracking (non-blocking)
@@ -242,37 +232,43 @@ export async function callAIStream(
   taskType: TaskType = 'chat_response',
   options?: { maxTokens?: number; temperature?: number }
 ): Promise<ReadableStream<Uint8Array>> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) throw new Error('OPENROUTER_API_KEY not configured');
-
+  const client = getClient();
   const complexity = classifyComplexity(taskType, messages.map(m => m.content).join('').length);
-  const model = MODELS[complexity];
+  const model = MODEL_CONFIG[complexity];
 
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://legalperformance.app',
-      'X-Title': 'APEX Legal Performance',
-    },
-    body: JSON.stringify({
-      model: model.id,
-      messages: [
-        { role: 'system', content: getSystemPrompt(taskType) },
-        ...messages.map(m => ({ role: m.role, content: m.content })),
-      ],
-      max_tokens: options?.maxTokens || model.maxTokens,
-      temperature: options?.temperature ?? 0.3,
-      stream: true,
-    }),
+  const anthropicMessages = messages
+    .filter(m => m.role !== 'system')
+    .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }));
+
+  const stream = client.messages.stream({
+    model: model.id,
+    max_tokens: options?.maxTokens || model.maxTokens,
+    system: [{ type: 'text', text: getSystemPrompt(taskType), cache_control: { type: 'ephemeral' } }],
+    messages: anthropicMessages,
   });
 
-  if (!response.ok || !response.body) {
-    throw new Error(`AI API error: ${response.status}`);
-  }
-
-  return response.body;
+  const encoder = new TextEncoder();
+  return new ReadableStream({
+    async start(controller) {
+      try {
+        for await (const event of stream) {
+          if (
+            event.type === 'content_block_delta' &&
+            event.delta.type === 'text_delta'
+          ) {
+            const sseData = JSON.stringify({
+              choices: [{ delta: { content: event.delta.text } }],
+            });
+            controller.enqueue(encoder.encode(`data: ${sseData}\n\n`));
+          }
+        }
+        controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+        controller.close();
+      } catch (error) {
+        controller.error(error);
+      }
+    },
+  });
 }
 
 export async function analyzePDF(

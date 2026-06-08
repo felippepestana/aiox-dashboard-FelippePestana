@@ -29,9 +29,9 @@ export async function POST(request: Request) {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
 
-    if (message.includes('OPENROUTER_API_KEY')) {
+    if (message.includes('ANTHROPIC_API_KEY')) {
       return NextResponse.json(
-        { error: 'AI not configured', message: 'OpenRouter API key missing from .env' },
+        { error: 'AI not configured', message: 'Anthropic API key missing from .env' },
         { status: 503 }
       );
     }
