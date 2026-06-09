@@ -1,10 +1,14 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase';
+import { withRateLimit } from '@/lib/api-rate-limit';
 
 const SESSION_COOKIE = 'aiox_session';
 const SESSION_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const rateLimitResponse = withRateLimit(request, 'auth');
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const { email, password, name } = await request.json();
 

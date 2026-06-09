@@ -1,10 +1,14 @@
 import { NextRequest } from 'next/server';
 import { callAIStream, type TaskType, type AIMessage } from '@/lib/ai-router';
 import { getAuthUser, unauthorized } from '@/lib/api-utils';
+import { withRateLimit } from '@/lib/api-rate-limit';
 
 export async function POST(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
+
+  const rateLimitResponse = withRateLimit(request, 'ai');
+  if (rateLimitResponse) return rateLimitResponse;
 
   try {
     const { messages, taskType } = await request.json() as {

@@ -9,6 +9,7 @@ import { useLegalMarketingStore } from '@/stores/legal-marketing-store';
 import { useLegalStrategyStore } from '@/stores/legal-strategy-store';
 import { useDeadlineAlerts } from '@/hooks/useDeadlineAlerts';
 import { useHydration } from '@/hooks/useHydration';
+import { createBrowserClient } from '@/lib/supabase';
 import { DeadlineAlerts } from '@/components/legal/DeadlineAlerts';
 import { DeadlineToast } from '@/components/legal/DeadlineToast';
 import { NotificationToast } from '@/components/legal/NotificationToast';
@@ -101,6 +102,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [footerOpen, setFooterOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const pathname = usePathname();
   const otherHydrated = useRef(false);
 
@@ -132,6 +134,12 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       hydrateMarketingFromApi();
       hydrateStrategyFromApi();
     }
+
+    // Fetch the authenticated user's ID for realtime notifications
+    const supabase = createBrowserClient();
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data.user?.id ?? null);
+    });
   }, [hydrateFinancialFromApi, hydrateMarketingFromApi, hydrateStrategyFromApi, shouldShow]);
 
   useEffect(() => {
@@ -457,7 +465,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       <DeadlineToast />
 
       {/* Supabase realtime notifications */}
-      <NotificationToast userId={null} />
+      <NotificationToast userId={userId} />
 
       {/* Mobile bottom navigation */}
       <MobileBottomNav onOpenSidebar={() => setMobileOpen(true)} />
