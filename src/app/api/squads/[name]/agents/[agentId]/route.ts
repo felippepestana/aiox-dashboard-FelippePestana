@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -369,6 +370,7 @@ export async function GET(
 
     return NextResponse.json({ agent: detail });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Error in /api/squads/[name]/agents/[agentId]:', error);
     return NextResponse.json(
       { error: 'Failed to load agent detail' },

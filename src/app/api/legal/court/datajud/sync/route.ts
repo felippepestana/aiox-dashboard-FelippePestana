@@ -13,6 +13,7 @@
 //   503  DATAJUD_API_KEY not configured
 // =============================================================================
 
+import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser, unauthorized, badRequest, serverError } from '@/lib/api-utils';
 import { getMovements, DataJudError } from '@/lib/court/datajud';
@@ -122,6 +123,7 @@ export async function POST(request: NextRequest) {
 
     const { error: insertError } = await supabase.from('movements').insert(rows);
     if (insertError) {
+      Sentry.captureMessage(`Failed to insert DataJud movements: ${insertError.message}`, 'error');
       console.error('Failed to insert DataJud movements:', insertError);
       return serverError('Failed to save movements to database');
     }
@@ -152,6 +154,7 @@ export async function POST(request: NextRequest) {
         { status: status >= 400 && status < 600 ? status : 500 },
       );
     }
+    Sentry.captureException(error);
     console.error('DataJud sync error:', error);
     return serverError();
   }

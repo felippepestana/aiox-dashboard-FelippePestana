@@ -1,7 +1,11 @@
 import { NextRequest } from 'next/server';
 import { callAIStream, type TaskType, type AIMessage } from '@/lib/ai-router';
+import { getAuthUser, unauthorized } from '@/lib/api-utils';
 
 export async function POST(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
   try {
     const { messages, taskType } = await request.json() as {
       messages: AIMessage[];

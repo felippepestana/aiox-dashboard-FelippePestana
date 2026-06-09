@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { NextResponse } from 'next/server';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
@@ -88,6 +89,7 @@ export async function GET() {
     });
   } catch (error) {
     // eslint-disable-next-line no-undef
+    Sentry.captureException(error);
     console.error('GitHub API error:', error);
     return NextResponse.json(
       {

@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -140,6 +141,7 @@ export async function GET() {
       data = JSON.parse(fileContent);
     } catch {
       // AC4: Handle corrupted JSON
+      Sentry.captureMessage('[API /status] Invalid JSON in status file', 'warning');
       console.error('[API /status] Invalid JSON in status file');
       return NextResponse.json(
         {
@@ -153,6 +155,7 @@ export async function GET() {
     // AC3: Validate schema
     const validatedStatus = validateStatusFile(data);
     if (!validatedStatus) {
+      Sentry.captureMessage('[API /status] Status file failed schema validation', 'warning');
       console.error('[API /status] Status file failed schema validation');
       return NextResponse.json(
         {
@@ -172,6 +175,7 @@ export async function GET() {
     }
 
     // Other errors
+    Sentry.captureException(error);
     console.error('[API /status] Error reading status file:', error);
     return NextResponse.json(
       {

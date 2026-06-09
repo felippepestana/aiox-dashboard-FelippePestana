@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { createServerClient } from './supabase';
 
 export interface AIUsageRecord {
@@ -15,6 +16,7 @@ export async function trackAIUsage(record: AIUsageRecord): Promise<void> {
     const supabase = createServerClient();
     await supabase.from('ai_usage').insert(record);
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Failed to track AI usage:', error);
     // Non-blocking — don't fail the request
   }

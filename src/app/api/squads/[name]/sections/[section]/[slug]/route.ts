@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { NextResponse } from 'next/server';
@@ -78,6 +79,7 @@ export async function GET(
       isYaml: isStructured,
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Error in /api/squads/[name]/sections/[section]/[slug]:', error);
     return NextResponse.json({ error: 'Failed to load item content' }, { status: 500 });
   }

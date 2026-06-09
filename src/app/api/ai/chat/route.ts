@@ -1,7 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { callAI, type TaskType, type AIMessage } from '@/lib/ai-router';
+import { getAuthUser, unauthorized } from '@/lib/api-utils';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
   try {
     const body = await request.json();
     const { messages, taskType = 'chat_response' } = body as {

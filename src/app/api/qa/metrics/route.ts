@@ -1,4 +1,5 @@
 /* eslint-disable no-undef */
+import * as Sentry from '@sentry/nextjs';
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -226,6 +227,7 @@ export async function GET() {
     const metrics = await collectQAMetrics();
     return NextResponse.json(metrics);
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Failed to collect QA metrics:', error);
     return NextResponse.json({ error: 'Failed to collect QA metrics' }, { status: 500 });
   }

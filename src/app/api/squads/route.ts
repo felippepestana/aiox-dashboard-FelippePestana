@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -409,6 +410,7 @@ export async function GET() {
       },
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Error in /api/squads:', error);
     return NextResponse.json(
       { squads: [], domainIndex: {}, connections: [], error: 'Failed to load squads' },

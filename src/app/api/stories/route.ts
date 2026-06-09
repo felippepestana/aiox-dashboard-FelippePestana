@@ -1,4 +1,6 @@
-import { NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
+import { NextRequest, NextResponse } from 'next/server';
+import { getAuthUser, unauthorized } from '@/lib/api-utils';
 import { promises as fs } from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
@@ -382,6 +384,7 @@ function parseStoryFromMarkdown(
       updatedAt: data.updatedAt || fileStats.mtime.toISOString(),
     };
   } catch (error) {
+    Sentry.captureException(error);
     console.error(`Error parsing story from ${filePath}:`, error);
     return null;
   }
@@ -563,7 +566,10 @@ interface CreateStoryRequest {
   technicalNotes?: string;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
   try {
     const projectRoot = getProjectRoot();
     const storiesDir = path.join(projectRoot, 'docs', 'stories');
@@ -605,6 +611,7 @@ export async function GET() {
           stories.push(story);
         }
       } catch (error) {
+        Sentry.captureException(error);
         console.error(`Error reading ${filePath}:`, error);
       }
     }
@@ -615,6 +622,7 @@ export async function GET() {
       count: stories.length,
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Error in /api/stories:', error);
 
     // Return mock data on error in development
@@ -637,7 +645,10 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
   try {
     const body = (await request.json()) as CreateStoryRequest;
 
@@ -687,6 +698,7 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Error creating story:', error);
     return NextResponse.json({ error: 'Failed to create story' }, { status: 500 });
   }

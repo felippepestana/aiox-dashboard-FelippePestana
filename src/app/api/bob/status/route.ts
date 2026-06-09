@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -28,6 +29,7 @@ export async function GET() {
     try {
       data = JSON.parse(fileContent);
     } catch {
+      Sentry.captureMessage('[API /bob/status] Invalid JSON in bob-status file', 'warning');
       console.error('[API /bob/status] Invalid JSON in bob-status file');
       return NextResponse.json(
         { ...BOB_INACTIVE_STATUS, error: 'Bob status file contains invalid JSON' },
@@ -49,6 +51,7 @@ export async function GET() {
       return NextResponse.json(BOB_INACTIVE_STATUS);
     }
 
+    Sentry.captureException(error);
     console.error('[API /bob/status] Error reading bob-status file:', error);
     return NextResponse.json(
       { ...BOB_INACTIVE_STATUS, error: 'Failed to read bob-status file' },

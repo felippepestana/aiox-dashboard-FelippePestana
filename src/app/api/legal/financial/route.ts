@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser, unauthorized, serverError, badRequest } from '@/lib/api-utils';
 import { getFinancialSummary, createTransaction } from '@/lib/db/financial';
@@ -10,6 +11,7 @@ export async function GET(request: NextRequest) {
     const data = await getFinancialSummary(user.id);
     return NextResponse.json(data);
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Failed to fetch financial data:', error);
     return serverError();
   }
@@ -40,6 +42,7 @@ export async function POST(request: NextRequest) {
     );
     return NextResponse.json({ transaction }, { status: 201 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Failed to create transaction:', error);
     return serverError();
   }

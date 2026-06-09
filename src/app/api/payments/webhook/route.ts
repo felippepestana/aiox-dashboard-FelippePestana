@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase';
 import { getPaymentInfo, getSubscriptionInfo } from '@/lib/mercadopago';
@@ -9,6 +10,30 @@ function planFromReason(reason: string | undefined): string {
 }
 
 export async function POST(request: NextRequest) {
+  // Verify Mercado Pago webhook signature
+  const xSignature = request.headers.get('x-signature');
+  const xRequestId = request.headers.get('x-request-id');
+  const webhookSecret = process.env.MP_WEBHOOK_SECRET;
+
+  if (webhookSecret && xSignature) {
+    const parts = Object.fromEntries(
+      xSignature.split(',').map(p => {
+        const [k, v] = p.trim().split('=');
+        return [k, v];
+      })
+    );
+
+    const dataId = new URL(request.url).searchParams.get('data.id') || '';
+    const manifest = `id:${dataId};request-id:${xRequestId};ts:${parts.ts};`;
+
+    const { createHmac } = await import('crypto');
+    const hmac = createHmac('sha256', webhookSecret).update(manifest).digest('hex');
+
+    if (hmac !== parts.v1) {
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    }
+  }
+
   try {
     const body = await request.json();
     const { type, data } = body;
@@ -71,6 +96,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Webhook error:', error);
     return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
   }

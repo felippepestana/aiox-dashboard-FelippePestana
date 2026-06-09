@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import path from 'path';
 import { NextResponse } from 'next/server';
 import {
@@ -38,6 +39,7 @@ export async function GET(
 
     return NextResponse.json({ items });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Error in /api/squads/[name]/sections/[section]:', error);
     return NextResponse.json({ error: 'Failed to list section items' }, { status: 500 });
   }

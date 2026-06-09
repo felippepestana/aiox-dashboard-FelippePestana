@@ -1,4 +1,6 @@
+import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
+import { getAuthUser, unauthorized } from '@/lib/api-utils';
 import { promises as fs } from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
@@ -154,9 +156,12 @@ interface UpdateStoryRequest {
 
 // GET /api/stories/[id] - Get a single story
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
   try {
     const { id } = await params;
     const projectRoot = getProjectRoot();
@@ -188,6 +193,7 @@ export async function GET(
     return NextResponse.json({ story });
 
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Error getting story:', error);
     return NextResponse.json(
       { error: 'Failed to get story' },
@@ -201,6 +207,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
   try {
     const { id } = await params;
     const body = await request.json() as UpdateStoryRequest;
@@ -307,6 +316,7 @@ export async function PUT(
     });
 
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Error updating story:', error);
     return NextResponse.json(
       { error: 'Failed to update story' },
@@ -317,9 +327,12 @@ export async function PUT(
 
 // DELETE /api/stories/[id] - Delete a story
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
   try {
     const { id } = await params;
     const projectRoot = getProjectRoot();
@@ -356,6 +369,7 @@ export async function DELETE(
     });
 
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Error deleting story:', error);
     return NextResponse.json(
       { error: 'Failed to delete story' },

@@ -891,9 +891,9 @@ function Footer() {
       title: 'Legal',
       links: [
         { label: 'Termos de Uso', href: '#' },
-        { label: 'Privacidade', href: '#' },
-        { label: 'LGPD', href: '#' },
-        { label: 'Cookies', href: '#' },
+        { label: 'Política de Privacidade', href: '/privacy' },
+        { label: 'LGPD', href: '/privacy#base-legal' },
+        { label: 'Cookies', href: '/privacy#cookies' },
       ],
     },
   ];

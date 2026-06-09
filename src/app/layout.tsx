@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
+import { CookieConsent } from "@/components/CookieConsent";
 
 export const metadata: Metadata = {
   title: {
@@ -68,6 +69,7 @@ export default function RootLayout({
       >
         {children}
         <ServiceWorkerRegistration />
+        <CookieConsent />
       </body>
     </html>
   );

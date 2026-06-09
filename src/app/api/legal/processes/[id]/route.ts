@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   getAuthUser,
@@ -21,6 +22,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     if (!process) return notFound('Process not found');
     return NextResponse.json({ process });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Failed to fetch process:', error);
     return notFound('Process not found');
   }
@@ -44,6 +46,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     if (!process) return notFound('Process not found');
     return NextResponse.json({ process });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Failed to update process:', error);
     return serverError();
   }
@@ -64,6 +67,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
     await deleteProcess(user.id, id);
     return NextResponse.json({ success: true });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Failed to delete process:', error);
     return serverError();
   }

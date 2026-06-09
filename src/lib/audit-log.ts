@@ -3,6 +3,7 @@
 // Records all sensitive operations in the audit_logs Supabase table
 // =============================================================================
 
+import * as Sentry from '@sentry/nextjs';
 import { supabase } from '@/lib/supabase';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -75,9 +76,11 @@ export async function logAuditEvent(event: Omit<AuditEvent, 'id' | 'timestamp'>)
     });
 
     if (error) {
+      Sentry.captureMessage(`[audit-log] insert error: ${error.message}`, 'error');
       console.error('[audit-log] insert error:', error.message);
     }
   } catch (err) {
+    Sentry.captureException(err);
     console.error('[audit-log] unexpected error:', err);
   }
 }
@@ -118,6 +121,7 @@ export async function getAuditLog(filters: AuditLogFilters = {}): Promise<AuditL
   const { data, error, count } = await query;
 
   if (error) {
+    Sentry.captureMessage(`[audit-log] query error: ${error.message}`, 'error');
     console.error('[audit-log] query error:', error.message);
     return { entries: [], total: 0, page, pageSize, totalPages: 0 };
   }
@@ -152,6 +156,7 @@ export async function getRecentActivity(
   const { data, error } = await query;
 
   if (error) {
+    Sentry.captureMessage(`[audit-log] recent activity error: ${error.message}`, 'error');
     console.error('[audit-log] recent activity error:', error.message);
     return [];
   }

@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   getAuthUser,
@@ -21,6 +22,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     if (!deadline) return notFound('Deadline not found');
     return NextResponse.json({ deadline });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Failed to fetch deadline:', error);
     return notFound('Deadline not found');
   }
@@ -44,6 +46,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     if (!deadline) return notFound('Deadline not found');
     return NextResponse.json({ deadline });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Failed to update deadline:', error);
     return serverError();
   }
@@ -64,6 +67,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
     await deleteDeadline(user.id, id);
     return NextResponse.json({ success: true });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Failed to delete deadline:', error);
     return serverError();
   }

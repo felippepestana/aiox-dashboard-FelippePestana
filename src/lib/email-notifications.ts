@@ -3,6 +3,8 @@
 // Provider-agnostic: Resend (preferred) or SMTP fallback
 // =============================================================================
 
+import * as Sentry from '@sentry/nextjs';
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -411,6 +413,7 @@ export async function sendEmail(template: EmailTemplate): Promise<SendEmailResul
 
       if (!response.ok) {
         const errorBody = await response.text();
+        Sentry.captureMessage(`[email-notifications] Resend error: ${response.status} ${errorBody}`, 'error');
         console.error('[email-notifications] Resend error:', response.status, errorBody);
         return { success: false, provider: 'resend', error: `HTTP ${response.status}: ${errorBody}` };
       }
@@ -418,6 +421,7 @@ export async function sendEmail(template: EmailTemplate): Promise<SendEmailResul
       return { success: true, provider: 'resend' };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
+      Sentry.captureException(err);
       console.error('[email-notifications] Resend exception:', message);
       return { success: false, provider: 'resend', error: message };
     }
@@ -454,12 +458,17 @@ export async function sendEmail(template: EmailTemplate): Promise<SendEmailResul
       return { success: true, provider: 'smtp' };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
+      Sentry.captureException(err);
       console.error('[email-notifications] SMTP exception:', message);
       return { success: false, provider: 'smtp', error: message };
     }
   }
 
   // --- No provider configured ---
+  Sentry.captureMessage(
+    '[email-notifications] No email provider configured. Set RESEND_API_KEY or SMTP_HOST to enable email sending.',
+    'warning'
+  );
   console.warn(
     '[email-notifications] No email provider configured. ' +
       'Set RESEND_API_KEY or SMTP_HOST to enable email sending.'

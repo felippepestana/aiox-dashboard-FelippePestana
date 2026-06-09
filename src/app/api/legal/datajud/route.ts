@@ -8,7 +8,8 @@
 // POST { processIds: [...] } → bulk sync movements for multiple processes
 // =============================================================================
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getAuthUser, unauthorized } from '@/lib/api-utils';
 import { supabase } from '@/lib/supabase';
 import { searchByCNJ, getMovements, DataJudError } from '@/lib/court/datajud';
 import { isValidCNJ } from '@/lib/court/cnj-utils';
@@ -34,7 +35,10 @@ function requireApiKey(): string | null {
  * Response 200:
  *   { success: true, data: DataJudProcessInfo, movements: ProcessMovement[] }
  */
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
   const { searchParams } = new URL(request.url);
   const cnj = searchParams.get('cnj');
 
@@ -128,7 +132,10 @@ export async function GET(request: Request) {
  *     results: SyncResult[]        // per-process breakdown
  *   }
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
   const apiKey = requireApiKey();
   if (!apiKey) {
     return NextResponse.json(

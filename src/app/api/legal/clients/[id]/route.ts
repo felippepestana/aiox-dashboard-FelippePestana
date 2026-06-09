@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   getAuthUser,
@@ -21,6 +22,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     if (!client) return notFound('Client not found');
     return NextResponse.json({ client });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Failed to fetch client:', error);
     return notFound('Client not found');
   }
@@ -44,6 +46,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     if (!client) return notFound('Client not found');
     return NextResponse.json({ client });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Failed to update client:', error);
     return serverError();
   }
@@ -64,6 +67,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
     await deleteClient(user.id, id);
     return NextResponse.json({ success: true });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Failed to delete client:', error);
     return serverError();
   }

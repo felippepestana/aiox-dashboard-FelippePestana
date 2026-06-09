@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser, unauthorized, serverError, badRequest } from '@/lib/api-utils';
 import { getDeadlines, createDeadline, updateDeadline } from '@/lib/db/deadlines';
@@ -17,6 +18,7 @@ export async function GET(request: NextRequest) {
     const result = await getDeadlines(user.id, filters, searchParams);
     return NextResponse.json(result);
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Failed to fetch deadlines:', error);
     return serverError();
   }
@@ -44,6 +46,7 @@ export async function POST(request: NextRequest) {
     const deadline = await createDeadline(user.id, body as unknown as Parameters<typeof createDeadline>[1]);
     return NextResponse.json({ deadline }, { status: 201 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Failed to create deadline:', error);
     return serverError();
   }
@@ -70,6 +73,7 @@ export async function PATCH(request: NextRequest) {
     const deadline = await updateDeadline(user.id, id, body as unknown as Parameters<typeof updateDeadline>[2]);
     return NextResponse.json({ deadline });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Failed to update deadline:', error);
     return serverError();
   }
