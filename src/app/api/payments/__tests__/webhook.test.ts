@@ -72,7 +72,6 @@ describe('POST /api/payments/webhook — payment events', () => {
     expect(mockUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         subscription_status: 'active',
-        subscription_plan: 'professional',
         mp_customer_id: 'mp-payer-1',
       }),
     );

@@ -13,10 +13,10 @@ interface PlanGateProps {
 export function PlanGate({ feature, children, fallbackMessage }: PlanGateProps) {
   const { plan, status, loading } = useSubscription();
 
-  if (loading) return <>{children}</>;
+  if (loading) return null;
 
   const hasAccess = hasFeature(plan, feature) && isActivePlan(status);
-  if (hasAccess || plan !== 'starter') return <>{children}</>;
+  if (hasAccess) return <>{children}</>;
 
   return <UpgradePrompt message={fallbackMessage} />;
 }

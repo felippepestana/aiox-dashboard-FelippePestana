@@ -1,6 +1,16 @@
 // Mercado Pago integration — uses direct fetch to the MP REST API.
 // No npm package required; this avoids a build-time dependency.
 
+async function mpFetch(url: string, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10_000);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 interface MPPreference {
   id: string;
   init_point: string;
@@ -24,7 +34,10 @@ export async function createCheckoutPreference(params: {
   const accessToken = process.env.MP_ACCESS_TOKEN;
   if (!accessToken) throw new Error('MP_ACCESS_TOKEN not configured');
 
-  const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (!appUrl) throw new Error('NEXT_PUBLIC_APP_URL not configured');
+
+  const response = await mpFetch('https://api.mercadopago.com/checkout/preferences', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${accessToken}`,
@@ -40,12 +53,12 @@ export async function createCheckoutPreference(params: {
       payer: { email: params.userEmail },
       external_reference: params.userId,
       back_urls: {
-        success: `${process.env.NEXT_PUBLIC_APP_URL}/legal/billing?status=success`,
-        failure: `${process.env.NEXT_PUBLIC_APP_URL}/legal/billing?status=failure`,
-        pending: `${process.env.NEXT_PUBLIC_APP_URL}/legal/billing?status=pending`,
+        success: `${appUrl}/legal/billing?status=success`,
+        failure: `${appUrl}/legal/billing?status=failure`,
+        pending: `${appUrl}/legal/billing?status=pending`,
       },
       auto_return: 'approved',
-      notification_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/payments/webhook`,
+      notification_url: `${appUrl}/api/payments/webhook`,
     }),
   });
 
@@ -65,7 +78,10 @@ export async function createSubscription(params: {
   const accessToken = process.env.MP_ACCESS_TOKEN;
   if (!accessToken) throw new Error('MP_ACCESS_TOKEN not configured');
 
-  const response = await fetch('https://api.mercadopago.com/preapproval', {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (!appUrl) throw new Error('NEXT_PUBLIC_APP_URL not configured');
+
+  const response = await mpFetch('https://api.mercadopago.com/preapproval', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${accessToken}`,
@@ -81,8 +97,8 @@ export async function createSubscription(params: {
       },
       payer_email: params.userEmail,
       external_reference: params.userId,
-      back_url: `${process.env.NEXT_PUBLIC_APP_URL}/legal/billing`,
-      notification_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/payments/webhook`,
+      back_url: `${appUrl}/legal/billing`,
+      notification_url: `${appUrl}/api/payments/webhook`,
     }),
   });
 
@@ -98,7 +114,7 @@ export async function getPaymentInfo(paymentId: string) {
   const accessToken = process.env.MP_ACCESS_TOKEN;
   if (!accessToken) throw new Error('MP_ACCESS_TOKEN not configured');
 
-  const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+  const response = await mpFetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
     headers: { 'Authorization': `Bearer ${accessToken}` },
   });
 
@@ -113,7 +129,7 @@ export async function getSubscriptionInfo(preapprovalId: string) {
   const accessToken = process.env.MP_ACCESS_TOKEN;
   if (!accessToken) throw new Error('MP_ACCESS_TOKEN not configured');
 
-  const response = await fetch(`https://api.mercadopago.com/preapproval/${preapprovalId}`, {
+  const response = await mpFetch(`https://api.mercadopago.com/preapproval/${preapprovalId}`, {
     headers: { 'Authorization': `Bearer ${accessToken}` },
   });
 

@@ -160,6 +160,10 @@ function SubscriptionPanel() {
         setError(json.error || 'Erro ao criar checkout.');
         return;
       }
+      if (!json.initPoint || typeof json.initPoint !== 'string') {
+        setError('Checkout inválido. Tente novamente.');
+        return;
+      }
       window.location.href = json.initPoint;
     } catch {
       setError('Erro de conexão. Tente novamente.');
@@ -169,7 +173,7 @@ function SubscriptionPanel() {
   }
 
   const statusBadge = data ? (STATUS_BADGE[data.status] ?? STATUS_BADGE.free) : null;
-  const isStarter = !data || data.plan === 'starter' || data.status === 'free';
+  const canUpgrade = !data || data.plan === 'starter' || ['free', 'past_due', 'canceled'].includes(data.status);
 
   return (
     <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6">
@@ -218,8 +222,8 @@ function SubscriptionPanel() {
               </span>
             )}
 
-            {/* Upgrade button — only for starter/free */}
-            {isStarter && (
+            {/* Upgrade button — for starter/free/past_due/canceled */}
+            {canUpgrade && (
               <button
                 onClick={handleUpgrade}
                 disabled={upgrading}

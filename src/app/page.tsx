@@ -636,10 +636,12 @@ function PricingCTA({ plan }: { plan: (typeof PLANS)[number] }) {
         window.location.href = '/login';
         return;
       }
-      const data = await res.json();
-      if (data.initPoint) {
-        window.location.href = data.initPoint;
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.initPoint) {
+        window.location.href = '/login';
+        return;
       }
+      window.location.href = data.initPoint;
     } catch {
       window.location.href = '/login';
     } finally {

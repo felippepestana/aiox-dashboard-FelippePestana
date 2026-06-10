@@ -191,6 +191,7 @@ export async function callAI(
   const response = await client.messages.create({
     model: model.id,
     max_tokens: options?.maxTokens || model.maxTokens,
+    temperature: options?.temperature,
     system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
     messages: anthropicMessages,
   });
@@ -241,6 +242,7 @@ export async function callAIStream(
   const stream = client.messages.stream({
     model: model.id,
     max_tokens: options?.maxTokens || model.maxTokens,
+    temperature: options?.temperature,
     system: [{ type: 'text', text: getSystemPrompt(taskType), cache_control: { type: 'ephemeral' } }],
     messages: anthropicMessages,
   }, { signal: abortController.signal });

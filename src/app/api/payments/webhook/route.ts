@@ -56,7 +56,6 @@ export async function POST(request: NextRequest) {
       if (payment.status === 'approved') {
         const { error: updateError } = await supabase.from('profiles').update({
           subscription_status: 'active',
-          subscription_plan: 'professional',
           mp_customer_id: payment.payer?.id?.toString() || null,
         }).eq('id', userId);
 
