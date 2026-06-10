@@ -88,7 +88,7 @@ export async function GET() {
       updatedAt: new Date().toISOString(),
     });
   } catch (error) {
-    // eslint-disable-next-line no-undef
+     
     Sentry.captureException(error);
     console.error('GitHub API error:', error);
     return NextResponse.json(

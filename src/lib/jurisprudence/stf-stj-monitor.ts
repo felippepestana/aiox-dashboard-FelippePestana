@@ -793,7 +793,7 @@ export class STFSTJMonitor {
       },
     ];
 
-    let filtered = court ? informativos.filter((i) => i.court === court) : informativos;
+    const filtered = court ? informativos.filter((i) => i.court === court) : informativos;
     return filtered.slice(0, limit);
   }
 }

@@ -143,7 +143,7 @@ export function usePagination<T>(
 
   useEffect(() => {
     fetchPage(page, pageSize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [page, pageSize, fetchPage]);
 
   // ─── Actions ─────────────────────────────────────────────────────────────

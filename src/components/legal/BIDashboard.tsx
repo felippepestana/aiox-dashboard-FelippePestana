@@ -86,7 +86,7 @@ export function BIDashboard({ period, onPeriodChange }: BIDashboardProps) {
 
   const totalCases = caseDistribution.reduce((s, d) => s + d.count, 0);
 
-  let gradientParts: string[] = [];
+  const gradientParts: string[] = [];
   let cumulative = 0;
   caseDistribution.forEach((d) => {
     const pct = totalCases > 0 ? (d.count / totalCases) * 100 : 0;

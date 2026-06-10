@@ -5,7 +5,7 @@
 // Role definitions, configs, and access-control helpers
 // =============================================================================
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { getAllPages } from './navigation-config';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -64,18 +64,17 @@ const STORAGE_KEY = 'apex_user_role';
  * For future auth integration: replace this with a real session reader.
  */
 export function useUserRole(): Role {
-  const [role, setRole] = useState<Role>('admin');
-
-  useEffect(() => {
+  const [role] = useState<Role>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY) as Role | null;
       if (stored && ROLE_CONFIGS.some((c) => c.role === stored)) {
-        setRole(stored);
+        return stored;
       }
     } catch {
       // localStorage not available (SSR / private mode)
     }
-  }, []);
+    return 'admin';
+  });
 
   return role;
 }

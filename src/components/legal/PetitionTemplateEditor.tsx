@@ -179,7 +179,7 @@ export function PetitionTemplateEditor({
 
       return next;
     });
-  }, [process, client]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [process, client]);  
 
   const setValue = (name: string, val: string) => {
     setValues((prev) => ({ ...prev, [name]: val }));

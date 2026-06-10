@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+ 
 import * as Sentry from '@sentry/nextjs';
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
