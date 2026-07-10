@@ -1,5 +1,8 @@
 import '@testing-library/jest-dom/vitest';
 
+// Encryption helpers require AUTH_SECRET (no hardcoded fallback in production code)
+process.env.AUTH_SECRET ||= 'vitest-only-auth-secret';
+
 // Mock EventSource for jsdom (not available in jsdom)
 class MockEventSource {
   url: string;

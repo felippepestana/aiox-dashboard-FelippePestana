@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { NextRequest } from 'next/server';
 import { callAIStream, type TaskType, type AIMessage } from '@/lib/ai-router';
 import { getAuthUser, unauthorized } from '@/lib/api-utils';
@@ -30,6 +31,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    Sentry.captureException(error);
     const message = error instanceof Error ? error.message : 'AI service error';
     return new Response(JSON.stringify({ error: message }), { status: 503 });
   }

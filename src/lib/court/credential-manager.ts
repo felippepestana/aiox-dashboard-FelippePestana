@@ -58,7 +58,10 @@ let _cachedKey: CryptoKey | null = null;
 async function getDerivedKey(): Promise<CryptoKey> {
   if (_cachedKey) return _cachedKey;
 
-  const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || 'fallback-dev-secret';
+  const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+  if (!secret) {
+    throw new Error('AUTH_SECRET (or NEXTAUTH_SECRET) is required for credential encryption');
+  }
   const encoder = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(
     'raw',

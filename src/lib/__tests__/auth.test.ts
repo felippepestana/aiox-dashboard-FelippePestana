@@ -232,7 +232,7 @@ describe('validateSession', () => {
     });
   });
 
-  it('falls back to Base64 token when Supabase returns no user', async () => {
+  it('rejects unsigned Base64 tokens even when well-formed and unexpired (forgery protection)', async () => {
     mockGetUser.mockResolvedValueOnce({ data: { user: null } });
 
     const payload = {
@@ -240,21 +240,15 @@ describe('validateSession', () => {
       email: 'legacy@firm.com',
       name: 'Legacy User',
       role: 'admin',
-      exp: Date.now() + 60_000, // expires in 1 minute
+      exp: Date.now() + 60_000, // unexpired — must still be rejected
     };
     const token = makeBase64Token(payload);
 
     const result = await validateSession(token);
-
-    expect(result).toEqual({
-      id: 'legacy-uid',
-      email: 'legacy@firm.com',
-      name: 'Legacy User',
-      role: 'admin',
-    });
+    expect(result).toBeNull();
   });
 
-  it('returns null for expired Base64 token', async () => {
+  it('rejects expired Base64 token', async () => {
     mockGetUser.mockResolvedValueOnce({ data: { user: null } });
 
     const payload = {
@@ -293,19 +287,19 @@ describe('validateSession', () => {
     expect(result?.role).toBe('advogado');
   });
 
-  it('falls back to default role "admin" from Base64 token when role missing', async () => {
+  it('rejects Base64 tokens regardless of payload contents (no role escalation)', async () => {
     mockGetUser.mockResolvedValueOnce({ data: { user: null } });
 
     const payload = {
       id: 'uid',
       email: 'x@x.com',
       name: 'X',
-      // no role field
+      // no role field — legacy path defaulted to admin; must be rejected now
       exp: Date.now() + 60_000,
     };
     const token = makeBase64Token(payload);
 
     const result = await validateSession(token);
-    expect(result?.role).toBe('admin');
+    expect(result).toBeNull();
   });
 });

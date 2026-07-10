@@ -413,7 +413,8 @@ export async function sendEmail(template: EmailTemplate): Promise<SendEmailResul
 
       if (!response.ok) {
         const errorBody = await response.text();
-        Sentry.captureMessage(`[email-notifications] Resend error: ${response.status} ${errorBody}`, 'error');
+        // Body may echo recipient addresses (PII) — keep it out of Sentry, full detail stays in server logs
+        Sentry.captureMessage(`[email-notifications] Resend error: HTTP ${response.status}`, 'error');
         console.error('[email-notifications] Resend error:', response.status, errorBody);
         return { success: false, provider: 'resend', error: `HTTP ${response.status}: ${errorBody}` };
       }

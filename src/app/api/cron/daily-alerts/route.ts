@@ -22,9 +22,10 @@ function daysUntilDue(dueDateIso: string): number {
 }
 
 export async function GET(request: Request) {
-  // ── Auth: validate CRON_SECRET ───────────────────────────────────────────
-  const cronSecret = request.headers.get('x-cron-secret');
-  if (cronSecret !== process.env.CRON_SECRET) {
+  // ── Auth: Vercel Cron sends `Authorization: Bearer <CRON_SECRET>` ─────────
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

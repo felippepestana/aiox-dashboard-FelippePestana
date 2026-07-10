@@ -5,20 +5,27 @@ import { useState, useEffect, useCallback } from 'react';
 type Theme = 'dark' | 'light';
 const STORAGE_KEY = 'apex_theme';
 
+function applyTheme(t: Theme) {
+  document.documentElement.setAttribute('data-theme', t);
+  // Tailwind's `dark:` variant is driven by the .dark class — keep it in sync
+  document.documentElement.classList.toggle('dark', t === 'dark');
+}
+
 export function useTheme() {
   const [theme, setThemeState] = useState<Theme>('dark');
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
-    const initial = stored || 'dark';
+    // Validate the stored value — corrupted/legacy entries fall back to dark
+    const stored = localStorage.getItem(STORAGE_KEY);
+    const initial: Theme = stored === 'light' ? 'light' : 'dark';
     setThemeState(initial);
-    document.documentElement.setAttribute('data-theme', initial);
+    applyTheme(initial);
   }, []);
 
   const setTheme = useCallback((t: Theme) => {
     setThemeState(t);
     localStorage.setItem(STORAGE_KEY, t);
-    document.documentElement.setAttribute('data-theme', t);
+    applyTheme(t);
   }, []);
 
   const toggle = useCallback(() => {

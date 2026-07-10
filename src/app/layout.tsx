@@ -51,7 +51,9 @@ export default function RootLayout({
             __html: `
               (function() {
                 var t = localStorage.getItem('apex_theme');
-                if (t) document.documentElement.setAttribute('data-theme', t);
+                if (t !== 'light') t = 'dark';
+                document.documentElement.setAttribute('data-theme', t);
+                document.documentElement.classList.toggle('dark', t === 'dark');
               })();
             `,
           }}

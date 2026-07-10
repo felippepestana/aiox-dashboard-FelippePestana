@@ -4,7 +4,11 @@ import { checkRateLimit, RATE_LIMITS } from './rate-limit';
 type RateLimitType = keyof typeof RATE_LIMITS;
 
 export function withRateLimit(request: NextRequest, type: RateLimitType): NextResponse | null {
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+  // Nginx appends the peer address via $proxy_add_x_forwarded_for, so the LAST
+  // entry is the one set by our own proxy; earlier entries are client-supplied
+  // and spoofable — never trust them for rate limiting.
+  const forwarded = request.headers.get('x-forwarded-for');
+  const ip = forwarded?.split(',').pop()?.trim()
     || request.headers.get('x-real-ip')
     || 'unknown';
 

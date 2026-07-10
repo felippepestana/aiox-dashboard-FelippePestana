@@ -15,7 +15,12 @@ export async function POST(request: NextRequest) {
   const xRequestId = request.headers.get('x-request-id');
   const webhookSecret = process.env.MP_WEBHOOK_SECRET;
 
-  if (webhookSecret && xSignature) {
+  if (webhookSecret) {
+    // A configured secret makes the signature mandatory — unsigned requests are rejected
+    if (!xSignature) {
+      return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
+    }
+
     const parts = Object.fromEntries(
       xSignature.split(',').map(p => {
         const [k, v] = p.trim().split('=');
@@ -26,10 +31,12 @@ export async function POST(request: NextRequest) {
     const dataId = new URL(request.url).searchParams.get('data.id') || '';
     const manifest = `id:${dataId};request-id:${xRequestId};ts:${parts.ts};`;
 
-    const { createHmac } = await import('crypto');
+    const { createHmac, timingSafeEqual } = await import('crypto');
     const hmac = createHmac('sha256', webhookSecret).update(manifest).digest('hex');
 
-    if (hmac !== parts.v1) {
+    const expected = Buffer.from(hmac, 'utf8');
+    const received = Buffer.from(String(parts.v1 ?? ''), 'utf8');
+    if (expected.length !== received.length || !timingSafeEqual(expected, received)) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
   }

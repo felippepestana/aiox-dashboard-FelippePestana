@@ -115,11 +115,9 @@ describe('AUTH_SECRET env fallback', () => {
     expect(decryptSensitiveData(ct)).toBe(plaintext);
   });
 
-  it('falls back to hardcoded dev secret when AUTH_SECRET is absent', () => {
+  it('throws when AUTH_SECRET is absent instead of using a fallback secret', () => {
     delete process.env.AUTH_SECRET;
-    const plaintext = 'fallback test';
-    const ct = encryptSensitiveData(plaintext);
-    expect(decryptSensitiveData(ct)).toBe(plaintext);
+    expect(() => encryptSensitiveData('no fallback allowed')).toThrow(/AUTH_SECRET/);
   });
 });
 

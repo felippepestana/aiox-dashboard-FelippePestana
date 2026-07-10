@@ -27,9 +27,14 @@ const SALT = 'aiox-legal-encryption-salt-v1'; // fixed per-app salt for key deri
 /**
  * Derive a 256-bit AES key from the AUTH_SECRET env variable using PBKDF2.
  * A custom key can be passed for field-level key rotation scenarios.
+ * Throws when no secret is available — encrypting PII with a publicly
+ * known fallback secret would silently defeat the encryption.
  */
 function deriveKey(secret?: string): Buffer {
-  const base = secret ?? process.env.AUTH_SECRET ?? 'fallback-dev-secret-change-in-production';
+  const base = secret ?? process.env.AUTH_SECRET;
+  if (!base) {
+    throw new Error('AUTH_SECRET environment variable is required for data encryption');
+  }
   return pbkdf2Sync(base, SALT, PBKDF2_ITERATIONS, KEY_LENGTH, PBKDF2_DIGEST);
 }
 

@@ -15,12 +15,12 @@ export function CookieConsent() {
     }
   }, []);
 
-  function accept() {
+  function saveConsent(accepted: boolean) {
     try {
       localStorage.setItem(
         'apex_cookie_consent',
         JSON.stringify({
-          accepted: true,
+          accepted,
           timestamp: Date.now(),
         }),
       );
@@ -34,7 +34,7 @@ export function CookieConsent() {
 
   return (
     <div
-      role="dialog"
+      role="region"
       aria-live="polite"
       aria-label="Aviso de cookies"
       className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#1a2332] bg-[#0d1320]/95 backdrop-blur-sm p-4"
@@ -48,12 +48,20 @@ export function CookieConsent() {
           </Link>
           .
         </p>
-        <button
-          onClick={accept}
-          className="shrink-0 rounded-lg bg-[#D4AF37] px-6 py-2 text-sm font-medium text-[#060d1a] hover:bg-[#e0c040] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1320] transition-colors"
-        >
-          Aceitar
-        </button>
+        <div className="flex shrink-0 items-center gap-3">
+          <button
+            onClick={() => saveConsent(false)}
+            className="rounded-lg border border-[#1a2332] px-6 py-2 text-sm font-medium text-[#A0AEC0] hover:bg-[#1a2332] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A0AEC0] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1320] transition-colors"
+          >
+            Recusar
+          </button>
+          <button
+            onClick={() => saveConsent(true)}
+            className="rounded-lg bg-[#D4AF37] px-6 py-2 text-sm font-medium text-[#060d1a] hover:bg-[#e0c040] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1320] transition-colors"
+          >
+            Aceitar
+          </button>
+        </div>
       </div>
     </div>
   );

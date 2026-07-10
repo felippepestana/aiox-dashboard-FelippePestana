@@ -3,16 +3,22 @@ interface RateLimitEntry {
   resetAt: number;
 }
 
+// In-memory store: counters are per-process, which is sufficient for the
+// current single-instance Node deployment. If the app moves to serverless or
+// multi-replica hosting, swap this Map for a shared backend (Redis/KV) —
+// checkRateLimit stays the single entry point either way.
 const store = new Map<string, RateLimitEntry>();
 
 // Cleanup old entries every 5 minutes
 if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
+  const timer = setInterval(() => {
     const now = Date.now();
     for (const [key, entry] of store) {
       if (now > entry.resetAt) store.delete(key);
     }
   }, 5 * 60 * 1000);
+  // Don't keep a long-running Node process alive just for cache pruning
+  if (typeof timer === 'object' && 'unref' in timer) timer.unref();
 }
 
 interface RateLimitConfig {

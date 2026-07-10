@@ -1,4 +1,4 @@
-// Auth Library — Supabase Auth with backward-compatible Base64 session fallback
+// Auth Library — Supabase Auth
 
 import { createServerClient, createBrowserClient } from './supabase';
 
@@ -63,41 +63,25 @@ export async function getSession() {
   return session;
 }
 
-// Validate a raw session token — tries Supabase first, falls back to legacy Base64 format
+// Validate a raw session token against Supabase.
+// Note: unsigned legacy Base64 tokens are NOT accepted — they were forgeable
+// (any client could craft an admin session), so only Supabase-verified
+// tokens are valid.
 export async function validateSession(token: string): Promise<User | null> {
-  // Try Supabase token validation
   const supabase = createServerClient();
   const { data: { user } } = await supabase.auth.getUser(token);
+  if (!user) return null;
 
-  if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('name, role')
-      .eq('id', user.id)
-      .single();
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('name, role')
+    .eq('id', user.id)
+    .single();
 
-    return {
-      id: user.id,
-      email: user.email || '',
-      name: profile?.name || 'Usuário',
-      role: profile?.role || 'advogado',
-    };
-  }
-
-  // Fallback: try old Base64 session format for migration period
-  try {
-    const payload = JSON.parse(Buffer.from(token, 'base64url').toString('utf-8'));
-    if (payload.exp && payload.exp > Date.now()) {
-      return {
-        id: payload.id,
-        email: payload.email,
-        name: payload.name,
-        role: payload.role || 'admin',
-      };
-    }
-  } catch {
-    /* invalid token */
-  }
-
-  return null;
+  return {
+    id: user.id,
+    email: user.email || '',
+    name: profile?.name || 'Usuário',
+    role: profile?.role || 'advogado',
+  };
 }

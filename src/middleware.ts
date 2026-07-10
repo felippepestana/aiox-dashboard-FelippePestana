@@ -126,8 +126,9 @@ export async function middleware(request: NextRequest) {
 
   // Rate limit API routes
   if (pathname.startsWith('/api/')) {
+    // Last entry is appended by our own Nginx proxy; earlier ones are spoofable
     const forwarded = request.headers.get('x-forwarded-for');
-    const ip = forwarded?.split(',')[0]?.trim() ?? '127.0.0.1';
+    const ip = forwarded?.split(',').pop()?.trim() ?? '127.0.0.1';
 
     // Prune stale entries every request (cheap operation on typical store size)
     pruneRateLimitStore();

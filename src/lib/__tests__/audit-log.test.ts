@@ -130,23 +130,27 @@ describe('logAuditEvent', () => {
     expect(capturedPayload!.details).toBeNull();
   });
 
-  it('does not throw when Supabase returns an error (swallowed)', async () => {
+  it('does not throw when Supabase returns an error (swallowed, reported to Sentry)', async () => {
     const errorChain = makeQuery({ error: { message: 'DB down' } });
     mockFrom.mockReturnValue(errorChain);
+    const Sentry = await import('@sentry/nextjs');
 
     await expect(
       logAuditEvent({ userId: 'user-1', action: 'create', resourceType: 'client' }),
     ).resolves.toBeUndefined();
+    expect(Sentry.captureMessage).toHaveBeenCalled();
   });
 
-  it('does not throw when Supabase insert throws an exception (swallowed)', async () => {
+  it('does not throw when Supabase insert throws an exception (swallowed, reported to Sentry)', async () => {
     const chain: Record<string, unknown> = {};
     chain.insert = vi.fn(() => { throw new Error('Unexpected crash'); });
     mockFrom.mockReturnValue(chain);
+    const Sentry = await import('@sentry/nextjs');
 
     await expect(
       logAuditEvent({ userId: 'user-1', action: 'create', resourceType: 'client' }),
     ).resolves.toBeUndefined();
+    expect(Sentry.captureException).toHaveBeenCalled();
   });
 });
 
