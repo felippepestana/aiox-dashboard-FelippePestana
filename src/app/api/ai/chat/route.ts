@@ -3,6 +3,10 @@ import { callAI, type TaskType, type AIMessage } from '@/lib/ai-router';
 import { getAuthUser, unauthorized } from '@/lib/api-utils';
 import { withRateLimit } from '@/lib/api-rate-limit';
 
+/**
+ * POST /api/ai/chat — forwards a chat message history to the AI router and
+ * returns the model response with usage metadata.
+ */
 export async function POST(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();

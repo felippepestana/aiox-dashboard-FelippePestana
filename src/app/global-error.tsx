@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import * as Sentry from '@sentry/nextjs';
 
+/** Global error boundary that reports the error to Sentry and renders a fallback screen with a retry button. */
 export default function GlobalError({
   error,
   reset,

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 
+/** Generates the robots.txt rules, disallowing private routes and pointing to the sitemap. */
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [

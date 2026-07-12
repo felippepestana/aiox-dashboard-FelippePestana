@@ -5,12 +5,14 @@ import { useState, useEffect, useCallback } from 'react';
 type Theme = 'dark' | 'light';
 const STORAGE_KEY = 'apex_theme';
 
+/** Applies the theme to the document root via the data-theme attribute and the .dark class. */
 function applyTheme(t: Theme) {
   document.documentElement.setAttribute('data-theme', t);
   // Tailwind's `dark:` variant is driven by the .dark class — keep it in sync
   document.documentElement.classList.toggle('dark', t === 'dark');
 }
 
+/** Returns the current theme ('dark' | 'light') plus setTheme and toggle functions, persisting the choice in localStorage. */
 export function useTheme() {
   const [theme, setThemeState] = useState<Theme>('dark');
 

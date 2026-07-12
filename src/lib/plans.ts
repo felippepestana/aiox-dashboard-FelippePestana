@@ -36,14 +36,22 @@ const FEATURE_MIN_PLAN: Record<PlanFeature, SubscriptionPlan> = {
   whitelabel: 'enterprise',
 };
 
+/**
+ * Whether a subscription plan includes a feature (plan rank >= feature's minimum plan).
+ */
 export function hasFeature(plan: SubscriptionPlan, feature: PlanFeature): boolean {
   return PLAN_RANK[plan] >= PLAN_RANK[FEATURE_MIN_PLAN[feature]];
 }
 
+/** Whether a subscription status counts as active (active or trialing). */
 export function isActivePlan(status: SubscriptionStatus): boolean {
   return status === 'active' || status === 'trialing';
 }
 
+/**
+ * React hook that fetches the current user's subscription info from the API.
+ * Defaults to the free starter plan while loading or on error.
+ */
 export function useSubscription(): SubscriptionInfo & { loading: boolean } {
   const [data, setData] = useState<SubscriptionInfo>({
     plan: 'starter',

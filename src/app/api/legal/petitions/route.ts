@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser, unauthorized, serverError, badRequest } from '@/lib/api-utils';
 import { getPetitions, createPetition } from '@/lib/db/petitions';
 
+/** GET /api/legal/petitions — lists the authenticated user's petitions, optionally filtered by status and process. */
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
@@ -23,6 +24,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/** POST /api/legal/petitions — creates a new petition for the authenticated user (title required). */
 export async function POST(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();

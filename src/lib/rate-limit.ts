@@ -26,12 +26,17 @@ interface RateLimitConfig {
   windowMs: number;
 }
 
+/** Predefined rate-limit configurations per endpoint category. */
 export const RATE_LIMITS = {
   auth: { maxRequests: 5, windowMs: 15 * 60 * 1000 },     // 5 per 15 min
   ai: { maxRequests: 30, windowMs: 60 * 1000 },            // 30 per minute
   api: { maxRequests: 100, windowMs: 60 * 1000 },          // 100 per minute
 } satisfies Record<string, RateLimitConfig>;
 
+/**
+ * Fixed-window rate limit check for a key. Increments the counter and
+ * returns whether the request is allowed, plus remaining quota and reset time.
+ */
 export function checkRateLimit(
   key: string,
   config: RateLimitConfig

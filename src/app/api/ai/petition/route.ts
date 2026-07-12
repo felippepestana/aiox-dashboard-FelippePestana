@@ -3,6 +3,10 @@ import { generatePetition } from '@/lib/ai-router';
 import { getAuthUser, unauthorized } from '@/lib/api-utils';
 import { withRateLimit } from '@/lib/api-rate-limit';
 
+/**
+ * POST /api/ai/petition — generates a legal petition draft with AI from the
+ * given area, type, facts, arguments, requests, and court.
+ */
 export async function POST(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();

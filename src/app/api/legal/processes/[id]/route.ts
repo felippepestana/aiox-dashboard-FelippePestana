@@ -11,6 +11,7 @@ import { getProcessById, updateProcess, deleteProcess } from '@/lib/db/processes
 
 type RouteContext = { params: Promise<{ id: string }> };
 
+/** GET /api/legal/processes/[id] — fetches a single legal process owned by the authenticated user. */
 export async function GET(request: NextRequest, { params }: RouteContext) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
@@ -28,6 +29,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   }
 }
 
+/** PATCH /api/legal/processes/[id] — partially updates a legal process owned by the authenticated user. */
 export async function PATCH(request: NextRequest, { params }: RouteContext) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
@@ -53,10 +55,12 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
 }
 
 // Keep PUT as an alias for PATCH for backward compatibility
+/** PUT /api/legal/processes/[id] — backward-compatible alias that delegates to PATCH. */
 export async function PUT(request: NextRequest, context: RouteContext) {
   return PATCH(request, context);
 }
 
+/** DELETE /api/legal/processes/[id] — deletes a legal process owned by the authenticated user. */
 export async function DELETE(request: NextRequest, { params }: RouteContext) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();

@@ -6,7 +6,7 @@ import path from 'path';
 import matter from 'gray-matter';
 import type { Story, StoryStatus, StoryComplexity, StoryPriority, StoryCategory, AgentId } from '@/types';
 
-// Get the project root path
+/** Resolves the project root path from AIOS_PROJECT_ROOT or relative to cwd. */
 function getProjectRoot(): string {
   if (process.env.AIOS_PROJECT_ROOT) {
     return process.env.AIOS_PROJECT_ROOT;
@@ -23,7 +23,7 @@ const VALID_PRIORITY: StoryPriority[] = ['low', 'medium', 'high', 'critical'];
 const VALID_CATEGORY: StoryCategory[] = ['feature', 'fix', 'refactor', 'docs'];
 const VALID_AGENTS: AgentId[] = ['dev', 'qa', 'architect', 'pm', 'po', 'analyst', 'devops'];
 
-// Recursively find a story file by ID
+/** Recursively searches a directory for the markdown file whose story ID matches. */
 async function findStoryFile(dir: string, storyId: string): Promise<string | null> {
   try {
     const entries = await fs.readdir(dir, { withFileTypes: true });
@@ -54,7 +54,7 @@ async function findStoryFile(dir: string, storyId: string): Promise<string | nul
   return null;
 }
 
-// Parse story from file
+/** Parses a story markdown file (frontmatter + sections) into a Story object, or null on failure. */
 function parseStoryFromFile(
   content: string,
   filePath: string,
@@ -154,7 +154,7 @@ interface UpdateStoryRequest {
   progress?: number;
 }
 
-// GET /api/stories/[id] - Get a single story
+/** GET /api/stories/[id] — finds and returns a single story parsed from its markdown file. */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -202,7 +202,7 @@ export async function GET(
   }
 }
 
-// PUT /api/stories/[id] - Update a story
+/** PUT /api/stories/[id] — updates a story's frontmatter and markdown sections on disk. */
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -325,7 +325,7 @@ export async function PUT(
   }
 }
 
-// DELETE /api/stories/[id] - Delete a story
+/** DELETE /api/stories/[id] — archives a story by moving its file into docs/stories/.archive. */
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

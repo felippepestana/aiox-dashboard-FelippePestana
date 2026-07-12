@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser, unauthorized, serverError, badRequest } from '@/lib/api-utils';
 import { getProcesses, createProcess } from '@/lib/db/processes';
 
+/** GET /api/legal/processes — lists the authenticated user's legal processes with optional area/status/search filters. */
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
@@ -24,6 +25,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/** POST /api/legal/processes — creates a new legal process for the authenticated user (title or cnj required). */
 export async function POST(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();

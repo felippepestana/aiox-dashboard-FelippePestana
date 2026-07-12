@@ -11,6 +11,10 @@ export interface AIUsageRecord {
   duration_ms: number;
 }
 
+/**
+ * Insert an AI usage record into the ai_usage table.
+ * Errors are logged and swallowed so tracking never fails the request.
+ */
 export async function trackAIUsage(record: AIUsageRecord): Promise<void> {
   try {
     const supabase = createServerClient();
@@ -22,6 +26,10 @@ export async function trackAIUsage(record: AIUsageRecord): Promise<void> {
   }
 }
 
+/**
+ * Summarize a user's AI usage over the last N days: raw records,
+ * token/cost totals, and breakdowns by task type and model.
+ */
 export async function getAIUsageSummary(userId: string, days: number = 30) {
   const supabase = createServerClient();
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
@@ -42,6 +50,9 @@ export async function getAIUsageSummary(userId: string, days: number = 30) {
   };
 }
 
+/**
+ * Group usage rows by a key, aggregating count, tokens and cost per group.
+ */
 function groupBy(arr: { task_type: string; model: string; tokens_used: number; cost_usd: number }[], key: string) {
   return arr.reduce((acc, item) => {
     const group = item[key as keyof typeof item] as string;

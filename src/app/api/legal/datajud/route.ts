@@ -17,6 +17,7 @@ import type { ProcessMovement } from '@/types/legal';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+/** Returns the DataJud API key from the environment, or null when not configured. */
 function requireApiKey(): string | null {
   return process.env.DATAJUD_API_KEY || null;
 }

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser, unauthorized, serverError, badRequest } from '@/lib/api-utils';
 import { getFinancialSummary, createTransaction } from '@/lib/db/financial';
 
+/** GET /api/legal/financial — returns the authenticated user's financial summary. */
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
@@ -17,6 +18,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/** POST /api/legal/financial — records an income or expense transaction for the authenticated user. */
 export async function POST(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();

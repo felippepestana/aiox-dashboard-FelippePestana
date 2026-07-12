@@ -4,6 +4,10 @@ import { callAIStream, type TaskType, type AIMessage } from '@/lib/ai-router';
 import { getAuthUser, unauthorized } from '@/lib/api-utils';
 import { withRateLimit } from '@/lib/api-rate-limit';
 
+/**
+ * POST /api/ai/chat/stream — streams an AI chat completion back to the client
+ * as server-sent events.
+ */
 export async function POST(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();

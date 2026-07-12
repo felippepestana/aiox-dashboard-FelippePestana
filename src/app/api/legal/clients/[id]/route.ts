@@ -11,6 +11,7 @@ import { getClientById, updateClient, deleteClient } from '@/lib/db/clients';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
+/** GET /api/legal/clients/[id] — fetches a single client owned by the authenticated user. */
 export async function GET(request: NextRequest, { params }: RouteContext) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
@@ -28,6 +29,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   }
 }
 
+/** PATCH /api/legal/clients/[id] — partially updates a client owned by the authenticated user. */
 export async function PATCH(request: NextRequest, { params }: RouteContext) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
@@ -53,10 +55,12 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
 }
 
 // Keep PUT as an alias for PATCH for backward compatibility
+/** PUT /api/legal/clients/[id] — backward-compatible alias that delegates to PATCH. */
 export async function PUT(request: NextRequest, context: RouteContext) {
   return PATCH(request, context);
 }
 
+/** DELETE /api/legal/clients/[id] — deletes a client owned by the authenticated user. */
 export async function DELETE(request: NextRequest, { params }: RouteContext) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();

@@ -90,6 +90,10 @@ const ENV_VARS: EnvVar[] = [
 
 let _validated = false;
 
+/**
+ * Validate required/optional environment variables once per process.
+ * Logs warnings for missing optionals; throws in production when required vars are missing or invalid.
+ */
 export function validateEnv(): void {
   if (_validated) return;
   _validated = true;

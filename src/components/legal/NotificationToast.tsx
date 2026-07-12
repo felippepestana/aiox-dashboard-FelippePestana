@@ -25,6 +25,7 @@ const ICON_COLOR_MAP: Record<NotificationType, string> = {
   payment_update: 'text-purple-400',
 };
 
+/** Renders a stack of auto-dismissing toast cards for realtime notifications received for the given user. */
 export function NotificationToast({ userId }: { userId: string | null }) {
   const [toasts, setToasts] = useState<RealtimeNotification[]>([]);
   const { subscribe } = useRealtimeNotifications(userId);

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
+/** Renders a fixed bottom cookie-consent banner that persists the user's choice in localStorage. */
 export function CookieConsent() {
   const [show, setShow] = useState(false);
 

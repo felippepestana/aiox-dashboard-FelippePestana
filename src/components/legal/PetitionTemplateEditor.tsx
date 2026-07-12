@@ -33,6 +33,7 @@ export interface PetitionTemplateEditorProps {
   onSave: (content: string, title: string) => void;
 }
 
+/** Renders the appropriate input control (text, textarea, select, date, or number) for a template variable. */
 function VariableField({
   variable,
   value,
@@ -110,6 +111,7 @@ function VariableField({
   );
 }
 
+/** Renders a petition template editor with a variable form, live preview, auto-fill from process/client data, and copy/download/save actions. */
 export function PetitionTemplateEditor({
   template,
   process,

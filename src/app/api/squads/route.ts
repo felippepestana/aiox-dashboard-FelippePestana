@@ -20,6 +20,7 @@ import {
   type SquadSectionName,
 } from '@/lib/squad-api-utils';
 
+/** Counts listable files in a squad section directory (tasks, workflows, etc.). */
 async function countSectionFiles(
   projectRoot: string,
   squadName: string,
@@ -34,6 +35,7 @@ async function countSectionFiles(
   );
 }
 
+/** Lists sorted agent IDs found in a squad's agents directory. */
 async function listAgentNames(projectRoot: string, squadName: string): Promise<string[]> {
   const agentsDir = resolveSquadSectionDir(projectRoot, squadName, 'agents');
   if (!agentsDir) {
@@ -50,6 +52,7 @@ async function listAgentNames(projectRoot: string, squadName: string): Promise<s
     .sort((a, b) => a.localeCompare(b));
 }
 
+/** Checks whether a file exists on disk. */
 async function fileExists(filePath: string): Promise<boolean> {
   try {
     await fs.access(filePath);
@@ -59,6 +62,7 @@ async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
+/** Loads and parses a squad's squad.yaml manifest, or returns null if missing/invalid. */
 async function readSquadConfig(
   squadPath: string
 ): Promise<Record<string, unknown> | null> {
@@ -71,6 +75,7 @@ async function readSquadConfig(
   }
 }
 
+/** Narrows an unknown value to a plain object record, or returns undefined. */
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return undefined;
@@ -78,6 +83,7 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value as Record<string, unknown>;
 }
 
+/** Collects possible quality-score values from the various places a squad config may declare them. */
 function extractConfigScoreCandidates(
   config: Record<string, unknown> | null
 ): unknown[] {
@@ -104,6 +110,7 @@ function extractConfigScoreCandidates(
   ];
 }
 
+/** Extracts squad-to-squad dependency connections from a squad config's dependencies field. */
 function extractDependencies(
   squadName: string,
   config: Record<string, unknown>
@@ -204,6 +211,10 @@ interface RegistryData {
   };
 }
 
+/**
+ * GET /api/squads — lists all squads with metadata, counts, dependencies, and a
+ * domain index, using the squad registry or falling back to a directory scan.
+ */
 export async function GET() {
   try {
     const projectRoot = getProjectRoot();

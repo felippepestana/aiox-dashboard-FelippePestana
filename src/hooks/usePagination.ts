@@ -40,6 +40,7 @@ export interface UsePaginationReturn<T> {
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
+/** Generic pagination hook that fetches pages via the given fetcher, caches them in memory with next-page prefetch, and returns page data plus navigation actions. */
 export function usePagination<T>(
   fetcher: PageFetcher<T>,
   options: UsePaginationOptions = {}

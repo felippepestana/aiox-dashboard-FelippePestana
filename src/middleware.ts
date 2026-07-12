@@ -28,6 +28,7 @@ const SECURITY_HEADERS: Record<string, string> = {
   ].join('; '),
 };
 
+/** Attach the standard security headers (CSP, X-Frame-Options, etc.) to a response. */
 function applySecurityHeaders(response: NextResponse): NextResponse {
   for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
     response.headers.set(key, value);
@@ -112,6 +113,10 @@ async function isValidSession(token: string): Promise<boolean> {
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 
+/**
+ * Global Next.js middleware: rate-limits API routes, guards protected routes
+ * behind a valid session (redirecting to /login), and applies security headers.
+ */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 

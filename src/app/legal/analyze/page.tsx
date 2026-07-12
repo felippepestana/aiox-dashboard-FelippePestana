@@ -56,6 +56,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 // ─── File Splitter ──────────────────────────────────────────────────────────
 
+/** Splits an oversized file into chunk descriptors (name, part number, size) for chunked processing. */
 function splitLargeFile(file: File, chunkSizeMB: number = 5): { name: string; partNumber: number; totalParts: number; size: number }[] {
   const chunkSize = chunkSizeMB * 1024 * 1024;
   const totalParts = Math.ceil(file.size / chunkSize);
@@ -71,6 +72,7 @@ function splitLargeFile(file: File, chunkSizeMB: number = 5): { name: string; pa
   return parts;
 }
 
+/** Reads a file as text, or as a truncated base64 data URL with a descriptive header for PDFs. */
 async function readFileAsText(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -94,6 +96,7 @@ async function readFileAsText(file: File): Promise<string> {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
+/** Document analysis page: upload legal files, pick the user's role in the case, run AI analysis and chat about the results. */
 export default function AnalyzePage() {
   const [phase, setPhase] = useState<AnalysisPhase>('upload');
   const [files, setFiles] = useState<File[]>([]);

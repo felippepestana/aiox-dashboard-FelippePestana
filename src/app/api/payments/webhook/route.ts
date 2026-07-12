@@ -3,12 +3,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase';
 import { getPaymentInfo, getSubscriptionInfo } from '@/lib/mercadopago';
 
+/** Infers the subscription plan name from a Mercado Pago preapproval reason string. */
 function planFromReason(reason: string | undefined): string {
   if (!reason) return 'professional';
   if (reason.toLowerCase().includes('enterprise')) return 'enterprise';
   return 'professional';
 }
 
+/**
+ * POST /api/payments/webhook — Mercado Pago webhook that verifies the HMAC
+ * signature and updates the user's profile subscription state for payment and
+ * preapproval events.
+ */
 export async function POST(request: NextRequest) {
   // Verify Mercado Pago webhook signature
   const xSignature = request.headers.get('x-signature');

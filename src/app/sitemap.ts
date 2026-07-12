@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 
+/** Generates the sitemap.xml entries for the public site. */
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://apex.legal";
 

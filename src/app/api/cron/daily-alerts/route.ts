@@ -13,6 +13,7 @@ import {
   type DeadlineEmailItem,
 } from '@/lib/email-notifications';
 
+/** Returns the whole number of days from today until the given due date (negative if overdue). */
 function daysUntilDue(dueDateIso: string): number {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
@@ -21,6 +22,10 @@ function daysUntilDue(dueDateIso: string): number {
   return Math.round((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 }
 
+/**
+ * GET /api/cron/daily-alerts — Vercel cron endpoint (CRON_SECRET protected) that
+ * finds pending deadlines due within 7 days or overdue and emails an alert digest.
+ */
 export async function GET(request: Request) {
   // ── Auth: Vercel Cron sends `Authorization: Bearer <CRON_SECRET>` ─────────
   const authHeader = request.headers.get('authorization');

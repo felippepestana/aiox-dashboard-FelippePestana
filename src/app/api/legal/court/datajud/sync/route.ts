@@ -20,6 +20,10 @@ import { getMovements, DataJudError } from '@/lib/court/datajud';
 import { isValidCNJ } from '@/lib/court/cnj-utils';
 import { createServerClient } from '@/lib/supabase';
 
+/**
+ * POST /api/legal/court/datajud/sync — fetches DataJud movements for a process,
+ * inserts only the new ones into the movements table, and updates last_sync_at.
+ */
 export async function POST(request: NextRequest) {
   // Auth check
   const user = await getAuthUser(request);

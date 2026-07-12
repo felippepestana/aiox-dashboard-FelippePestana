@@ -12,6 +12,7 @@ import {
   resolveSquadSectionDir,
 } from '@/lib/squad-api-utils';
 
+/** Derives a display title from a markdown file's first H1, falling back to the formatted filename. */
 function extractTitle(content: string, filename: string, isStructured: boolean): string {
   if (!isStructured) {
     const match = content.match(/^#\s+(.+)/m);
@@ -22,6 +23,10 @@ function extractTitle(content: string, filename: string, isStructured: boolean):
   return formatName(filename);
 }
 
+/**
+ * GET /api/squads/[name]/sections/[section]/[slug] — returns the raw content
+ * and title of a single file within a squad section, with path validation.
+ */
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ name: string; section: string; slug: string }> }

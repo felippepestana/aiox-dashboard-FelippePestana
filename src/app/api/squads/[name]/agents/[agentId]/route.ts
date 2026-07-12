@@ -11,7 +11,7 @@ import {
   sanitizeRelativePath,
 } from '@/lib/squad-api-utils';
 
-// Extract YAML block from markdown agent file
+/** Extracts a YAML block (```yaml fence or frontmatter) from a markdown agent file. */
 function extractYamlFromMarkdown(content: string): Record<string, unknown> | null {
   // Match ```yaml ... ``` blocks
   const yamlMatch = content.match(/```ya?ml\n([\s\S]*?)```/);
@@ -50,7 +50,7 @@ interface ParsedTask {
   estimatedDuration: string;
 }
 
-// Parse a task markdown file to extract structured data
+/** Parses a task markdown file into structured task data (name, inputs, outputs, responsibilities, etc.). */
 function parseTaskFile(content: string, taskId: string): ParsedTask {
   const task: ParsedTask = {
     id: taskId,
@@ -180,6 +180,10 @@ interface AgentDetail {
   sourcePath?: string;
 }
 
+/**
+ * GET /api/squads/[name]/agents/[agentId] — loads and parses a squad agent's
+ * markdown definition, returning its profile, commands, tasks, and handoffs.
+ */
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ name: string; agentId: string }> }

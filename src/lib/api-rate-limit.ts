@@ -3,6 +3,10 @@ import { checkRateLimit, RATE_LIMITS } from './rate-limit';
 
 type RateLimitType = keyof typeof RATE_LIMITS;
 
+/**
+ * Apply per-IP rate limiting to an API request.
+ * Returns a 429 response when the limit is exceeded, or null to proceed.
+ */
 export function withRateLimit(request: NextRequest, type: RateLimitType): NextResponse | null {
   // Nginx appends the peer address via $proxy_add_x_forwarded_for, so the LAST
   // entry is the one set by our own proxy; earlier entries are client-supplied

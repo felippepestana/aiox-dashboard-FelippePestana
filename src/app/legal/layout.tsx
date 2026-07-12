@@ -89,6 +89,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Search,
 };
 
+/** Renders the lucide icon mapped to the given name, falling back to the Scale icon. */
 function NavIcon({ name, className }: { name: string; className?: string }) {
   const Icon = ICON_MAP[name] ?? Scale;
   return <Icon className={className} />;
@@ -96,6 +97,7 @@ function NavIcon({ name, className }: { name: string; className?: string }) {
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
 
+/** Layout for the legal dashboard: collapsible sidebar navigation, mobile menu, alerts and onboarding wrapper around page content. */
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);

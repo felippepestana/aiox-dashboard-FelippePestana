@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from '@sentry/nextjs';
 
+/** Base Next.js configuration, wrapped with Sentry build-time instrumentation below. */
 const nextConfig: NextConfig = {
   serverExternalPackages: ['chokidar'],
 };

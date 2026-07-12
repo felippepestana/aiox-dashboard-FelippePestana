@@ -26,6 +26,10 @@ interface GitHubPR {
   isDraft: boolean;
 }
 
+/**
+ * GET /api/github — lists open issues, pull requests, and repo info for the
+ * current repository via the authenticated `gh` CLI.
+ */
 export async function GET() {
   try {
     // Check if gh CLI is authenticated

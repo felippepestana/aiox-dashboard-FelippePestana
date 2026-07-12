@@ -19,6 +19,7 @@ import {
 
 /* ─────────────────────────────────────── helpers ─────────────────────────── */
 
+/** Hook that reports when the referenced element first enters the viewport, using an IntersectionObserver. */
 function useInView(threshold = 0.15) {
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
@@ -37,6 +38,7 @@ function useInView(threshold = 0.15) {
 
 /* ─────────────────────────────────────── logo mark ──────────────────────── */
 
+/** Renders the APEX gold triangle logo mark as an inline SVG. */
 function ApexLogo({ size = 40 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none" aria-label="APEX Logo">
@@ -55,6 +57,7 @@ function ApexLogo({ size = 40 }: { size?: number }) {
 
 /* ─────────────────────────────────────── nav ─────────────────────────────── */
 
+/** Fixed top navigation bar with anchor links, login CTAs and a mobile menu. */
 function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -159,6 +162,7 @@ function Navbar() {
 
 /* ─────────────────────────────────────── hero ────────────────────────────── */
 
+/** Landing hero section with animated background, headline, tagline and primary CTAs. */
 function Hero() {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
@@ -290,6 +294,7 @@ function Hero() {
 
 /* ─────────────────────────────────────── stats bar ──────────────────────── */
 
+/** Horizontal bar of key product stats that fades in when scrolled into view. */
 function StatsBar() {
   const { ref, inView } = useInView();
   const stats = [
@@ -367,6 +372,7 @@ const FEATURES = [
   },
 ];
 
+/** Grid of product feature cards with scroll-triggered entrance animation. */
 function FeaturesGrid() {
   const { ref, inView } = useInView();
 
@@ -422,6 +428,7 @@ const AI_FEATURES = [
   'Precedentes e análise de tendências',
 ];
 
+/** Section showcasing the legal AI features alongside a mock chat UI frame. */
 function AIShowcase() {
   const { ref, inView } = useInView();
 
@@ -606,6 +613,7 @@ const PLANS = [
   },
 ];
 
+/** Call-to-action button for a pricing plan; starts a checkout flow for paid plans or links to login. */
 function PricingCTA({ plan }: { plan: (typeof PLANS)[number] }) {
   const [loading, setLoading] = useState(false);
 
@@ -660,6 +668,7 @@ function PricingCTA({ plan }: { plan: (typeof PLANS)[number] }) {
   );
 }
 
+/** Pricing section rendering the three subscription plan cards. */
 function Pricing() {
   const { ref, inView } = useInView();
 
@@ -758,6 +767,7 @@ const TESTIMONIALS = [
   },
 ];
 
+/** Testimonials section with customer quote cards. */
 function Testimonials() {
   const { ref, inView } = useInView();
 
@@ -822,6 +832,7 @@ function Testimonials() {
 
 /* ─────────────────────────────────────── CTA section ─────────────────────── */
 
+/** Final call-to-action section prompting visitors to create a free account. */
 function CTASection() {
   const { ref, inView } = useInView();
 
@@ -860,6 +871,7 @@ function CTASection() {
 
 /* ─────────────────────────────────────── footer ─────────────────────────── */
 
+/** Site footer with brand info, link columns and social icons. */
 function Footer() {
   const cols = [
     {
@@ -992,6 +1004,7 @@ const jsonLd = {
   },
 };
 
+/** Public marketing landing page composing the hero, features, pricing, testimonials and footer sections. */
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#060d1a] text-white">

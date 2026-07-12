@@ -307,6 +307,7 @@ const DEFAULT_QUESTIONS = [
   'Quais são suas expectativas com relação a este caso?',
 ];
 
+/** Formats a date string as dd/mm/yyyy in pt-BR. */
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('pt-BR', {
     day: '2-digit',
@@ -315,6 +316,7 @@ function formatDate(dateStr: string): string {
   });
 }
 
+/** Formats a date string as HH:mm in pt-BR. */
 function formatTime(dateStr: string): string {
   return new Date(dateStr).toLocaleTimeString('pt-BR', {
     hour: '2-digit',
@@ -329,6 +331,7 @@ interface NewInterviewModalProps {
   onStart: (session: Omit<ExtendedSession, 'id' | 'transcriptEntries' | 'suggestions'>) => void;
 }
 
+/** Multi-step modal for starting a new interview: pick or create a client, choose legal area and interview type. */
 function NewInterviewModal({ onClose, onStart }: NewInterviewModalProps) {
   const { clients } = useLegalStore();
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -698,6 +701,7 @@ Responda APENAS com as perguntas, uma por linha, numeradas de 1 a 8. Sem explica
 
 // ─── Session Card ────────────────────────────────────────────────────────────
 
+/** Expandable card for an interview session with status, details and an AI note-summarization action. */
 function SessionCard({ session }: { session: ExtendedSession }) {
   const [expanded, setExpanded] = useState(false);
   const [summarizing, setSummarizing] = useState(false);
@@ -869,6 +873,7 @@ Notas: "${session.notes}"`,
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
+/** Interview list page: searchable, filterable list of interview sessions with a modal to start new ones. */
 export default function InterviewListPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');

@@ -1,6 +1,7 @@
 // Mercado Pago integration — uses direct fetch to the MP REST API.
 // No npm package required; this avoids a build-time dependency.
 
+/** Fetch wrapper for Mercado Pago API calls with a 10-second abort timeout. */
 async function mpFetch(url: string, init?: RequestInit): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10_000);
@@ -25,6 +26,10 @@ interface MPSubscription {
   init_point?: string;
 }
 
+/**
+ * Create a one-time Mercado Pago checkout preference for a plan purchase
+ * and return the preference with its payment init_point URLs.
+ */
 export async function createCheckoutPreference(params: {
   planName: string;
   priceInCents: number;
@@ -70,6 +75,9 @@ export async function createCheckoutPreference(params: {
   return response.json();
 }
 
+/**
+ * Create a monthly recurring Mercado Pago subscription (preapproval) for a plan.
+ */
 export async function createSubscription(params: {
   planId: string;
   userEmail: string;
@@ -110,6 +118,9 @@ export async function createSubscription(params: {
   return response.json();
 }
 
+/**
+ * Fetch payment details from Mercado Pago; returns null when the payment is not found.
+ */
 export async function getPaymentInfo(paymentId: string) {
   const accessToken = process.env.MP_ACCESS_TOKEN;
   if (!accessToken) throw new Error('MP_ACCESS_TOKEN not configured');
@@ -125,6 +136,9 @@ export async function getPaymentInfo(paymentId: string) {
   return response.json();
 }
 
+/**
+ * Fetch subscription (preapproval) details from Mercado Pago; returns null when not found.
+ */
 export async function getSubscriptionInfo(preapprovalId: string) {
   const accessToken = process.env.MP_ACCESS_TOKEN;
   if (!accessToken) throw new Error('MP_ACCESS_TOKEN not configured');

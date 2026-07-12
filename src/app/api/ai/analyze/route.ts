@@ -3,6 +3,11 @@ import { callAI, type TaskType } from '@/lib/ai-router';
 import { getAuthUser, unauthorized } from '@/lib/api-utils';
 import { withRateLimit } from '@/lib/api-rate-limit';
 
+/**
+ * POST /api/ai/analyze — analyzes a legal document with AI from a given party's
+ * perspective and returns a structured analysis (entities, clauses, strategy),
+ * or continues a follow-up chat when chatHistory is provided.
+ */
 export async function POST(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser, unauthorized, serverError, badRequest } from '@/lib/api-utils';
 import { getDeadlines, createDeadline, updateDeadline } from '@/lib/db/deadlines';
 
+/** GET /api/legal/deadlines — lists the authenticated user's deadlines with optional status/process/search filters. */
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
@@ -24,6 +25,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/** POST /api/legal/deadlines — creates a new deadline for the authenticated user (title and dueDate required). */
 export async function POST(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
@@ -52,6 +54,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/** PATCH /api/legal/deadlines?id=... — updates the deadline identified by the id query parameter. */
 export async function PATCH(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();

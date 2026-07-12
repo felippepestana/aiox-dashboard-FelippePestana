@@ -11,6 +11,7 @@ import { getDeadlineById, updateDeadline, deleteDeadline } from '@/lib/db/deadli
 
 type RouteContext = { params: Promise<{ id: string }> };
 
+/** GET /api/legal/deadlines/[id] — fetches a single deadline owned by the authenticated user. */
 export async function GET(request: NextRequest, { params }: RouteContext) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
@@ -28,6 +29,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   }
 }
 
+/** PATCH /api/legal/deadlines/[id] — partially updates a deadline owned by the authenticated user. */
 export async function PATCH(request: NextRequest, { params }: RouteContext) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
@@ -53,10 +55,12 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
 }
 
 // Keep PUT as an alias for PATCH for backward compatibility
+/** PUT /api/legal/deadlines/[id] — backward-compatible alias that delegates to PATCH. */
 export async function PUT(request: NextRequest, context: RouteContext) {
   return PATCH(request, context);
 }
 
+/** DELETE /api/legal/deadlines/[id] — deletes a deadline owned by the authenticated user. */
 export async function DELETE(request: NextRequest, { params }: RouteContext) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateSession } from '@/lib/auth';
 import { createServerClient } from '@/lib/supabase';
 
+/** GET /api/payments/subscription — returns the authenticated user's subscription plan, status, and period end. */
 export async function GET(request: NextRequest) {
   const sessionCookie = request.cookies.get('aiox_session')?.value;
   if (!sessionCookie) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

@@ -30,10 +30,12 @@ const AREA_LABELS: Record<string, string> = {
   previdenciario: 'Previdenciário', administrativo: 'Administrativo', ambiental: 'Ambiental', digital: 'Digital',
 };
 
+/** Formats a number as Brazilian Real (BRL) currency. */
 function formatCurrency(v: number): string {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
+/** Renders a business-intelligence dashboard with legal practice metrics, revenue charts, case distribution, and top clients. */
 export function BIDashboard({ period, onPeriodChange }: BIDashboardProps) {
   const { processes, clients, deadlines } = useLegalStore();
   const { getTotalRevenue, getTotalExpenses, honorarios, transactions } = useLegalFinancialStore();

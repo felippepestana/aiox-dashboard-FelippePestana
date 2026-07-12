@@ -16,6 +16,7 @@ export interface RealtimeNotification {
 
 type NotificationListener = (notification: RealtimeNotification) => void;
 
+/** Subscribes to Supabase realtime changes (processes, deadlines, profile) for a user and returns a `subscribe` function to register notification listeners. */
 export function useRealtimeNotifications(userId: string | null) {
   const listenersRef = useRef<Set<NotificationListener>>(new Set());
 

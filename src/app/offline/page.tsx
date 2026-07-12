@@ -1,5 +1,6 @@
 'use client';
 
+/** Fallback page shown when the user is offline, with a button to reload the app. */
 export default function OfflinePage() {
   return (
     <div className="min-h-screen bg-[#060d1a] flex items-center justify-center">

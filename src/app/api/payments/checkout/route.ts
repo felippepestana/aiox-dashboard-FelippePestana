@@ -3,6 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateSession } from '@/lib/auth';
 import { createSubscription } from '@/lib/mercadopago';
 
+/**
+ * POST /api/payments/checkout — creates a Mercado Pago subscription for the
+ * requested plan and returns the checkout init point URL.
+ */
 export async function POST(request: NextRequest) {
   const sessionCookie = request.cookies.get('aiox_session')?.value;
   if (!sessionCookie) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

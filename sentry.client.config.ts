@@ -1,3 +1,7 @@
+/**
+ * Sentry browser-side initialization: 10% trace/replay sampling,
+ * full replay capture on errors.
+ */
 import * as Sentry from '@sentry/nextjs';
 
 Sentry.init({

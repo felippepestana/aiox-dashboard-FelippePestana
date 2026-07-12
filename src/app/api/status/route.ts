@@ -7,8 +7,7 @@ import type { AiosStatus, AgentId } from '@/types';
 // Status file path relative to project root
 const STATUS_FILE_NAME = '.aios/dashboard/status.json';
 
-// Get the project root path
-// Priority: AIOS_PROJECT_ROOT env var > navigate from cwd
+/** Resolves the project root path (AIOS_PROJECT_ROOT env var takes priority over navigating from cwd). */
 function getProjectRoot(): string {
   if (process.env.AIOS_PROJECT_ROOT) {
     return process.env.AIOS_PROJECT_ROOT;
@@ -31,7 +30,7 @@ const DISCONNECTED_STATUS: AiosStatus = {
   },
 };
 
-// Type guard for AgentId
+/** Type guard that checks whether a value is a known AgentId. */
 function isValidAgentId(id: unknown): id is AgentId {
   return (
     typeof id === 'string' &&
@@ -39,7 +38,7 @@ function isValidAgentId(id: unknown): id is AgentId {
   );
 }
 
-// Validate status file structure
+/** Validates and normalizes the parsed status file into an AiosStatus, or returns null if invalid. */
 function validateStatusFile(data: unknown): AiosStatus | null {
   if (!data || typeof data !== 'object') {
     return null;
@@ -127,6 +126,10 @@ function validateStatusFile(data: unknown): AiosStatus | null {
   };
 }
 
+/**
+ * GET /api/status — reads and validates the AIOS CLI status file, returning a
+ * disconnected fallback when the file is missing or invalid.
+ */
 export async function GET() {
   try {
     // Resolve status file path from project root

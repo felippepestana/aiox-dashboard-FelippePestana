@@ -166,6 +166,9 @@ export async function getRecentActivity(
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
+/**
+ * Map a raw audit_logs row (snake_case) to an AuditEvent object.
+ */
 function rowToEvent(row: Record<string, unknown>): AuditEvent {
   return {
     id: row.id as string,

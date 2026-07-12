@@ -10,6 +10,7 @@ export const metadata: Metadata = {
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
 
+/** Numbered policy section with an anchor id, heading and body content. */
 function Section({
   id,
   number,
@@ -34,6 +35,7 @@ function Section({
   );
 }
 
+/** Titled subsection block used inside a policy Section. */
 function SubSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mt-5 mb-3">
@@ -43,6 +45,7 @@ function SubSection({ title, children }: { title: string; children: React.ReactN
   );
 }
 
+/** Small gold pill tag used to label data categories. */
 function Tag({ children }: { children: React.ReactNode }) {
   return (
     <span className="inline-flex items-center rounded-full border border-[rgba(212,175,55,0.25)] bg-[rgba(212,175,55,0.07)] px-2.5 py-0.5 text-xs text-[#D4AF37] font-medium mr-1.5 mb-1.5">
@@ -51,6 +54,7 @@ function Tag({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** Two-column label/value table row for policy detail tables. */
 function TableRow({ label, value }: { label: string; value: string }) {
   return (
     <tr className="border-b border-[rgba(192,192,192,0.07)]">
@@ -81,6 +85,7 @@ const TOC = [
 
 /* ─── Page ────────────────────────────────────────────────────────────────── */
 
+/** LGPD privacy policy page with a table of contents and twelve numbered sections. */
 export default function PrivacyPage() {
   const effectiveDate = '09 de junho de 2026';
   const lastReview = '09 de junho de 2026';

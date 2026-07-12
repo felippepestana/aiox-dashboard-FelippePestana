@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser, unauthorized, serverError, badRequest } from '@/lib/api-utils';
 import { getClients, createClient } from '@/lib/db/clients';
 
+/** GET /api/legal/clients — lists the authenticated user's clients, optionally filtered by type and search. */
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
@@ -23,6 +24,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/** POST /api/legal/clients — creates a new client for the authenticated user (name required). */
 export async function POST(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();

@@ -55,6 +55,7 @@ export interface SaveCredentialInput {
  */
 let _cachedKey: CryptoKey | null = null;
 
+/** Derive (and cache) the AES-256-GCM key from AUTH_SECRET via PBKDF2. */
 async function getDerivedKey(): Promise<CryptoKey> {
   if (_cachedKey) return _cachedKey;
 
@@ -144,6 +145,10 @@ interface CredentialRow {
   created_at: string;
 }
 
+/**
+ * Map a court_credentials DB row to a CourtCredential, optionally
+ * attaching the decrypted password.
+ */
 function rowToCredential(row: CredentialRow, includePassword?: false): CourtCredential;
 function rowToCredential(row: CredentialRow, password: string): CourtCredential & { password: string };
 function rowToCredential(row: CredentialRow, password?: string | false): CourtCredential {

@@ -67,6 +67,8 @@ const TASK_COMPLEXITY_MAP: Record<TaskType, TaskComplexity> = {
 
 // Lazy singleton Anthropic client
 let _client: Anthropic | null = null;
+
+/** Return the lazily-created singleton Anthropic client; throws if ANTHROPIC_API_KEY is missing. */
 function getClient(): Anthropic {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY not configured. Add it to .env file.');
@@ -74,6 +76,9 @@ function getClient(): Anthropic {
   return _client;
 }
 
+/**
+ * Classify a task's complexity from its type, upgrading a tier when the input is large.
+ */
 export function classifyComplexity(taskType: TaskType, inputLength: number): TaskComplexity {
   const baseComplexity = TASK_COMPLEXITY_MAP[taskType];
 
@@ -83,6 +88,9 @@ export function classifyComplexity(taskType: TaskType, inputLength: number): Tas
   return baseComplexity;
 }
 
+/**
+ * Pick the cheapest capable model config for a task type and input size.
+ */
 export function getModelForTask(taskType: TaskType, inputLength: number = 0): ModelConfig {
   const complexity = classifyComplexity(taskType, inputLength);
   return MODEL_CONFIG[complexity];
@@ -102,6 +110,10 @@ export interface AIResponse {
   durationMs: number;
 }
 
+/**
+ * Return the APEX legal-assistant system prompt tailored to the given task type.
+ * Falls back to the generic chat prompt for unknown types.
+ */
 export function getSystemPrompt(taskType: TaskType): string {
   const baseContext = `Você é o APEX, assistente jurídico especializado em direito brasileiro, desenvolvido para escritórios de advocacia.`;
 
@@ -171,6 +183,10 @@ Seja minucioso. Destaque cláusulas que podem ser questionadas judicialmente.`,
   return prompts[taskType] ?? prompts.chat_response;
 }
 
+/**
+ * Send messages to the auto-selected Claude model and return the full response
+ * with token/cost/duration metadata. Usage is tracked fire-and-forget.
+ */
 export async function callAI(
   messages: AIMessage[],
   taskType: TaskType = 'chat_response',
@@ -225,6 +241,10 @@ export async function callAI(
   };
 }
 
+/**
+ * Stream a Claude response as an SSE-formatted ReadableStream
+ * (OpenAI-style `data:` chunks ending with `[DONE]`).
+ */
 export async function callAIStream(
   messages: AIMessage[],
   taskType: TaskType = 'chat_response',
@@ -274,6 +294,10 @@ export async function callAIStream(
   });
 }
 
+/**
+ * Analyze an extracted legal document from the perspective of the given party (polo)
+ * and return a structured strategic analysis.
+ */
 export async function analyzePDF(
   base64Content: string,
   fileName: string,
@@ -304,6 +328,9 @@ ${base64Content.slice(0, 50000)}`,
   ], taskType, { maxTokens: 4096 });
 }
 
+/**
+ * Generate a formatted Brazilian legal petition from facts, arguments and requests.
+ */
 export async function generatePetition(
   area: string,
   type: string,

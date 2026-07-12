@@ -56,10 +56,12 @@ const STATUS_TABS: { value: InvoiceStatus | 'all'; label: string }[] = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+/** Formats a value in cents as a Brazilian Real currency string. */
 function formatCurrency(cents: number): string {
   return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
+/** Formats an ISO date string as dd/mm/yyyy in pt-BR, or an em dash when empty. */
 function formatDate(iso: string): string {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -95,6 +97,7 @@ const EMPTY_ITEM: LegalInvoiceItem = {
   total: 0,
 };
 
+/** Returns a blank invoice form state with one empty line item. */
 function emptyForm() {
   return {
     clientId: '',
@@ -129,6 +132,7 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   free:      { label: 'Plano Gratuito', className: 'bg-[#1a2332] text-[#6b7a8d] border-[#1a2332]' },
 };
 
+/** Panel showing the current subscription plan and status, with an upgrade-to-checkout action. */
 function SubscriptionPanel() {
   const [data, setData] = useState<SubscriptionData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -246,6 +250,7 @@ function SubscriptionPanel() {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+/** Billing page: invoice summary stats, status-filtered invoice list, invoice creation form and subscription panel. */
 export default function BillingPage() {
   const { invoices, addInvoice, updateInvoiceStatus } = useLegalFinancialStore();
   const { clients, processes } = useLegalStore();

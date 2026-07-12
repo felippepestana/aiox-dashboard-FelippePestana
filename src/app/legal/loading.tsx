@@ -1,3 +1,4 @@
+/** Loading skeleton shown while legal dashboard pages are being fetched. */
 export default function LegalLoading() {
   return (
     <div className="p-6 space-y-6 animate-pulse" aria-label="Carregando..." aria-busy="true">

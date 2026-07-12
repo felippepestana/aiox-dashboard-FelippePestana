@@ -50,6 +50,7 @@ export interface WeeklyDigestSummary {
 
 const FROM_ADDRESS = process.env.NOTIFICATION_EMAIL || 'noreply@aiox.legal';
 
+/** Map days-until-due to a deadline urgency badge color (red/orange/amber/blue). */
 function getUrgencyColor(daysUntilDue: number): string {
   if (daysUntilDue < 0) return '#dc2626'; // red — overdue
   if (daysUntilDue <= 1) return '#ea580c'; // orange — critical
@@ -57,6 +58,7 @@ function getUrgencyColor(daysUntilDue: number): string {
   return '#2563eb'; // blue — upcoming
 }
 
+/** Human-readable pt-BR urgency label for a deadline (e.g. "Vence hoje"). */
 function getUrgencyLabel(daysUntilDue: number): string {
   if (daysUntilDue < 0) return `Vencido (${Math.abs(daysUntilDue)} dias)`;
   if (daysUntilDue === 0) return 'Vence hoje';
@@ -64,6 +66,7 @@ function getUrgencyLabel(daysUntilDue: number): string {
   return `${daysUntilDue} dias restantes`;
 }
 
+/** Format an ISO date string as dd/mm/yyyy (pt-BR); returns the input on parse failure. */
 function formatDate(iso: string): string {
   try {
     return new Date(iso).toLocaleDateString('pt-BR', {
@@ -76,6 +79,7 @@ function formatDate(iso: string): string {
   }
 }
 
+/** Format a number as Brazilian Real currency (R$). */
 function formatCurrency(value: number): string {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
@@ -84,6 +88,7 @@ function formatCurrency(value: number): string {
 // Shared HTML components
 // ---------------------------------------------------------------------------
 
+/** Opening HTML for branded emails: document head plus the APEX header banner. */
 function htmlHeader(title: string): string {
   return `
 <!DOCTYPE html>
@@ -116,6 +121,7 @@ function htmlHeader(title: string): string {
 `;
 }
 
+/** Closing HTML for branded emails: footer with dashboard link, closes tags opened by htmlHeader. */
 function htmlFooter(): string {
   const year = new Date().getFullYear();
   return `
@@ -142,6 +148,10 @@ function htmlFooter(): string {
 // buildDeadlineAlertEmail
 // ---------------------------------------------------------------------------
 
+/**
+ * Build the HTML + plain-text deadline alert email listing upcoming
+ * deadlines with urgency badges.
+ */
 export function buildDeadlineAlertEmail(
   deadlines: DeadlineEmailItem[],
   recipientEmail: string
@@ -226,6 +236,9 @@ APEX Legal Performance — Email automático.
 // buildMovementAlertEmail
 // ---------------------------------------------------------------------------
 
+/**
+ * Build the HTML + plain-text email alerting about new case movements.
+ */
 export function buildMovementAlertEmail(
   movements: MovementEmailItem[],
   recipientEmail: string
@@ -297,6 +310,9 @@ APEX Legal Performance — Email automático.
 // buildWeeklyDigestEmail
 // ---------------------------------------------------------------------------
 
+/**
+ * Build the weekly digest email with deadline/movement stats and a financial summary.
+ */
 export function buildWeeklyDigestEmail(
   summary: WeeklyDigestSummary,
   recipientEmail: string
@@ -389,6 +405,10 @@ export interface SendEmailResult {
   error?: string;
 }
 
+/**
+ * Send an email via Resend (preferred) or an SMTP relay fallback.
+ * Returns a result object instead of throwing; fails gracefully when no provider is configured.
+ */
 export async function sendEmail(template: EmailTemplate): Promise<SendEmailResult> {
   const resendApiKey = process.env.RESEND_API_KEY;
   const smtpHost = process.env.SMTP_HOST;

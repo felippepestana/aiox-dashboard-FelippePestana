@@ -13,6 +13,7 @@ import { useDeadlineAlerts } from '@/hooks/useDeadlineAlerts';
 
 const SESSION_KEY = 'aiox_deadline_toast_shown';
 
+/** Renders a once-per-session toast alerting about overdue or same-day deadlines, auto-dismissing after 8 seconds. */
 export function DeadlineToast() {
   const { counts } = useDeadlineAlerts();
   const [visible, setVisible] = useState(false);

@@ -10,6 +10,7 @@ interface PlanGateProps {
   fallbackMessage?: string;
 }
 
+/** Renders children only when the user's active plan includes the given feature; otherwise shows an upgrade prompt. */
 export function PlanGate({ feature, children, fallbackMessage }: PlanGateProps) {
   const { plan, status, loading } = useSubscription();
 
@@ -21,6 +22,7 @@ export function PlanGate({ feature, children, fallbackMessage }: PlanGateProps) 
   return <UpgradePrompt message={fallbackMessage} />;
 }
 
+/** Renders an upgrade call-to-action card that starts a Professional plan checkout on click. */
 function UpgradePrompt({ message }: { message?: string }) {
   const [upgrading, setUpgrading] = useState(false);
 

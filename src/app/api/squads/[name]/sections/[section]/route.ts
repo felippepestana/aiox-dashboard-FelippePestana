@@ -10,6 +10,10 @@ import {
   resolveSquadSectionDir,
 } from '@/lib/squad-api-utils';
 
+/**
+ * GET /api/squads/[name]/sections/[section] — lists the files in a squad
+ * section (tasks, workflows, etc.) as slug/name/path items.
+ */
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ name: string; section: string }> }

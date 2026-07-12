@@ -38,6 +38,7 @@ export const metadata: Metadata = {
   },
 };
 
+/** Root layout that wraps every page with the base HTML shell, theme bootstrap, PWA metadata, service worker registration and cookie consent. */
 export default function RootLayout({
   children,
 }: Readonly<{
