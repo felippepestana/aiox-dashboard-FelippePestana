@@ -25,7 +25,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   } catch (error) {
     Sentry.captureException(error);
     console.error('Failed to fetch client:', error);
-    return notFound('Client not found');
+    return serverError();
   }
 }
 

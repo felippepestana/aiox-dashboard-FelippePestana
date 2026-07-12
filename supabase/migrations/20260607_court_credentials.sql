@@ -36,6 +36,7 @@ create index if not exists idx_court_credentials_system_tribunal
 -- RLS: users can only manage their own credentials
 alter table court_credentials enable row level security;
 
+drop policy if exists "Users manage own court credentials" on court_credentials;
 create policy "Users manage own court credentials"
   on court_credentials
   for all
@@ -43,6 +44,7 @@ create policy "Users manage own court credentials"
   with check (user_id = auth.uid());
 
 -- Keep updated_at in sync
+drop trigger if exists tr_court_credentials_updated on court_credentials;
 create trigger tr_court_credentials_updated
   before update on court_credentials
   for each row execute function update_updated_at();
