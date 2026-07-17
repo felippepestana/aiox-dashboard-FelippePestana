@@ -37,8 +37,16 @@ const ENV_VARS: EnvVar[] = [
   {
     key: 'AUTH_SECRET',
     required: true,
-    validate: (v) => v.length >= 16,
-    hint: 'Must be at least 16 characters (use: openssl rand -hex 32)',
+    // Length alone is not enough: the public placeholders from .env.example
+    // and old defaults must never pass as a real secret.
+    validate: (v) =>
+      v.length >= 16 &&
+      ![
+        'generate-a-random-32-char-string',
+        'change-this-to-random-string',
+        'fallback-dev-secret-change-in-production',
+      ].includes(v),
+    hint: 'Must be at least 16 random characters, not a placeholder (use: openssl rand -hex 32)',
   },
 
   // AI — optional but validated if present

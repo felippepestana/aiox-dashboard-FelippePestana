@@ -66,6 +66,17 @@ export async function POST(request: NextRequest) {
   const webhookSecret = process.env.MP_WEBHOOK_SECRET;
   const signedDataId = new URL(request.url).searchParams.get('data.id') || '';
 
+  // Fail closed: with payments configured in production, an unsigned webhook
+  // must never mutate billing state — anyone replaying a real MP resource ID
+  // could otherwise force subscription updates.
+  if (!webhookSecret && process.env.MP_ACCESS_TOKEN && process.env.NODE_ENV === 'production') {
+    Sentry.captureMessage(
+      '[payments/webhook] MP_WEBHOOK_SECRET is not set in production — rejecting webhook',
+      'error',
+    );
+    return NextResponse.json({ error: 'Webhook signature not configured' }, { status: 503 });
+  }
+
   if (webhookSecret) {
     // A configured secret makes the signature mandatory — unsigned requests are rejected
     if (!xSignature) {

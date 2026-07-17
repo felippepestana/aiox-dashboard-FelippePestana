@@ -25,7 +25,9 @@ export async function POST(request: NextRequest) {
       return new Response(JSON.stringify({ error: 'Messages required' }), { status: 400 });
     }
 
-    const stream = await callAIStream(messages, taskType || 'chat_response');
+    const stream = await callAIStream(messages, taskType || 'chat_response', {
+      userId: user.id,
+    });
 
     return new Response(stream, {
       headers: {

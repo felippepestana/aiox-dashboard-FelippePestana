@@ -248,11 +248,12 @@ export async function callAI(
 export async function callAIStream(
   messages: AIMessage[],
   taskType: TaskType = 'chat_response',
-  options?: { maxTokens?: number; temperature?: number }
+  options?: { maxTokens?: number; temperature?: number; userId?: string }
 ): Promise<ReadableStream<Uint8Array>> {
   const client = getClient();
   const complexity = classifyComplexity(taskType, messages.map(m => m.content).join('').length);
   const model = MODEL_CONFIG[complexity];
+  const startTime = Date.now();
 
   const anthropicMessages = messages
     .filter(m => m.role !== 'system')
@@ -282,6 +283,25 @@ export async function callAIStream(
             controller.enqueue(encoder.encode(`data: ${sseData}\n\n`));
           }
         }
+        // Fire-and-forget usage tracking, mirroring callAI — without this the
+        // streaming chat path (the default in /legal/chat) never reached
+        // ai_usage and per-user cost reporting missed most conversations.
+        try {
+          const final = await stream.finalMessage();
+          const tokensUsed = (final.usage.input_tokens || 0) + (final.usage.output_tokens || 0);
+          trackAIUsage({
+            user_id: options?.userId || 'anonymous',
+            task_type: taskType,
+            model: model.name,
+            complexity,
+            tokens_used: tokensUsed,
+            cost_usd: (tokensUsed / 1000) * model.costPer1kTokens,
+            duration_ms: Date.now() - startTime,
+          }).catch(() => {});
+        } catch {
+          /* usage tracking is best-effort */
+        }
+
         controller.enqueue(encoder.encode('data: [DONE]\n\n'));
         controller.close();
       } catch (error) {

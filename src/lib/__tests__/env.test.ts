@@ -164,6 +164,17 @@ describe('validateEnv', () => {
       expect(() => validateEnv()).toThrow('Invalid environment configuration');
     });
 
+    it('throws in production when AUTH_SECRET is the public .env.example placeholder', async () => {
+      setEnv({
+        ...validRequiredEnv(),
+        AUTH_SECRET: 'generate-a-random-32-char-string',
+        NODE_ENV: 'production',
+      });
+
+      const { validateEnv } = await import('@/lib/env');
+      expect(() => validateEnv()).toThrow('Invalid environment configuration');
+    });
+
     it('logs error in development when NEXT_PUBLIC_SUPABASE_URL has invalid format', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       setEnv({

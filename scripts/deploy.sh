@@ -145,9 +145,11 @@ if [ ! -f "$APP_DIR/.env" ]; then
     log_info "Creating .env from .env.example..."
     cp "$APP_DIR/.env.example" "$APP_DIR/.env"
 
-    # Generate a random AUTH_SECRET
+    # Generate a random AUTH_SECRET (anchor to the whole line — the literal
+    # placeholder text in .env.example has drifted before and a missed sed
+    # would silently keep the public sample value)
     AUTH_SECRET=$(openssl rand -base64 32)
-    sed -i "s|AUTH_SECRET=change-this-to-random-string|AUTH_SECRET=$AUTH_SECRET|g" "$APP_DIR/.env"
+    sed -i "s|^AUTH_SECRET=.*|AUTH_SECRET=$AUTH_SECRET|" "$APP_DIR/.env"
 
     # Generate a random CRON_SECRET (never keep the public placeholder from
     # .env.example — it would become the bearer token for /api/cron/*)
