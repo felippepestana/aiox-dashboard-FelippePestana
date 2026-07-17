@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "preview": "next build && next start"
+    "preview": "next build && cp -r public .next/standalone/public && cp -r .next/static .next/standalone/.next/static && node .next/standalone/server.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.92.0",
