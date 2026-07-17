@@ -11,6 +11,8 @@ export default withSentryConfig(nextConfig, {
   project: process.env.SENTRY_PROJECT,
   silent: !process.env.CI,
   widenClientFileUpload: true,
-  tunnelRoute: '/monitoring',
+  // Must NOT collide with middleware's protected '/monitor*' prefix, or
+  // unauthenticated Sentry envelopes would be redirected to /login
+  tunnelRoute: '/sentry-tunnel',
   disableLogger: true,
 });

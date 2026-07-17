@@ -81,12 +81,12 @@ function pruneRateLimitStore(): void {
 // ─── Session validation ───────────────────────────────────────────────────────
 
 /**
- * Validates a session token — tries Supabase JWT first, then falls back to the
- * legacy Base64-encoded session format so that existing sessions keep working
- * until they naturally expire.
+ * Validates a session token against Supabase.
+ * Unsigned legacy Base64 sessions are NOT accepted — they were forgeable
+ * (any client could craft an unexpired payload), so only Supabase-verified
+ * JWTs pass the route guard. Mirrors validateSession in src/lib/auth.ts.
  */
 async function isValidSession(token: string): Promise<boolean> {
-  // 1. Try Supabase JWT validation
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const serviceKey =
@@ -95,20 +95,10 @@ async function isValidSession(token: string): Promise<boolean> {
 
     const supabase = createClient(supabaseUrl, serviceKey);
     const { data: { user } } = await supabase.auth.getUser(token);
-    if (user) return true;
+    return Boolean(user);
   } catch {
-    /* network error or invalid JWT — fall through */
+    return false; // network error or invalid JWT
   }
-
-  // 2. Fallback: legacy Base64 session (migration period)
-  try {
-    const payload = JSON.parse(Buffer.from(token, 'base64url').toString('utf-8'));
-    if (payload.exp && payload.exp > Date.now()) return true;
-  } catch {
-    /* not a legacy token */
-  }
-
-  return false;
 }
 
 // ─── Middleware ───────────────────────────────────────────────────────────────

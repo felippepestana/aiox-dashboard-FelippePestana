@@ -9,7 +9,6 @@ import { useLegalMarketingStore } from '@/stores/legal-marketing-store';
 import { useLegalStrategyStore } from '@/stores/legal-strategy-store';
 import { useDeadlineAlerts } from '@/hooks/useDeadlineAlerts';
 import { useHydration } from '@/hooks/useHydration';
-import { createBrowserClient } from '@/lib/supabase';
 import { DeadlineAlerts } from '@/components/legal/DeadlineAlerts';
 import { DeadlineToast } from '@/components/legal/DeadlineToast';
 import { NotificationToast } from '@/components/legal/NotificationToast';
@@ -137,11 +136,13 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       hydrateStrategyFromApi();
     }
 
-    // Fetch the authenticated user's ID for realtime notifications
-    const supabase = createBrowserClient();
-    supabase.auth.getUser().then(({ data }) => {
-      setUserId(data.user?.id ?? null);
-    });
+    // Fetch the authenticated user's ID for realtime notifications.
+    // The session lives in an httpOnly cookie, so the Supabase browser client
+    // can't read it — resolve the user via the app's own session endpoint.
+    fetch('/api/auth/me')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setUserId(data?.user?.id ?? null))
+      .catch(() => setUserId(null));
   }, [hydrateFinancialFromApi, hydrateMarketingFromApi, hydrateStrategyFromApi, shouldShow]);
 
   useEffect(() => {

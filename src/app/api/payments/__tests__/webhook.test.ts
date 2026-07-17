@@ -165,6 +165,27 @@ describe('POST /api/payments/webhook — subscription_preapproval events', () =>
     });
   }
 
+  it('processes alphanumeric preapproval IDs (MP subscription IDs are not numeric)', async () => {
+    mockGetSubscriptionInfo.mockResolvedValueOnce({
+      id: '2c938084726fca480172750000000000',
+      status: 'authorized',
+      external_reference: 'user-1',
+      next_payment_date: '2025-01-01',
+    });
+
+    const req = makeRequest({
+      type: 'subscription_preapproval',
+      data: { id: '2c938084726fca480172750000000000' },
+    });
+    const res = await POST(req);
+
+    expect(res.status).toBe(200);
+    expect(mockGetSubscriptionInfo).toHaveBeenCalledWith('2c938084726fca480172750000000000');
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ subscription_status: 'active' }),
+    );
+  });
+
   it('maps unknown MP status to "free"', async () => {
     mockGetSubscriptionInfo.mockResolvedValueOnce({
       id: 'sub-1',

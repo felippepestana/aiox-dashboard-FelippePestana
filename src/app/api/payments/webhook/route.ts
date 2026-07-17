@@ -51,11 +51,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { type, data } = body;
 
-    if (!data?.id || !/^\d+$/.test(String(data.id))) {
+    // Payment IDs are numeric; preapproval (subscription) IDs are alphanumeric
+    // strings (e.g. "2c938084..."), so each type gets its own format guard.
+    const id = String(data?.id ?? '');
+    const isValidId =
+      type === 'payment' ? /^\d+$/.test(id) : /^[A-Za-z0-9_-]{1,64}$/.test(id);
+
+    if (!id || !isValidId) {
       return NextResponse.json({ received: true });
     }
-
-    const id = String(data.id);
 
     if (type === 'payment') {
       const payment = await getPaymentInfo(id);

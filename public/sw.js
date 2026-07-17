@@ -7,10 +7,12 @@ const CACHE_NAME = 'apex-legal-v1';
 const OFFLINE_URL = '/offline';
 
 // Static assets to cache on install (app shell)
+// Note: authenticated routes (e.g. /legal) must NOT be pre-cached — cached
+// dashboard HTML could be served to logged-out/other users, or a cached
+// login redirect could poison offline navigation. They fall back to /offline.
 const APP_SHELL = [
   '/',
   '/login',
-  '/legal',
   '/offline',
   '/manifest.json',
   '/icon-192.png',
