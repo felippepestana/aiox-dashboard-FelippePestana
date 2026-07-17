@@ -6,10 +6,12 @@ import { POST } from '@/app/api/payments/webhook/route';
 
 const mockGetPaymentInfo = vi.fn();
 const mockGetSubscriptionInfo = vi.fn();
+const mockGetAuthorizedPaymentInfo = vi.fn();
 
 vi.mock('@/lib/mercadopago', () => ({
   getPaymentInfo: (...args: unknown[]) => mockGetPaymentInfo(...args),
   getSubscriptionInfo: (...args: unknown[]) => mockGetSubscriptionInfo(...args),
+  getAuthorizedPaymentInfo: (...args: unknown[]) => mockGetAuthorizedPaymentInfo(...args),
 }));
 
 const mockUpdate = vi.fn();
@@ -129,6 +131,71 @@ describe('POST /api/payments/webhook — payment events', () => {
     expect(mockUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ mp_customer_id: null }),
     );
+  });
+});
+
+// ─── subscription_authorized_payment events (renewals) ───────────────────────
+
+describe('POST /api/payments/webhook — subscription_authorized_payment events', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUpdate.mockReturnValue({ eq: mockEq });
+  });
+
+  it('re-syncs the parent preapproval on a successful renewal charge', async () => {
+    mockGetAuthorizedPaymentInfo.mockResolvedValueOnce({
+      preapproval_id: 'sub-1',
+      status: 'processed',
+      payment: { status: 'approved' },
+    });
+    mockGetSubscriptionInfo.mockResolvedValueOnce({
+      id: 'sub-1',
+      status: 'authorized',
+      external_reference: 'user-1',
+      next_payment_date: '2025-02-01',
+    });
+
+    const req = makeRequest({ type: 'subscription_authorized_payment', data: { id: '777' } });
+    const res = await POST(req);
+
+    expect(res.status).toBe(200);
+    expect(mockGetSubscriptionInfo).toHaveBeenCalledWith('sub-1');
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ subscription_status: 'active' }),
+    );
+  });
+
+  it('marks the subscriber past_due when the renewal charge failed (recycling invoice)', async () => {
+    mockGetAuthorizedPaymentInfo.mockResolvedValueOnce({
+      preapproval_id: 'sub-1',
+      status: 'recycling',
+      payment: { status: 'rejected' },
+    });
+    // MP keeps the preapproval 'authorized' during retry windows
+    mockGetSubscriptionInfo.mockResolvedValueOnce({
+      id: 'sub-1',
+      status: 'authorized',
+      external_reference: 'user-1',
+      next_payment_date: '2025-02-01',
+    });
+
+    const req = makeRequest({ type: 'subscription_authorized_payment', data: { id: '777' } });
+    await POST(req);
+
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ subscription_status: 'past_due' }),
+    );
+  });
+
+  it('ignores authorized payments without a preapproval_id', async () => {
+    mockGetAuthorizedPaymentInfo.mockResolvedValueOnce({ status: 'processed' });
+
+    const req = makeRequest({ type: 'subscription_authorized_payment', data: { id: '777' } });
+    const res = await POST(req);
+
+    expect(res.status).toBe(200);
+    expect(mockGetSubscriptionInfo).not.toHaveBeenCalled();
+    expect(mockUpdate).not.toHaveBeenCalled();
   });
 });
 

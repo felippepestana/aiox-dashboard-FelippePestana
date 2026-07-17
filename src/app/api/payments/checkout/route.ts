@@ -16,7 +16,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const { plan } = await request.json();
-    if (!plan || !['professional', 'enterprise'].includes(plan)) {
+    // Enterprise is consultation-only (sales-led) — self-serve checkout is
+    // restricted to the professional plan.
+    if (plan !== 'professional') {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
     }
 

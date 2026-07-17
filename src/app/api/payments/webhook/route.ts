@@ -17,9 +17,14 @@ function planFromReason(reason: string | undefined): string {
 /**
  * Fetches a preapproval from Mercado Pago and syncs the owner profile's
  * subscription status/plan/period-end. Shared by the initial preapproval
- * event and recurring authorized-payment events.
+ * event and recurring authorized-payment events. `forceStatus` overrides the
+ * preapproval-derived status (e.g. 'past_due' when a renewal charge failed
+ * but MP still reports the preapproval as 'authorized' during retries).
  */
-async function syncSubscriptionFromPreapproval(preapprovalId: string): Promise<void> {
+async function syncSubscriptionFromPreapproval(
+  preapprovalId: string,
+  forceStatus?: string,
+): Promise<void> {
   const subscription = await getSubscriptionInfo(preapprovalId);
   if (!subscription) return;
 
@@ -38,7 +43,7 @@ async function syncSubscriptionFromPreapproval(preapprovalId: string): Promise<v
   };
 
   const { error: updateError } = await supabase.from('profiles').update({
-    subscription_status: statusMap[subscription.status] || 'free',
+    subscription_status: forceStatus || statusMap[subscription.status] || 'free',
     subscription_plan: planFromReason(subscription.reason),
     subscription_preapproval_id: subscription.id,
     subscription_current_period_end: subscription.next_payment_date || null,
@@ -140,7 +145,18 @@ export async function POST(request: NextRequest) {
       const authorizedPayment = await getAuthorizedPaymentInfo(id);
       const preapprovalId = authorizedPayment?.preapproval_id;
       if (preapprovalId) {
-        await syncSubscriptionFromPreapproval(String(preapprovalId));
+        // MP keeps the preapproval 'authorized' while it retries a failed
+        // charge ('recycling' invoices / rejected payments), so the invoice
+        // status must drive the downgrade — not the preapproval status.
+        const invoiceStatus = String(authorizedPayment.status ?? '');
+        const chargeStatus = String(authorizedPayment.payment?.status ?? '');
+        const renewalFailed =
+          invoiceStatus === 'recycling' || chargeStatus === 'rejected';
+
+        await syncSubscriptionFromPreapproval(
+          String(preapprovalId),
+          renewalFailed ? 'past_due' : undefined,
+        );
       }
     }
 

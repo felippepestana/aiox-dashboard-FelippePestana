@@ -607,8 +607,9 @@ const PLANS = [
       'Onboarding personalizado',
     ],
     cta: 'Falar com Vendas',
+    // Consultation-only plan: no checkoutPlan on purpose — the CTA must lead
+    // to a sales conversation, never to a self-serve R$997 checkout.
     href: '/login',
-    checkoutPlan: 'enterprise',
     popular: false,
   },
 ];
