@@ -184,6 +184,19 @@ Seja minucioso. Destaque cláusulas que podem ser questionadas judicialmente.`,
 }
 
 /**
+ * Convert chat history to Anthropic message params: strips system turns and
+ * drops leading assistant turns (chat UIs seed a greeting as the first
+ * message, but the Messages API requires the history to start with a user
+ * turn — otherwise every call 400s and the UI falls back to canned replies).
+ */
+function toAnthropicMessages(messages: AIMessage[]): { role: 'user' | 'assistant'; content: string }[] {
+  const filtered = messages.filter(m => m.role !== 'system');
+  const firstUser = filtered.findIndex(m => m.role === 'user');
+  const startingAtUser = firstUser === -1 ? [] : filtered.slice(firstUser);
+  return startingAtUser.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }));
+}
+
+/**
  * Send messages to the auto-selected Claude model and return the full response
  * with token/cost/duration metadata. Usage is tracked fire-and-forget.
  */
@@ -198,9 +211,7 @@ export async function callAI(
   const model = MODEL_CONFIG[complexity];
   const systemPrompt = getSystemPrompt(taskType);
 
-  const anthropicMessages = messages
-    .filter(m => m.role !== 'system')
-    .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }));
+  const anthropicMessages = toAnthropicMessages(messages);
 
   const startTime = Date.now();
 
@@ -255,9 +266,7 @@ export async function callAIStream(
   const model = MODEL_CONFIG[complexity];
   const startTime = Date.now();
 
-  const anthropicMessages = messages
-    .filter(m => m.role !== 'system')
-    .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }));
+  const anthropicMessages = toAnthropicMessages(messages);
 
   const abortController = new AbortController();
   const stream = client.messages.stream({

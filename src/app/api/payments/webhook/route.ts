@@ -42,12 +42,16 @@ async function syncSubscriptionFromPreapproval(
     pending: 'incomplete',
   };
 
-  const { error: updateError } = await supabase.from('profiles').update({
+  // Upsert, not update: signup does not pre-create the profiles row, and a
+  // plain update would match zero rows without error — silently dropping the
+  // paid subscription for first-time users.
+  const { error: updateError } = await supabase.from('profiles').upsert({
+    id: userId,
     subscription_status: forceStatus || statusMap[subscription.status] || 'free',
     subscription_plan: planFromReason(subscription.reason),
     subscription_preapproval_id: subscription.id,
     subscription_current_period_end: subscription.next_payment_date || null,
-  }).eq('id', userId);
+  });
 
   if (updateError) {
     throw new Error(`Failed to update profile subscription: ${updateError.message}`);
@@ -63,7 +67,11 @@ export async function POST(request: NextRequest) {
   // Verify Mercado Pago webhook signature
   const xSignature = request.headers.get('x-signature');
   const xRequestId = request.headers.get('x-request-id');
-  const webhookSecret = process.env.MP_WEBHOOK_SECRET;
+  // The public sample value from .env.example must count as "not configured" —
+  // anyone reading the repo could sign forged webhooks with it.
+  const rawSecret = process.env.MP_WEBHOOK_SECRET;
+  const webhookSecret =
+    rawSecret && rawSecret !== 'your-mp-webhook-secret' ? rawSecret : undefined;
   const signedDataId = new URL(request.url).searchParams.get('data.id') || '';
 
   // Fail closed: with payments configured in production, an unsigned webhook
@@ -134,10 +142,13 @@ export async function POST(request: NextRequest) {
       const supabase = createServerClient();
 
       if (payment.status === 'approved') {
-        const { error: updateError } = await supabase.from('profiles').update({
+        // Upsert for the same reason as the subscription sync: the profiles
+        // row may not exist yet for a first-time user.
+        const { error: updateError } = await supabase.from('profiles').upsert({
+          id: userId,
           subscription_status: 'active',
           mp_customer_id: payment.payer?.id?.toString() || null,
-        }).eq('id', userId);
+        });
 
         if (updateError) {
           throw new Error(`Failed to update profile: ${updateError.message}`);

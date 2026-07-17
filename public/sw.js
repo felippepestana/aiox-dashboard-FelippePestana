@@ -115,13 +115,15 @@ async function cacheFirst(request) {
 async function networkFirst(request) {
   try {
     const response = await fetch(request);
-    // Never cache protected-page payloads (RSC data for /legal), auth
-    // responses (/api/auth/token would persist the access token in Cache
-    // Storage past logout), or anything the server marked no-store.
+    // Never cache protected-page payloads (RSC data for /legal), authenticated
+    // API data (auth tokens, client/process/billing records — replayable
+    // offline or after logout on a shared browser), or anything no-store.
     const pathname = new URL(request.url).pathname;
     const noStore = (response.headers.get('Cache-Control') || '').includes('no-store');
-    const skipCache =
-      isProtectedPath(pathname) || pathname.startsWith('/api/auth/') || noStore;
+    const sensitiveApi = ['/api/auth/', '/api/legal/', '/api/payments/', '/api/ai/'].some(
+      (p) => pathname.startsWith(p)
+    );
+    const skipCache = isProtectedPath(pathname) || sensitiveApi || noStore;
     if (response.ok && !skipCache) {
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, response.clone());

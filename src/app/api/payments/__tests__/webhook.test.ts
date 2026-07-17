@@ -14,13 +14,13 @@ vi.mock('@/lib/mercadopago', () => ({
   getAuthorizedPaymentInfo: (...args: unknown[]) => mockGetAuthorizedPaymentInfo(...args),
 }));
 
+// The route persists via upsert (profiles rows may not exist for new users)
 const mockUpdate = vi.fn();
-const mockEq = vi.fn(() => Promise.resolve({ error: null }));
 
 vi.mock('@/lib/supabase', () => ({
   createServerClient: () => ({
     from: vi.fn(() => ({
-      update: mockUpdate,
+      upsert: mockUpdate,
     })),
   }),
 }));
@@ -44,7 +44,7 @@ async function parseJson(response: Response): Promise<unknown> {
 describe('POST /api/payments/webhook — payment events', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUpdate.mockReturnValue({ eq: mockEq });
+    mockUpdate.mockResolvedValue({ error: null });
   });
 
   it('returns { received: true } with status 200 for an approved payment', async () => {
@@ -77,7 +77,9 @@ describe('POST /api/payments/webhook — payment events', () => {
         mp_customer_id: 'mp-payer-1',
       }),
     );
-    expect(mockEq).toHaveBeenCalledWith('id', 'user-1');
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'user-1' }),
+    );
   });
 
   it('returns { received: true } without calling update when payment status is not approved', async () => {
@@ -139,7 +141,7 @@ describe('POST /api/payments/webhook — payment events', () => {
 describe('POST /api/payments/webhook — subscription_authorized_payment events', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUpdate.mockReturnValue({ eq: mockEq });
+    mockUpdate.mockResolvedValue({ error: null });
   });
 
   it('re-syncs the parent preapproval on a successful renewal charge', async () => {
@@ -204,7 +206,7 @@ describe('POST /api/payments/webhook — subscription_authorized_payment events'
 describe('POST /api/payments/webhook — subscription_preapproval events', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUpdate.mockReturnValue({ eq: mockEq });
+    mockUpdate.mockResolvedValue({ error: null });
   });
 
   const statusMappings: Array<[string, string]> = [
@@ -288,7 +290,9 @@ describe('POST /api/payments/webhook — subscription_preapproval events', () =>
         subscription_current_period_end: '2025-06-01',
       }),
     );
-    expect(mockEq).toHaveBeenCalledWith('id', 'user-1');
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'user-1' }),
+    );
   });
 
   it('returns { received: true } when getSubscriptionInfo returns null', async () => {

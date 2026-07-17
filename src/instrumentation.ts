@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { validateEnv } from './lib/env';
 
 /**
@@ -13,3 +14,9 @@ export async function register() {
     await import('../sentry.edge.config');
   }
 }
+
+/**
+ * Captures Server Component, middleware, and route handler request errors
+ * (Next 15+ hook — without it those failures never reach Sentry).
+ */
+export const onRequestError = Sentry.captureRequestError;
