@@ -190,6 +190,42 @@ curl https://seudominio.com.br/api/health
 
 ---
 
+## Deploy Contínuo (GitHub Actions)
+
+A cada push na branch `main`, o workflow `.github/workflows/deploy.yml` conecta na VPS via SSH e atualiza os containers automaticamente. Para ativar, configure os secrets no repositório (**Settings → Secrets and variables → Actions**):
+
+| Secret | Valor |
+|---|---|
+| `VPS_HOST` | IP ou hostname da VPS |
+| `VPS_USER` | usuário SSH (ex: `root`) |
+| `VPS_SSH_KEY` | chave privada SSH com acesso à VPS |
+| `VPS_APP_DIR` | (opcional) diretório do app — padrão `/opt/aiox-legal` |
+
+Sem os secrets configurados, o workflow é ignorado sem erro. Também é possível disparar manualmente em **Actions → Deploy to VPS → Run workflow**.
+
+---
+
+## Cron de Alertas Diários
+
+O endpoint `/api/cron/daily-alerts` envia os alertas de prazos por email e exige o header `Authorization: Bearer <CRON_SECRET>`. O `scripts/deploy.sh` registra automaticamente o crontab na VPS (08:00 UTC) quando `CRON_SECRET` está no `.env`. Para registrar manualmente:
+
+```bash
+crontab -e
+# Adicione (substitua o domínio e o secret):
+0 8 * * * curl -fsS -H "Authorization: Bearer SEU_CRON_SECRET" https://seudominio.com.br/api/cron/daily-alerts > /dev/null 2>&1
+```
+
+---
+
+## Desativando a Vercel
+
+O projeto não usa mais a Vercel (o `vercel.json` foi removido; headers de segurança vivem no `src/middleware.ts` e o cron no crontab da VPS). Para os checks da Vercel pararem de aparecer nos PRs, desconecte no painel da Vercel:
+
+1. Acesse cada projeto em vercel.com (`aiox-dashboard-felippe-pestana`, `sabarzidental`, `felippepestanaaioxdashboard`) → **Settings → Git → Disconnect**.
+2. Ou remova o app "Vercel" do GitHub em **github.com → Settings → Applications → Installed GitHub Apps**.
+
+---
+
 ## Troubleshooting
 
 ### SSL não funciona

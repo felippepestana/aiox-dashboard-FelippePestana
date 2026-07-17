@@ -1,7 +1,8 @@
 // =============================================================================
-// Vercel Cron Job — Daily Deadline Alerts
-// Schedule: 0 8 * * * (08:00 UTC every day)
-// Protected by CRON_SECRET environment variable
+// Cron Job — Daily Deadline Alerts
+// Schedule: 0 8 * * * (08:00 UTC every day) — triggered by the VPS crontab
+// (see scripts/deploy.sh), or any scheduler sending the same request.
+// Protected by CRON_SECRET: requires "Authorization: Bearer <CRON_SECRET>".
 // =============================================================================
 
 import * as Sentry from '@sentry/nextjs';

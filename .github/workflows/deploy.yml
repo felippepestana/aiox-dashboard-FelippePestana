@@ -1,0 +1,54 @@
+# ============================================================
+# Continuous deploy to the Hostinger VPS (replaces Vercel).
+#
+# Required repository secrets (Settings → Secrets → Actions):
+#   VPS_HOST     — VPS IP or hostname
+#   VPS_USER     — SSH user (e.g. root)
+#   VPS_SSH_KEY  — private key with access to the VPS
+# Optional:
+#   VPS_APP_DIR  — app directory on the VPS (default /opt/aiox-legal)
+#
+# If the secrets are not configured the job skips gracefully.
+# ============================================================
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+    steps:
+      - name: Check secrets
+        id: check
+        run: |
+          if [ -z "$VPS_HOST" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::VPS secrets not configured — skipping deploy."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy over SSH
+        if: steps.check.outputs.configured == 'true'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script_stop: true
+          script: |
+            cd ${{ secrets.VPS_APP_DIR || '/opt/aiox-legal' }}
+            git fetch origin main
+            git reset --hard origin/main
+            docker compose build web
+            docker compose up -d
+            docker compose ps

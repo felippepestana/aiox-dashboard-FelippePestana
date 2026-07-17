@@ -243,6 +243,23 @@ else
 fi
 
 # ============================================================
+# Step 12.5: Setup daily deadline-alerts cron
+# ============================================================
+# Replaces the former Vercel Cron (vercel.json "crons"): calls the
+# authenticated endpoint every day at 08:00 UTC.
+
+log_info "Setting up daily alerts cron job..."
+CRON_SECRET_VALUE=$(grep -E '^CRON_SECRET=' "$APP_DIR/.env" 2>/dev/null | cut -d= -f2-)
+if [ -z "$CRON_SECRET_VALUE" ]; then
+    log_warn "CRON_SECRET not set in .env — skipping daily-alerts cron. Add it and re-run, or add the crontab entry manually."
+elif ! crontab -l 2>/dev/null | grep -q "api/cron/daily-alerts"; then
+    (crontab -l 2>/dev/null; echo "0 8 * * * curl -fsS -H \"Authorization: Bearer $CRON_SECRET_VALUE\" https://$DOMAIN/api/cron/daily-alerts > /dev/null 2>&1") | crontab -
+    log_ok "Daily alerts cron job added (08:00 UTC)."
+else
+    log_ok "Daily alerts cron already configured."
+fi
+
+# ============================================================
 # Step 13: Start containers
 # ============================================================
 
