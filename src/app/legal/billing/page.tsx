@@ -61,10 +61,12 @@ function formatCurrency(cents: number): string {
   return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-/** Formats an ISO date string as dd/mm/yyyy in pt-BR, or an em dash when empty. */
+/** Formats an ISO date string as dd/mm/yyyy in pt-BR, or an em dash when empty/invalid. */
 function formatDate(iso: string): string {
   if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return '—';
+  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 /** AIOX-YYYY-NNNN */
