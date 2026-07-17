@@ -3,6 +3,9 @@ import { withSentryConfig } from '@sentry/nextjs';
 
 /** Base Next.js configuration, wrapped with Sentry build-time instrumentation below. */
 const nextConfig: NextConfig = {
+  // The production Dockerfile copies .next/standalone — without this the
+  // Docker COPY step fails and VPS deploys break.
+  output: 'standalone',
   serverExternalPackages: ['chokidar'],
 };
 

@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await callAI(messages, taskType);
+    const result = await callAI(messages, taskType, { userId: user.id });
 
     return NextResponse.json({
       content: result.content,

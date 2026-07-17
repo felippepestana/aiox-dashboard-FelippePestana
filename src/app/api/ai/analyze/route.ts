@@ -30,7 +30,8 @@ export async function POST(request: NextRequest) {
           role: m.role as 'user' | 'assistant',
           content: m.content,
         })),
-        'document_analysis'
+        'document_analysis',
+        { userId: user.id }
       );
 
       return NextResponse.json({
@@ -96,7 +97,7 @@ ${content.slice(0, 50000)}`,
         },
       ],
       taskType,
-      { maxTokens: 4096, temperature: 0.2 }
+      { maxTokens: 4096, temperature: 0.2, userId: user.id }
     );
 
     let analysis;

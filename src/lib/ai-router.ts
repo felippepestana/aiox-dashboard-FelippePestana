@@ -337,7 +337,8 @@ export async function generatePetition(
   facts: string,
   arguments_: string,
   requests: string,
-  court: string
+  court: string,
+  userId?: string
 ): Promise<AIResponse> {
   return callAI([
     {
@@ -361,5 +362,5 @@ A peça deve conter:
 - Pedidos claros e determinados
 - Formatação profissional`,
     },
-  ], 'petition_generation', { maxTokens: 8192, temperature: 0.2 });
+  ], 'petition_generation', { maxTokens: 8192, temperature: 0.2, userId });
 }

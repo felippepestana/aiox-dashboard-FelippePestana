@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await generatePetition(
-      area, type, facts, args || '', requests || '', court || ''
+      area, type, facts, args || '', requests || '', court || '', user.id
     );
 
     return NextResponse.json({

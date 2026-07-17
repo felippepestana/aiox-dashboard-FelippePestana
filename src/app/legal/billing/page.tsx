@@ -179,7 +179,12 @@ function SubscriptionPanel() {
   }
 
   const statusBadge = data ? (STATUS_BADGE[data.status] ?? STATUS_BADGE.free) : null;
-  const canUpgrade = !data || data.plan === 'starter' || ['free', 'past_due', 'canceled'].includes(data.status);
+  // 'incomplete' = checkout started but never authorized/paid — the user must
+  // be able to restart it from here.
+  const canUpgrade =
+    !data ||
+    data.plan === 'starter' ||
+    ['free', 'past_due', 'canceled', 'incomplete'].includes(data.status);
 
   return (
     <div className="rounded-xl border border-[#1a2332] bg-[#0d1320] p-6">
