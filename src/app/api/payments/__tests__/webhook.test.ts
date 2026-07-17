@@ -14,13 +14,18 @@ vi.mock('@/lib/mercadopago', () => ({
   getAuthorizedPaymentInfo: (...args: unknown[]) => mockGetAuthorizedPaymentInfo(...args),
 }));
 
-// The route persists via upsert (profiles rows may not exist for new users)
+// The route updates the profile row, falling back to a full insert when the
+// row does not exist yet (legacy accounts predating profile-at-signup).
 const mockUpdate = vi.fn();
+const mockEq = vi.fn();
+const mockSelect = vi.fn();
+const mockInsert = vi.fn();
 
 vi.mock('@/lib/supabase', () => ({
   createServerClient: () => ({
     from: vi.fn(() => ({
-      upsert: mockUpdate,
+      update: mockUpdate,
+      insert: mockInsert,
     })),
   }),
 }));
@@ -44,7 +49,10 @@ async function parseJson(response: Response): Promise<unknown> {
 describe('POST /api/payments/webhook — payment events', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUpdate.mockResolvedValue({ error: null });
+    mockUpdate.mockReturnValue({ eq: mockEq });
+    mockEq.mockReturnValue({ select: mockSelect });
+    mockSelect.mockResolvedValue({ data: [{ id: 'user-1' }], error: null });
+    mockInsert.mockResolvedValue({ error: null });
   });
 
   it('returns { received: true } with status 200 for an approved payment', async () => {
@@ -77,9 +85,7 @@ describe('POST /api/payments/webhook — payment events', () => {
         mp_customer_id: 'mp-payer-1',
       }),
     );
-    expect(mockUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'user-1' }),
-    );
+    expect(mockEq).toHaveBeenCalledWith('id', 'user-1');
   });
 
   it('returns { received: true } without calling update when payment status is not approved', async () => {
@@ -120,6 +126,27 @@ describe('POST /api/payments/webhook — payment events', () => {
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 
+  it('inserts a full profile row when the update matches no existing row', async () => {
+    mockGetPaymentInfo.mockResolvedValueOnce({
+      status: 'approved',
+      external_reference: 'user-1',
+      payer: { id: 'mp-payer-1', email: 'novo@firm.com' },
+    });
+    mockSelect.mockResolvedValueOnce({ data: [], error: null }); // no row updated
+
+    const req = makeRequest({ type: 'payment', data: { id: '12345' } });
+    const res = await POST(req);
+
+    expect(res.status).toBe(200);
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'user-1',
+        email: 'novo@firm.com',
+        subscription_status: 'active',
+      }),
+    );
+  });
+
   it('stores null for mp_customer_id when payer id is absent', async () => {
     mockGetPaymentInfo.mockResolvedValueOnce({
       status: 'approved',
@@ -141,7 +168,10 @@ describe('POST /api/payments/webhook — payment events', () => {
 describe('POST /api/payments/webhook — subscription_authorized_payment events', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUpdate.mockResolvedValue({ error: null });
+    mockUpdate.mockReturnValue({ eq: mockEq });
+    mockEq.mockReturnValue({ select: mockSelect });
+    mockSelect.mockResolvedValue({ data: [{ id: 'user-1' }], error: null });
+    mockInsert.mockResolvedValue({ error: null });
   });
 
   it('re-syncs the parent preapproval on a successful renewal charge', async () => {
@@ -206,7 +236,10 @@ describe('POST /api/payments/webhook — subscription_authorized_payment events'
 describe('POST /api/payments/webhook — subscription_preapproval events', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUpdate.mockResolvedValue({ error: null });
+    mockUpdate.mockReturnValue({ eq: mockEq });
+    mockEq.mockReturnValue({ select: mockSelect });
+    mockSelect.mockResolvedValue({ data: [{ id: 'user-1' }], error: null });
+    mockInsert.mockResolvedValue({ error: null });
   });
 
   const statusMappings: Array<[string, string]> = [
@@ -290,9 +323,7 @@ describe('POST /api/payments/webhook — subscription_preapproval events', () =>
         subscription_current_period_end: '2025-06-01',
       }),
     );
-    expect(mockUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'user-1' }),
-    );
+    expect(mockEq).toHaveBeenCalledWith('id', 'user-1');
   });
 
   it('returns { received: true } when getSubscriptionInfo returns null', async () => {

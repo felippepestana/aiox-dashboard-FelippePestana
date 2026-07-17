@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase';
 import { withRateLimit } from '@/lib/api-rate-limit';
@@ -52,6 +53,18 @@ export async function POST(request: NextRequest) {
 
     if (!data.user) {
       return NextResponse.json({ error: 'Falha ao criar conta' }, { status: 500 });
+    }
+
+    // Create the profiles row right away — payment webhooks, AI usage
+    // tracking (FK to profiles) and profile reads all rely on it existing.
+    const { error: profileError } = await supabase.from('profiles').upsert({
+      id: data.user.id,
+      email,
+      name,
+    });
+    if (profileError) {
+      Sentry.captureException(profileError);
+      console.error('[signup] Failed to create profile row:', profileError.message);
     }
 
     // If email confirmation is disabled, a session is returned immediately

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generatePetition } from '@/lib/ai-router';
 import { getAuthUser, unauthorized } from '@/lib/api-utils';
 import { withRateLimit } from '@/lib/api-rate-limit';
+import { checkAIQuota, AI_QUOTA_EXCEEDED_MESSAGE } from '@/lib/ai-quota';
 
 /**
  * POST /api/ai/petition — generates a legal petition draft with AI from the
@@ -13,6 +14,12 @@ export async function POST(request: NextRequest) {
 
   const rateLimitResponse = withRateLimit(request, 'ai');
   if (rateLimitResponse) return rateLimitResponse;
+
+  // Server-side plan quota — the Starter tier is limited to 10 AI calls/month
+  const quota = await checkAIQuota(user.id);
+  if (!quota.allowed) {
+    return NextResponse.json({ error: AI_QUOTA_EXCEEDED_MESSAGE }, { status: 402 });
+  }
 
   try {
     const body = await request.json();

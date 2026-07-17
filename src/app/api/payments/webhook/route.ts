@@ -42,19 +42,48 @@ async function syncSubscriptionFromPreapproval(
     pending: 'incomplete',
   };
 
-  // Upsert, not update: signup does not pre-create the profiles row, and a
-  // plain update would match zero rows without error — silently dropping the
-  // paid subscription for first-time users.
-  const { error: updateError } = await supabase.from('profiles').upsert({
-    id: userId,
+  const fields = {
     subscription_status: forceStatus || statusMap[subscription.status] || 'free',
     subscription_plan: planFromReason(subscription.reason),
     subscription_preapproval_id: subscription.id,
     subscription_current_period_end: subscription.next_payment_date || null,
-  });
+  };
+
+  await persistProfileBilling(supabase, userId, fields, subscription.payer_email);
+}
+
+/**
+ * Writes billing fields to the user's profile. Updates in place when the row
+ * exists; inserts a full row (profiles.email/name are NOT NULL) when it
+ * doesn't — legacy accounts may predate profile creation at signup, and a
+ * zero-row update reports no error, silently dropping the paid state.
+ */
+async function persistProfileBilling(
+  supabase: ReturnType<typeof createServerClient>,
+  userId: string,
+  fields: Record<string, unknown>,
+  email?: string | null,
+): Promise<void> {
+  const { data: updated, error: updateError } = await supabase
+    .from('profiles')
+    .update(fields)
+    .eq('id', userId)
+    .select('id');
 
   if (updateError) {
     throw new Error(`Failed to update profile subscription: ${updateError.message}`);
+  }
+
+  if (!updated || updated.length === 0) {
+    const { error: insertError } = await supabase.from('profiles').insert({
+      id: userId,
+      email: email || `${userId}@sem-email.invalid`,
+      name: 'Usuário',
+      ...fields,
+    });
+    if (insertError) {
+      throw new Error(`Failed to create profile for subscription: ${insertError.message}`);
+    }
   }
 }
 
@@ -142,17 +171,15 @@ export async function POST(request: NextRequest) {
       const supabase = createServerClient();
 
       if (payment.status === 'approved') {
-        // Upsert for the same reason as the subscription sync: the profiles
-        // row may not exist yet for a first-time user.
-        const { error: updateError } = await supabase.from('profiles').upsert({
-          id: userId,
-          subscription_status: 'active',
-          mp_customer_id: payment.payer?.id?.toString() || null,
-        });
-
-        if (updateError) {
-          throw new Error(`Failed to update profile: ${updateError.message}`);
-        }
+        await persistProfileBilling(
+          supabase,
+          userId,
+          {
+            subscription_status: 'active',
+            mp_customer_id: payment.payer?.id?.toString() || null,
+          },
+          payment.payer?.email,
+        );
       }
     }
 

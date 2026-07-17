@@ -25,16 +25,22 @@ export type TaskType =
 export interface ModelConfig {
   id: string;
   name: string;
+  /** @deprecated kept for compatibility — equals costPer1kInput */
   costPer1kTokens: number;
+  costPer1kInput: number;
+  costPer1kOutput: number;
   maxTokens: number;
   supportsVision: boolean;
 }
 
+// Anthropic prices input and output tokens separately (output costs ~5x more)
 const MODEL_CONFIG: Record<TaskComplexity, ModelConfig> = {
   simple: {
     id: 'claude-haiku-4-5',
     name: 'Claude Haiku',
     costPer1kTokens: 0.001,
+    costPer1kInput: 0.001,
+    costPer1kOutput: 0.005,
     maxTokens: 8192,
     supportsVision: false,
   },
@@ -42,6 +48,8 @@ const MODEL_CONFIG: Record<TaskComplexity, ModelConfig> = {
     id: 'claude-sonnet-4-6',
     name: 'Claude Sonnet',
     costPer1kTokens: 0.003,
+    costPer1kInput: 0.003,
+    costPer1kOutput: 0.015,
     maxTokens: 16384,
     supportsVision: true,
   },
@@ -49,6 +57,8 @@ const MODEL_CONFIG: Record<TaskComplexity, ModelConfig> = {
     id: 'claude-opus-4-6',
     name: 'Claude Opus',
     costPer1kTokens: 0.005,
+    costPer1kInput: 0.005,
+    costPer1kOutput: 0.025,
     maxTokens: 32768,
     supportsVision: true,
   },
@@ -228,8 +238,12 @@ export async function callAI(
     .filter(block => block.type === 'text')
     .map(block => (block as Anthropic.TextBlock).text)
     .join('');
-  const tokensUsed = (response.usage.input_tokens || 0) + (response.usage.output_tokens || 0);
-  const estimatedCost = (tokensUsed / 1000) * model.costPer1kTokens;
+  const inputTokens = response.usage.input_tokens || 0;
+  const outputTokens = response.usage.output_tokens || 0;
+  const tokensUsed = inputTokens + outputTokens;
+  const estimatedCost =
+    (inputTokens / 1000) * model.costPer1kInput +
+    (outputTokens / 1000) * model.costPer1kOutput;
 
   // Fire-and-forget usage tracking (non-blocking)
   trackAIUsage({
@@ -297,14 +311,17 @@ export async function callAIStream(
         // ai_usage and per-user cost reporting missed most conversations.
         try {
           const final = await stream.finalMessage();
-          const tokensUsed = (final.usage.input_tokens || 0) + (final.usage.output_tokens || 0);
+          const inputTokens = final.usage.input_tokens || 0;
+          const outputTokens = final.usage.output_tokens || 0;
           trackAIUsage({
             user_id: options?.userId || 'anonymous',
             task_type: taskType,
             model: model.name,
             complexity,
-            tokens_used: tokensUsed,
-            cost_usd: (tokensUsed / 1000) * model.costPer1kTokens,
+            tokens_used: inputTokens + outputTokens,
+            cost_usd:
+              (inputTokens / 1000) * model.costPer1kInput +
+              (outputTokens / 1000) * model.costPer1kOutput,
             duration_ms: Date.now() - startTime,
           }).catch(() => {});
         } catch {

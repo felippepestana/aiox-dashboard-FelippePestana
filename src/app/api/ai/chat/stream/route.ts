@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 import { callAIStream, type TaskType, type AIMessage } from '@/lib/ai-router';
 import { getAuthUser, unauthorized } from '@/lib/api-utils';
 import { withRateLimit } from '@/lib/api-rate-limit';
+import { checkAIQuota, AI_QUOTA_EXCEEDED_MESSAGE } from '@/lib/ai-quota';
 
 /**
  * POST /api/ai/chat/stream — streams an AI chat completion back to the client
@@ -14,6 +15,12 @@ export async function POST(request: NextRequest) {
 
   const rateLimitResponse = withRateLimit(request, 'ai');
   if (rateLimitResponse) return rateLimitResponse;
+
+  // Server-side plan quota — the Starter tier is limited to 10 AI calls/month
+  const quota = await checkAIQuota(user.id);
+  if (!quota.allowed) {
+    return new Response(JSON.stringify({ error: AI_QUOTA_EXCEEDED_MESSAGE }), { status: 402 });
+  }
 
   try {
     const { messages, taskType } = await request.json() as {
