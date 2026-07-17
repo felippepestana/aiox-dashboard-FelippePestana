@@ -137,6 +137,26 @@ export async function getPaymentInfo(paymentId: string) {
 }
 
 /**
+ * Fetch a recurring authorized payment (subscription charge) from Mercado Pago;
+ * returns null when not found. The result includes `preapproval_id`, linking
+ * the charge back to its subscription.
+ */
+export async function getAuthorizedPaymentInfo(authorizedPaymentId: string) {
+  const accessToken = process.env.MP_ACCESS_TOKEN;
+  if (!accessToken) throw new Error('MP_ACCESS_TOKEN not configured');
+
+  const response = await mpFetch(`https://api.mercadopago.com/authorized_payments/${authorizedPaymentId}`, {
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) return null;
+    throw new Error(`Mercado Pago API error (${response.status})`);
+  }
+  return response.json();
+}
+
+/**
  * Fetch subscription (preapproval) details from Mercado Pago; returns null when not found.
  */
 export async function getSubscriptionInfo(preapprovalId: string) {

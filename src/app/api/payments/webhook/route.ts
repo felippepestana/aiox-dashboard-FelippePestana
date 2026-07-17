@@ -1,7 +1,11 @@
 import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase';
-import { getPaymentInfo, getSubscriptionInfo } from '@/lib/mercadopago';
+import {
+  getPaymentInfo,
+  getSubscriptionInfo,
+  getAuthorizedPaymentInfo,
+} from '@/lib/mercadopago';
 
 /** Infers the subscription plan name from a Mercado Pago preapproval reason string. */
 function planFromReason(reason: string | undefined): string {
@@ -11,15 +15,51 @@ function planFromReason(reason: string | undefined): string {
 }
 
 /**
+ * Fetches a preapproval from Mercado Pago and syncs the owner profile's
+ * subscription status/plan/period-end. Shared by the initial preapproval
+ * event and recurring authorized-payment events.
+ */
+async function syncSubscriptionFromPreapproval(preapprovalId: string): Promise<void> {
+  const subscription = await getSubscriptionInfo(preapprovalId);
+  if (!subscription) return;
+
+  const userId = subscription.external_reference;
+  if (!userId) return;
+
+  const supabase = createServerClient();
+
+  // 'pending' means checkout started but not authorized/paid — it must NOT
+  // grant active access, so it maps to the non-active 'incomplete' status.
+  const statusMap: Record<string, string> = {
+    authorized: 'active',
+    paused: 'past_due',
+    cancelled: 'canceled',
+    pending: 'incomplete',
+  };
+
+  const { error: updateError } = await supabase.from('profiles').update({
+    subscription_status: statusMap[subscription.status] || 'free',
+    subscription_plan: planFromReason(subscription.reason),
+    subscription_preapproval_id: subscription.id,
+    subscription_current_period_end: subscription.next_payment_date || null,
+  }).eq('id', userId);
+
+  if (updateError) {
+    throw new Error(`Failed to update profile subscription: ${updateError.message}`);
+  }
+}
+
+/**
  * POST /api/payments/webhook — Mercado Pago webhook that verifies the HMAC
- * signature and updates the user's profile subscription state for payment and
- * preapproval events.
+ * signature and updates the user's profile subscription state for payment,
+ * preapproval, and recurring authorized-payment events.
  */
 export async function POST(request: NextRequest) {
   // Verify Mercado Pago webhook signature
   const xSignature = request.headers.get('x-signature');
   const xRequestId = request.headers.get('x-request-id');
   const webhookSecret = process.env.MP_WEBHOOK_SECRET;
+  const signedDataId = new URL(request.url).searchParams.get('data.id') || '';
 
   if (webhookSecret) {
     // A configured secret makes the signature mandatory — unsigned requests are rejected
@@ -34,8 +74,7 @@ export async function POST(request: NextRequest) {
       })
     );
 
-    const dataId = new URL(request.url).searchParams.get('data.id') || '';
-    const manifest = `id:${dataId};request-id:${xRequestId};ts:${parts.ts};`;
+    const manifest = `id:${signedDataId};request-id:${xRequestId};ts:${parts.ts};`;
 
     const { createHmac, timingSafeEqual } = await import('crypto');
     const hmac = createHmac('sha256', webhookSecret).update(manifest).digest('hex');
@@ -55,10 +94,18 @@ export async function POST(request: NextRequest) {
     // strings (e.g. "2c938084..."), so each type gets its own format guard.
     const id = String(data?.id ?? '');
     const isValidId =
-      type === 'payment' ? /^\d+$/.test(id) : /^[A-Za-z0-9_-]{1,64}$/.test(id);
+      type === 'payment' || type === 'subscription_authorized_payment'
+        ? /^\d+$/.test(id)
+        : /^[A-Za-z0-9_-]{1,64}$/.test(id);
 
     if (!id || !isValidId) {
       return NextResponse.json({ received: true });
+    }
+
+    // The HMAC signs the query-string data.id — processing a different ID from
+    // the body would let a signed/replayed request act on another resource.
+    if (webhookSecret && signedDataId !== id) {
+      return NextResponse.json({ error: 'ID mismatch' }, { status: 401 });
     }
 
     if (type === 'payment') {
@@ -83,30 +130,17 @@ export async function POST(request: NextRequest) {
     }
 
     if (type === 'subscription_preapproval') {
-      const subscription = await getSubscriptionInfo(id);
-      if (!subscription) return NextResponse.json({ received: true });
+      await syncSubscriptionFromPreapproval(id);
+    }
 
-      const userId = subscription.external_reference;
-      if (!userId) return NextResponse.json({ received: true });
-
-      const supabase = createServerClient();
-
-      const statusMap: Record<string, string> = {
-        authorized: 'active',
-        paused: 'past_due',
-        cancelled: 'canceled',
-        pending: 'trialing',
-      };
-
-      const { error: updateError } = await supabase.from('profiles').update({
-        subscription_status: statusMap[subscription.status] || 'free',
-        subscription_plan: planFromReason(subscription.reason),
-        subscription_preapproval_id: subscription.id,
-        subscription_current_period_end: subscription.next_payment_date || null,
-      }).eq('id', userId);
-
-      if (updateError) {
-        throw new Error(`Failed to update profile subscription: ${updateError.message}`);
+    // Recurring subscription charges (renewals, failed monthly payments) arrive
+    // under this topic — re-sync the parent preapproval so past-due subscribers
+    // don't keep 'active' access until an unrelated preapproval event fires.
+    if (type === 'subscription_authorized_payment') {
+      const authorizedPayment = await getAuthorizedPaymentInfo(id);
+      const preapprovalId = authorizedPayment?.preapproval_id;
+      if (preapprovalId) {
+        await syncSubscriptionFromPreapproval(String(preapprovalId));
       }
     }
 

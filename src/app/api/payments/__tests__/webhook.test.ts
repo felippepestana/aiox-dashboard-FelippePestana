@@ -144,7 +144,9 @@ describe('POST /api/payments/webhook — subscription_preapproval events', () =>
     ['authorized', 'active'],
     ['paused', 'past_due'],
     ['cancelled', 'canceled'],
-    ['pending', 'trialing'],
+    // 'pending' (checkout started, not yet paid) must NOT map to an
+    // active-equivalent status like 'trialing'
+    ['pending', 'incomplete'],
   ];
 
   for (const [mpStatus, internalStatus] of statusMappings) {

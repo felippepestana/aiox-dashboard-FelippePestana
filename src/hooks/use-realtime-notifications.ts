@@ -29,8 +29,26 @@ export function useRealtimeNotifications(userId: string | null) {
     if (!userId) return;
 
     const supabase = createBrowserClient();
+    let cancelled = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
-    const channel = supabase
+    // The session lives in an httpOnly cookie, so the browser client has no
+    // Supabase session of its own — the realtime socket would connect as the
+    // anon role and RLS (auth.uid() = user_id) would filter out every event.
+    // Fetch the user's own access token and authenticate the socket first.
+    fetch('/api/auth/token')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { token?: string } | null) => {
+        if (cancelled) return;
+        if (data?.token) supabase.realtime.setAuth(data.token);
+        channel = buildChannel();
+      })
+      .catch(() => {
+        if (!cancelled) channel = buildChannel(); // subscribe anyway; RLS may still allow public events
+      });
+
+    function buildChannel() {
+      return supabase
       .channel(`user-notifications:${userId}`)
       .on(
         'postgres_changes',
@@ -97,9 +115,11 @@ export function useRealtimeNotifications(userId: string | null) {
         }
       )
       .subscribe();
+    }
 
     return () => {
-      supabase.removeChannel(channel);
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
     };
   }, [userId]);
 

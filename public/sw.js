@@ -10,6 +10,16 @@ const OFFLINE_URL = '/offline';
 // Note: authenticated routes (e.g. /legal) must NOT be pre-cached — cached
 // dashboard HTML could be served to logged-out/other users, or a cached
 // login redirect could poison offline navigation. They fall back to /offline.
+const PROTECTED_PREFIXES = [
+  '/legal', '/dental', '/kanban', '/agents', '/monitor',
+  '/github', '/squads', '/terminals', '/settings',
+];
+
+/** Whether the path belongs to an authenticated area that must never be cached. */
+function isProtectedPath(pathname) {
+  return PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
+}
+
 const APP_SHELL = [
   '/',
   '/login',
@@ -105,7 +115,9 @@ async function cacheFirst(request) {
 async function networkFirst(request) {
   try {
     const response = await fetch(request);
-    if (response.ok) {
+    // Protected-page payloads (e.g. RSC data for /legal) are never cached
+    const isProtected = isProtectedPath(new URL(request.url).pathname);
+    if (response.ok && !isProtected) {
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, response.clone());
     }
@@ -123,7 +135,10 @@ async function networkFirst(request) {
 async function networkFirstWithFallback(request) {
   try {
     const response = await fetch(request);
-    if (response.ok) {
+    // Never cache authenticated pages: their HTML (or a login redirect served
+    // for them) must not be replayable from Cache Storage offline/after logout.
+    const isProtected = isProtectedPath(new URL(request.url).pathname);
+    if (response.ok && !isProtected) {
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, response.clone());
     }

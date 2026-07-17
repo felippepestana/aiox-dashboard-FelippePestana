@@ -3,7 +3,13 @@
 import { useState, useEffect } from 'react';
 
 export type SubscriptionPlan = 'starter' | 'professional' | 'enterprise';
-export type SubscriptionStatus = 'free' | 'trialing' | 'active' | 'past_due' | 'canceled';
+export type SubscriptionStatus =
+  | 'free'
+  | 'trialing'
+  | 'active'
+  | 'past_due'
+  | 'canceled'
+  | 'incomplete'; // checkout started but not yet authorized/paid — no access
 
 export interface SubscriptionInfo {
   plan: SubscriptionPlan;
