@@ -205,6 +205,24 @@ Sem os secrets configurados, o workflow é ignorado sem erro. Também é possív
 
 ---
 
+## Migrations do Supabase
+
+O banco é o Supabase hospedado (não a VPS), e as migrations de `supabase/migrations/` são aplicadas pela **integração Supabase↔GitHub**: cada branch/PR ganha uma preview branch com as migrations aplicadas, e o merge na branch de produção as aplica ao projeto principal. O deploy da VPS não roda migrations.
+
+Se a integração não estiver ativa (ou para aplicar manualmente):
+
+```bash
+# Via CLI do Supabase (com o projeto linkado)
+supabase db push
+
+# Ou cole o conteúdo dos arquivos .sql no SQL Editor do painel Supabase,
+# em ordem de nome de arquivo.
+```
+
+⚠️ Confira no painel do Supabase (Branches/Migrations) que as migrations novas foram aplicadas **antes** de liberar tráfego para uma versão que dependa delas (ex.: colunas de assinatura, função `consume_ai_quota`).
+
+---
+
 ## Cron de Alertas Diários
 
 O endpoint `/api/cron/daily-alerts` envia os alertas de prazos por email e exige o header `Authorization: Bearer <CRON_SECRET>`. O `scripts/deploy.sh` registra automaticamente o crontab na VPS (08:00 UTC) quando `CRON_SECRET` está no `.env`. Para registrar manualmente:

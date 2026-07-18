@@ -19,7 +19,9 @@ services:
     container_name: aiox-web
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      # Localhost only — exposing 0.0.0.0 would let clients skip Nginx and
+      # spoof X-Forwarded-For, bypassing the login/signup rate limits
+      - "127.0.0.1:3000:3000"
     env_file:
       - .env
     environment:
@@ -41,7 +43,7 @@ services:
     working_dir: /app/server
     command: bun run server.ts
     ports:
-      - "4001:4001"
+      - "127.0.0.1:4001:4001"
     env_file:
       - .env
     environment:

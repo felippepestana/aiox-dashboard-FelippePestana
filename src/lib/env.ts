@@ -23,14 +23,18 @@ const ENV_VARS: EnvVar[] = [
   {
     key: 'NEXT_PUBLIC_SUPABASE_ANON_KEY',
     required: true,
-    validate: (v) => v.length > 10,
-    hint: 'Must be a non-empty JWT string',
+    // Reject the .env.example sample — it passes a bare length check
+    validate: (v) => v.length > 10 && !v.includes('your-anon-key'),
+    hint: 'Must be a real Supabase anon key, not the .env.example placeholder',
   },
   {
     key: 'SUPABASE_SERVICE_ROLE_KEY',
     required: true,
-    validate: (v) => v.length > 10,
-    hint: 'Must be a non-empty JWT string',
+    // createServerClient prefers any non-empty value here — a placeholder
+    // silently replaces the anon key and every server-side Supabase call
+    // fails until someone diagnoses it.
+    validate: (v) => v.length > 10 && !v.includes('your-service-role-key'),
+    hint: 'Must be a real Supabase service-role key, not the .env.example placeholder',
   },
 
   // Auth — required

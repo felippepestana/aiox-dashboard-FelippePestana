@@ -179,9 +179,9 @@ log_ok "Data directories created."
 # NEXT_PUBLIC_* values are inlined into the browser bundle at build time —
 # building with the .env.example placeholders would ship a client hardwired
 # to https://your-project.supabase.co until someone remembers to rebuild.
-if grep -qE '^(NEXT_PUBLIC_SUPABASE_URL=.*your-project|NEXT_PUBLIC_SUPABASE_ANON_KEY=.*your-anon-key)' "$APP_DIR/.env"; then
-    log_error "NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY still have placeholder values."
-    log_error "Edit $APP_DIR/.env with the real Supabase public values and re-run this script."
+if grep -qE '^(NEXT_PUBLIC_SUPABASE_URL=.*your-project|NEXT_PUBLIC_SUPABASE_ANON_KEY=.*your-anon-key|SUPABASE_SERVICE_ROLE_KEY=.*your-service-role-key)' "$APP_DIR/.env"; then
+    log_error "Supabase values in .env are still the .env.example placeholders."
+    log_error "Edit $APP_DIR/.env with the real Supabase URL/keys and re-run this script."
     exit 1
 fi
 

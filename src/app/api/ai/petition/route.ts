@@ -15,11 +15,6 @@ export async function POST(request: NextRequest) {
   const rateLimitResponse = withRateLimit(request, 'ai');
   if (rateLimitResponse) return rateLimitResponse;
 
-  // Server-side plan quota — the Starter tier is limited to 10 AI calls/month
-  const quota = await checkAIQuota(user.id);
-  if (!quota.allowed) {
-    return NextResponse.json({ error: AI_QUOTA_EXCEEDED_MESSAGE }, { status: 402 });
-  }
 
   try {
     const body = await request.json();
@@ -30,6 +25,13 @@ export async function POST(request: NextRequest) {
         { error: 'area, type, and facts are required' },
         { status: 400 }
       );
+    }
+
+    // Quota is reserved only after input validation — the atomic counter
+    // consumes a unit, and malformed 400 requests must not burn it.
+    const quota = await checkAIQuota(user.id);
+    if (!quota.allowed) {
+      return NextResponse.json({ error: AI_QUOTA_EXCEEDED_MESSAGE }, { status: 402 });
     }
 
     const result = await generatePetition(

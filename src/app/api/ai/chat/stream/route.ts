@@ -16,11 +16,6 @@ export async function POST(request: NextRequest) {
   const rateLimitResponse = withRateLimit(request, 'ai');
   if (rateLimitResponse) return rateLimitResponse;
 
-  // Server-side plan quota — the Starter tier is limited to 10 AI calls/month
-  const quota = await checkAIQuota(user.id);
-  if (!quota.allowed) {
-    return new Response(JSON.stringify({ error: AI_QUOTA_EXCEEDED_MESSAGE }), { status: 402 });
-  }
 
   try {
     const { messages, taskType } = await request.json() as {
@@ -30,6 +25,13 @@ export async function POST(request: NextRequest) {
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: 'Messages required' }), { status: 400 });
+    }
+
+    // Quota is reserved only after input validation — the atomic counter
+    // consumes a unit, and malformed 400 requests must not burn it.
+    const quota = await checkAIQuota(user.id);
+    if (!quota.allowed) {
+      return new Response(JSON.stringify({ error: AI_QUOTA_EXCEEDED_MESSAGE }), { status: 402 });
     }
 
     const stream = await callAIStream(messages, taskType || 'chat_response', {
