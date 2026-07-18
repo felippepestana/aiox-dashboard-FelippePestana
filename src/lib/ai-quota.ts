@@ -34,6 +34,22 @@ export async function checkAIQuota(userId: string): Promise<AIQuotaResult> {
     return { allowed: true };
   }
 
+  // Atomic reservation (single conditional upsert in Postgres): concurrent
+  // requests cannot all pass a read-then-insert check, so the cap holds
+  // under bursts. A unit is consumed even if the model call later fails —
+  // acceptable for an anti-abuse limit.
+  const { data: allowed, error } = await supabase.rpc('consume_ai_quota', {
+    p_user_id: userId,
+    p_limit: FREE_MONTHLY_AI_LIMIT,
+  });
+
+  if (error === null && typeof allowed === 'boolean') {
+    return { allowed };
+  }
+
+  // Fallback for environments where the migration has not been applied yet:
+  // best-effort count over ai_usage (racy under concurrency, but bounded by
+  // the per-minute rate limit).
   const monthStart = new Date();
   monthStart.setUTCDate(1);
   monthStart.setUTCHours(0, 0, 0, 0);
