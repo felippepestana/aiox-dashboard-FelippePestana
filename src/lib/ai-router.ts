@@ -75,6 +75,9 @@ const TASK_COMPLEXITY_MAP: Record<TaskType, TaskComplexity> = {
   strategy_analysis: 'complex',
 };
 
+/** Runtime list of supported task types — for validating client-supplied values. */
+export const VALID_TASK_TYPES = Object.keys(TASK_COMPLEXITY_MAP) as TaskType[];
+
 // Lazy singleton Anthropic client
 let _client: Anthropic | null = null;
 

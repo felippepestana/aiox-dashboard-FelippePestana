@@ -19,6 +19,7 @@ import { getAuthUser, unauthorized, badRequest, serverError } from '@/lib/api-ut
 import { getMovements, DataJudError } from '@/lib/court/datajud';
 import { isValidCNJ } from '@/lib/court/cnj-utils';
 import { createServerClient } from '@/lib/supabase';
+import { hasActiveFeature, PLAN_FEATURE_REQUIRED_MESSAGE } from '@/lib/plan-access';
 
 /**
  * POST /api/legal/court/datajud/sync — fetches DataJud movements for a process,
@@ -28,6 +29,11 @@ export async function POST(request: NextRequest) {
   // Auth check
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
+
+  // Paid-module gate: datajud_integration requires an active Professional+ subscription
+  if (!(await hasActiveFeature(user.id, 'datajud_integration'))) {
+    return NextResponse.json({ error: PLAN_FEATURE_REQUIRED_MESSAGE }, { status: 402 });
+  }
 
   // Parse body
   let body: Record<string, unknown>;

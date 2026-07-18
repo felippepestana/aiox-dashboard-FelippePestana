@@ -7,6 +7,8 @@
 #   VPS_SSH_KEY  — private key with access to the VPS
 # Optional:
 #   VPS_APP_DIR  — app directory on the VPS (default /opt/aiox-legal)
+#   VPS_DOMAIN   — public domain; when set, the daily-alerts crontab entry is
+#                  (re)provisioned on each deploy (same logic as deploy.sh)
 #
 # If the secrets are not configured the job skips gracefully.
 # ============================================================
@@ -54,3 +56,14 @@ jobs:
             docker compose build web
             docker compose up -d
             docker compose ps
+            # Keep the daily-alerts crontab in sync (mirrors scripts/deploy.sh);
+            # runs only when VPS_DOMAIN is configured and CRON_SECRET is real.
+            DOMAIN="${{ secrets.VPS_DOMAIN }}"
+            CRON_SECRET_VALUE=$(grep -E '^CRON_SECRET=' .env 2>/dev/null | cut -d= -f2-)
+            if [ -n "$DOMAIN" ] && [ -n "$CRON_SECRET_VALUE" ] && [ "$CRON_SECRET_VALUE" != "generate-a-random-32-char-string" ]; then
+              CRON_LINE="0 8 * * * curl -fsS -H \"Authorization: Bearer $CRON_SECRET_VALUE\" https://$DOMAIN/api/cron/daily-alerts > /dev/null 2>&1"
+              if ! crontab -l 2>/dev/null | grep -qF "$CRON_LINE"; then
+                (crontab -l 2>/dev/null | grep -v "api/cron/daily-alerts"; echo "$CRON_LINE") | crontab -
+                echo "Daily-alerts crontab refreshed."
+              fi
+            fi

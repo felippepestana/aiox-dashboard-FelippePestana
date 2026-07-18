@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { callAI, type TaskType, type AIMessage } from '@/lib/ai-router';
+import { callAI, VALID_TASK_TYPES, type TaskType, type AIMessage } from '@/lib/ai-router';
 import { getAuthUser, unauthorized } from '@/lib/api-utils';
 import { withRateLimit } from '@/lib/api-rate-limit';
 import { checkAIQuota, AI_QUOTA_EXCEEDED_MESSAGE } from '@/lib/ai-quota';
@@ -28,6 +28,12 @@ export async function POST(request: NextRequest) {
         { error: 'messages array is required' },
         { status: 400 }
       );
+    }
+
+    // Validate before the quota reservation — an unknown taskType would burn a
+    // quota unit and then 500 inside callAI (MODEL_CONFIG[undefined]).
+    if (!VALID_TASK_TYPES.includes(taskType)) {
+      return NextResponse.json({ error: 'Invalid taskType' }, { status: 400 });
     }
 
     // Quota is reserved only after input validation — the atomic counter

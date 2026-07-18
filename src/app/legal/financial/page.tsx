@@ -1,5 +1,6 @@
 'use client';
 
+import { PlanGate } from '@/components/legal/PlanGate';
 import { useState, useMemo } from 'react';
 import {
   DollarSign,
@@ -85,7 +86,7 @@ function formatDate(dateStr: string): string {
   });
 }
 
-export default function FinancialPage() {
+function FinancialPageContent() {
   const {
     transactions,
     honorarios,
@@ -380,5 +381,14 @@ export default function FinancialPage() {
         />
       )}
     </div>
+  );
+}
+
+/** Entry point gated by subscription plan — the module is Professional+. */
+export default function FinancialPage() {
+  return (
+    <PlanGate feature="financial_module" fallbackMessage="O módulo financeiro está disponível a partir do plano Professional.">
+      <FinancialPageContent />
+    </PlanGate>
   );
 }

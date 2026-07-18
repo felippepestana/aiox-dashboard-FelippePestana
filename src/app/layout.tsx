@@ -9,11 +9,11 @@ export const metadata: Metadata = {
     template: "%s | APEX Legal Performance",
   },
   description: "APEX Legal Performance — Solução Jurídica Tecnológica de Alta Performance. Gestão jurídica full-service com IA: processos, peças, prazos, tribunais, precedentes, marketing e estratégia.",
-  metadataBase: new URL("https://apex.legal"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://apex.legal"),
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    url: "https://apex.legal",
+    url: process.env.NEXT_PUBLIC_APP_URL || "https://apex.legal",
     siteName: "APEX Legal Performance",
     title: "APEX Legal Performance | Solução Jurídica Tecnológica de Alta Performance",
     description: "Gestão jurídica full-service com IA: processos, peças, prazos, tribunais, precedentes, marketing e estratégia.",

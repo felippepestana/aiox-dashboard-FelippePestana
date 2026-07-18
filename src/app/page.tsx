@@ -994,7 +994,7 @@ const jsonLd = {
   name: "APEX Legal Performance",
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
-  url: "https://apex.legal",
+  url: process.env.NEXT_PUBLIC_APP_URL || "https://apex.legal",
   description:
     "Plataforma jurídica com inteligência artificial para gestão de processos, prazos, honorários e estratégia para escritórios de advocacia brasileiros.",
   inLanguage: "pt-BR",

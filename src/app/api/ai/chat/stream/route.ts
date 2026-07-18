@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/nextjs';
 import { NextRequest } from 'next/server';
-import { callAIStream, type TaskType, type AIMessage } from '@/lib/ai-router';
+import { callAIStream, VALID_TASK_TYPES, type TaskType, type AIMessage } from '@/lib/ai-router';
 import { getAuthUser, unauthorized } from '@/lib/api-utils';
 import { withRateLimit } from '@/lib/api-rate-limit';
 import { checkAIQuota, AI_QUOTA_EXCEEDED_MESSAGE } from '@/lib/ai-quota';
@@ -25,6 +25,12 @@ export async function POST(request: NextRequest) {
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: 'Messages required' }), { status: 400 });
+    }
+
+    // Validate before the quota reservation — an unknown taskType would burn a
+    // quota unit and then 500 inside callAIStream (MODEL_CONFIG[undefined]).
+    if (taskType !== undefined && !VALID_TASK_TYPES.includes(taskType)) {
+      return new Response(JSON.stringify({ error: 'Invalid taskType' }), { status: 400 });
     }
 
     // Quota is reserved only after input validation — the atomic counter

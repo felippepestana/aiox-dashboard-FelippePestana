@@ -14,6 +14,7 @@ import { supabase } from '@/lib/supabase';
 import { searchByCNJ, getMovements, DataJudError } from '@/lib/court/datajud';
 import { isValidCNJ } from '@/lib/court/cnj-utils';
 import type { ProcessMovement } from '@/types/legal';
+import { hasActiveFeature, PLAN_FEATURE_REQUIRED_MESSAGE } from '@/lib/plan-access';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -39,6 +40,11 @@ function requireApiKey(): string | null {
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
+
+  // Paid-module gate: datajud_integration requires an active Professional+ subscription
+  if (!(await hasActiveFeature(user.id, 'datajud_integration'))) {
+    return NextResponse.json({ error: PLAN_FEATURE_REQUIRED_MESSAGE }, { status: 402 });
+  }
 
   const { searchParams } = new URL(request.url);
   const cnj = searchParams.get('cnj');
@@ -136,6 +142,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
+
+  // Paid-module gate: datajud_integration requires an active Professional+ subscription
+  if (!(await hasActiveFeature(user.id, 'datajud_integration'))) {
+    return NextResponse.json({ error: PLAN_FEATURE_REQUIRED_MESSAGE }, { status: 402 });
+  }
 
   const apiKey = requireApiKey();
   if (!apiKey) {
