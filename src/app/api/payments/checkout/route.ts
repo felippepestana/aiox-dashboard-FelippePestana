@@ -32,14 +32,24 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
-    if (
-      profile?.subscription_preapproval_id &&
-      ['active', 'trialing'].includes(profile.subscription_status ?? '')
-    ) {
+    const existingPreapproval = profile?.subscription_preapproval_id;
+    const status = profile?.subscription_status ?? '';
+
+    if (existingPreapproval && ['active', 'trialing'].includes(status)) {
       return NextResponse.json(
         { error: 'Você já possui uma assinatura ativa.' },
         { status: 409 },
       );
+    }
+
+    // Recovery path: an abandoned checkout ('incomplete') or a failing renewal
+    // ('past_due') already has a preapproval — send the user back to it
+    // instead of creating a second recurring subscription (double billing).
+    if (existingPreapproval && ['incomplete', 'past_due'].includes(status)) {
+      return NextResponse.json({
+        subscriptionId: existingPreapproval,
+        initPoint: `https://www.mercadopago.com.br/subscriptions/checkout?preapproval_id=${existingPreapproval}`,
+      });
     }
 
     const subscription = await createSubscription({
@@ -47,6 +57,25 @@ export async function POST(request: NextRequest) {
       userEmail: user.email,
       userId: user.id,
     });
+
+    // Persist the pending preapproval NOW, not only when the webhook lands —
+    // otherwise a retry (or concurrent request) before webhook delivery sees
+    // no preapproval and creates a second subscription. Best-effort: the
+    // webhook remains the source of truth for the final status.
+    const { error: persistError } = await supabase.from('profiles').upsert({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      subscription_status: 'incomplete',
+      subscription_plan: plan,
+      subscription_preapproval_id: subscription.id,
+    });
+    if (persistError) {
+      Sentry.captureMessage(
+        `[payments/checkout] failed to persist pending preapproval: ${persistError.message}`,
+        'error',
+      );
+    }
 
     return NextResponse.json({
       subscriptionId: subscription.id,

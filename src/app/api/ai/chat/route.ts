@@ -30,6 +30,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Every entry must be a role/string-content pair — a malformed entry
+    // passes the array check, burns a quota unit, then 500s in callAI when
+    // it reads m.content.length.
+    const validMessages = messages.every(
+      (m) =>
+        m &&
+        typeof m === 'object' &&
+        ['user', 'assistant', 'system'].includes((m as AIMessage).role) &&
+        typeof (m as AIMessage).content === 'string'
+    );
+    if (!validMessages) {
+      return NextResponse.json(
+        { error: 'each message requires a valid role and string content' },
+        { status: 400 }
+      );
+    }
+
     // Validate before the quota reservation — an unknown taskType would burn a
     // quota unit and then 500 inside callAI (MODEL_CONFIG[undefined]).
     if (!VALID_TASK_TYPES.includes(taskType)) {

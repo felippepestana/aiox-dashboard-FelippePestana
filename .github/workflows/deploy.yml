@@ -55,6 +55,9 @@ jobs:
             git reset --hard origin/main
             docker compose build web
             docker compose up -d
+            # The monitor runs bind-mounted source (no image rebuild), so
+            # `up -d` never recreates it — force it to pick up server/ changes.
+            docker compose up -d --force-recreate monitor
             docker compose ps
             # Keep the daily-alerts crontab in sync (mirrors scripts/deploy.sh);
             # runs only when VPS_DOMAIN is configured and CRON_SECRET is real.
