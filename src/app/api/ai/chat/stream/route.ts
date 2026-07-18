@@ -66,6 +66,9 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
+        // Nginx proxies with proxy_buffering on — without this, SSE chunks
+        // are held until the buffer fills and streaming stops being live
+        'X-Accel-Buffering': 'no',
       },
     });
   } catch (error) {
