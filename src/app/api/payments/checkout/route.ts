@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { validateSession } from '@/lib/auth';
-import { createSubscription } from '@/lib/mercadopago';
+import { cancelSubscription, createSubscription } from '@/lib/mercadopago';
 import { createServerClient } from '@/lib/supabase';
 
 /**
@@ -119,10 +119,22 @@ export async function POST(request: NextRequest) {
       .update({ subscription_preapproval_id: subscription.id })
       .eq('id', user.id);
     if (persistError) {
-      Sentry.captureMessage(
-        `[payments/checkout] failed to persist pending preapproval ${subscription.id}: ${persistError.message}`,
-        'error',
-      );
+      // Reconcile: the MP preapproval exists but our side has no record of
+      // it — cancel it so a retry (which re-claims) cannot leave a live
+      // orphan subscription behind and double-bill the user.
+      try {
+        await cancelSubscription(subscription.id);
+        Sentry.captureMessage(
+          `[payments/checkout] persistence failed; preapproval ${subscription.id} cancelled on MP: ${persistError.message}`,
+          'error',
+        );
+      } catch (cancelError) {
+        Sentry.captureMessage(
+          `[payments/checkout] CRITICAL: persistence failed AND cancel failed for preapproval ${subscription.id} — manual reconciliation required: ${persistError.message}`,
+          'fatal',
+        );
+        Sentry.captureException(cancelError);
+      }
       return NextResponse.json({ error: 'Failed to create checkout' }, { status: 500 });
     }
 

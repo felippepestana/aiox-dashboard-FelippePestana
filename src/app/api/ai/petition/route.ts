@@ -20,9 +20,18 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { area, type, facts, arguments: args, requests, court } = body;
 
-    if (!area || !type || !facts) {
+    // Type checks matter: truthy non-strings pass a presence-only guard,
+    // burn a quota unit, then get interpolated into a paid model request.
+    const isNonEmptyString = (v: unknown): v is string =>
+      typeof v === 'string' && v.length > 0;
+    const isOptionalString = (v: unknown) => v === undefined || typeof v === 'string';
+
+    if (
+      !isNonEmptyString(area) || !isNonEmptyString(type) || !isNonEmptyString(facts) ||
+      !isOptionalString(args) || !isOptionalString(requests) || !isOptionalString(court)
+    ) {
       return NextResponse.json(
-        { error: 'area, type, and facts are required' },
+        { error: 'area, type, and facts are required (all fields must be strings)' },
         { status: 400 }
       );
     }

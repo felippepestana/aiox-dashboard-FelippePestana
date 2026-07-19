@@ -137,6 +137,30 @@ export async function getPaymentInfo(paymentId: string) {
 }
 
 /**
+ * Cancel a preapproval (subscription) on Mercado Pago. Used to reconcile a
+ * checkout whose local persistence failed — the external subscription must
+ * not stay live when our side has no record of it.
+ */
+export async function cancelSubscription(preapprovalId: string) {
+  const accessToken = process.env.MP_ACCESS_TOKEN;
+  if (!accessToken) throw new Error('MP_ACCESS_TOKEN not configured');
+
+  const response = await mpFetch(`https://api.mercadopago.com/preapproval/${preapprovalId}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ status: 'cancelled' }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Mercado Pago API error (${response.status})`);
+  }
+  return response.json();
+}
+
+/**
  * Fetch a recurring authorized payment (subscription charge) from Mercado Pago;
  * returns null when not found. The result includes `preapproval_id`, linking
  * the charge back to its subscription.

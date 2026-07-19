@@ -35,7 +35,10 @@ export async function POST(request: NextRequest) {
             message &&
             ['user', 'assistant'].includes(message.role) &&
             typeof message.content === 'string',
-        );
+        ) &&
+        // Assistant-only histories become [] after the router drops leading
+        // assistant turns — Anthropic rejects that, after quota was spent
+        chatHistory.some((message) => message?.role === 'user');
       if (!validHistory) {
         return NextResponse.json({ error: 'Invalid chatHistory' }, { status: 400 });
       }
