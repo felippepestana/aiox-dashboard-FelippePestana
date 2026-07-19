@@ -69,14 +69,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Atomic claim BEFORE calling Mercado Pago: the conditional update only
-    // succeeds while no preapproval is stored, so of N concurrent requests
-    // exactly one proceeds — the rest get 409 instead of minting duplicate
-    // recurring subscriptions.
+    // succeeds while no *live* preapproval is stored, so a retry before
+    // webhook delivery cannot mint a duplicate recurring subscription.
+    // Canceled (or reset-to-free) rows keep their old preapproval id on
+    // file — the claim clears it atomically so former subscribers can
+    // re-subscribe instead of being stuck on 409.
     const { data: claimed, error: claimError } = await supabase
       .from('profiles')
-      .update({ subscription_status: 'incomplete', subscription_plan: plan })
+      .update({
+        subscription_status: 'incomplete',
+        subscription_plan: plan,
+        subscription_preapproval_id: null,
+      })
       .eq('id', user.id)
-      .is('subscription_preapproval_id', null)
+      .or('subscription_preapproval_id.is.null,subscription_status.in.(canceled,free)')
       .select('id');
     if (claimError) {
       Sentry.captureException(claimError);
