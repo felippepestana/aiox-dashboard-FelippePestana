@@ -200,6 +200,8 @@ A cada push na branch `main`, o workflow `.github/workflows/deploy.yml` conecta 
 | `VPS_USER` | usuário SSH (ex: `root`) |
 | `VPS_SSH_KEY` | chave privada SSH com acesso à VPS |
 | `VPS_APP_DIR` | (opcional) diretório do app — padrão `/opt/aiox-legal` |
+| `VPS_DOMAIN` | (opcional) domínio público — habilita o (re)provisionamento do cron de alertas a cada deploy |
+| `VPS_SSH_FINGERPRINT` | (recomendado) fingerprint SHA256 da chave do host da VPS (`ssh-keygen -l -f /etc/ssh/ssh_host_ed25519_key.pub`) — protege contra spoofing do servidor SSH |
 
 Sem os secrets configurados, o workflow é ignorado sem erro. Também é possível disparar manualmente em **Actions → Deploy to VPS → Run workflow**.
 

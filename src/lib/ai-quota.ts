@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { createServerClient } from './supabase';
 
 // Matches the Starter card on the landing page: "IA básica (10 consultas/mês)"
@@ -47,18 +48,32 @@ export async function checkAIQuota(userId: string): Promise<AIQuotaResult> {
     return { allowed };
   }
 
-  // Fallback for environments where the migration has not been applied yet:
-  // best-effort count over ai_usage (racy under concurrency, but bounded by
-  // the per-minute rate limit).
+  // Quota storage failed. Fail CLOSED in production — treating a broken
+  // counter as available quota would let free users run unlimited paid
+  // Anthropic calls exactly when the safety net is down.
+  if (process.env.NODE_ENV === 'production') {
+    Sentry.captureMessage(
+      `[ai-quota] consume_ai_quota unavailable in production: ${error?.message ?? 'unexpected result'}`,
+      'error',
+    );
+    return { allowed: false };
+  }
+
+  // Dev/test fallback for environments without the migration: best-effort
+  // count over ai_usage (racy under concurrency; never used in production).
   const monthStart = new Date();
   monthStart.setUTCDate(1);
   monthStart.setUTCHours(0, 0, 0, 0);
 
-  const { count } = await supabase
+  const { count, error: countError } = await supabase
     .from('ai_usage')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', userId)
     .gte('created_at', monthStart.toISOString());
+
+  if (countError) {
+    return { allowed: false };
+  }
 
   const used = count ?? 0;
   return {

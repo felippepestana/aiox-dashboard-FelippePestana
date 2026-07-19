@@ -179,11 +179,16 @@ log_ok "Data directories created."
 # NEXT_PUBLIC_* values are inlined into the browser bundle at build time —
 # building with the .env.example placeholders would ship a client hardwired
 # to https://your-project.supabase.co until someone remembers to rebuild.
-if grep -qE '^(NEXT_PUBLIC_SUPABASE_URL=.*your-project|NEXT_PUBLIC_SUPABASE_ANON_KEY=.*your-anon-key|SUPABASE_SERVICE_ROLE_KEY=.*your-service-role-key)' "$APP_DIR/.env"; then
-    log_error "Supabase values in .env are still the .env.example placeholders."
-    log_error "Edit $APP_DIR/.env with the real Supabase URL/keys and re-run this script."
-    exit 1
-fi
+for required_var in NEXT_PUBLIC_APP_URL NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY; do
+    required_value=$(grep -E "^${required_var}=" "$APP_DIR/.env" | cut -d= -f2-)
+    case "$required_value" in
+        ""|*your-project*|*your-anon-key*|*your-service-role-key*)
+            log_error "$required_var is missing, empty, or still an .env.example placeholder."
+            log_error "Edit $APP_DIR/.env with the real value and re-run this script."
+            exit 1
+            ;;
+    esac
+done
 
 log_info "Building Docker images (this may take a few minutes)..."
 docker compose build --no-cache

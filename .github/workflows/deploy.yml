@@ -9,6 +9,8 @@
 #   VPS_APP_DIR  — app directory on the VPS (default /opt/aiox-legal)
 #   VPS_DOMAIN   — public domain; when set, the daily-alerts crontab entry is
 #                  (re)provisioned on each deploy (same logic as deploy.sh)
+#   VPS_SSH_FINGERPRINT — SHA256 host-key fingerprint to pin the VPS identity
+#                  (recommended; empty skips verification)
 #
 # If the secrets are not configured the job skips gracefully.
 # ============================================================
@@ -48,6 +50,10 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          # Pins the VPS host key (get it with:
+          # ssh-keygen -l -f /etc/ssh/ssh_host_ed25519_key.pub | cut -d' ' -f2)
+          # — without it a spoofed SSH server could receive the deploy.
+          fingerprint: ${{ secrets.VPS_SSH_FINGERPRINT }}
           script_stop: true
           script: |
             cd ${{ secrets.VPS_APP_DIR || '/opt/aiox-legal' }}

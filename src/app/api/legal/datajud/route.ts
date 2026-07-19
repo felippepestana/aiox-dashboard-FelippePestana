@@ -10,7 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser, unauthorized } from '@/lib/api-utils';
-import { supabase } from '@/lib/supabase';
+import { createServerClient } from '@/lib/supabase';
 import { searchByCNJ, getMovements, DataJudError } from '@/lib/court/datajud';
 import { isValidCNJ } from '@/lib/court/cnj-utils';
 import type { ProcessMovement } from '@/types/legal';
@@ -38,6 +38,7 @@ function requireApiKey(): string | null {
  *   { success: true, data: DataJudProcessInfo, movements: ProcessMovement[] }
  */
 export async function GET(request: NextRequest) {
+  const supabase = createServerClient();
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
 
@@ -140,6 +141,7 @@ export async function GET(request: NextRequest) {
  *   }
  */
 export async function POST(request: NextRequest) {
+  const supabase = createServerClient();
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
 

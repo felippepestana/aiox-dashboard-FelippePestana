@@ -1,5 +1,5 @@
 /**
- * Sentry browser-side initialization: 10% trace sampling; session replay is
+ * Sentry browser-side initialization: 10% trace sampling; performance tracing and session replay are
  * enabled only after the visitor accepts the cookie banner (LGPD) — replay
  * records the session from SDK init, so starting it before consent would
  * ignore a "Recusar" choice. Error capture itself stays on (essential
@@ -21,7 +21,7 @@ const consent = hasAnalyticsConsent();
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  tracesSampleRate: 0.1,
+  tracesSampleRate: consent ? 0.1 : 0,
   // 0 until consent — takes effect on the next page load after accepting
   replaysSessionSampleRate: consent ? 0.1 : 0,
   replaysOnErrorSampleRate: consent ? 1.0 : 0,

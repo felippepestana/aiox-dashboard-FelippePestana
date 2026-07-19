@@ -66,7 +66,9 @@ function formatDate(iso: string): string {
   if (!iso) return '—';
   const date = new Date(iso);
   if (isNaN(date.getTime())) return '—';
-  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  // Explicit UTC keeps SSR and client rendering identical (no hydration
+  // mismatch or off-by-one day across timezones)
+  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' });
 }
 
 /** AIOX-YYYY-NNNN */
@@ -218,6 +220,7 @@ function SubscriptionPanel() {
                       day: '2-digit',
                       month: '2-digit',
                       year: 'numeric',
+                      timeZone: 'UTC',
                     })}
                   </p>
                 );

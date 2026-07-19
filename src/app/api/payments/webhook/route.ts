@@ -171,15 +171,30 @@ export async function POST(request: NextRequest) {
       const supabase = createServerClient();
 
       if (payment.status === 'approved') {
+        // Payment events only carry customer metadata — a replayed/old
+        // approved-payment event must not overwrite 'canceled'/'past_due'
+        // with 'active'. The preapproval is the authoritative subscription
+        // state, so re-sync it when one is on file.
+        const { data: prof, error: profError } = await supabase
+          .from('profiles')
+          .select('subscription_preapproval_id')
+          .eq('id', userId)
+          .single();
+        if (profError && profError.code !== 'PGRST116') {
+          throw new Error(`Failed to read profile: ${profError.message}`);
+        }
+
         await persistProfileBilling(
           supabase,
           userId,
-          {
-            subscription_status: 'active',
-            mp_customer_id: payment.payer?.id?.toString() || null,
-          },
+          { mp_customer_id: payment.payer?.id?.toString() || null },
           payment.payer?.email,
         );
+
+        const preapprovalId = prof?.subscription_preapproval_id;
+        if (preapprovalId) {
+          await syncSubscriptionFromPreapproval(String(preapprovalId));
+        }
       }
     }
 

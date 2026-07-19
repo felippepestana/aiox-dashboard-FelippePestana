@@ -120,9 +120,10 @@ async function networkFirst(request) {
     // offline or after logout on a shared browser), or anything no-store.
     const pathname = new URL(request.url).pathname;
     const noStore = (response.headers.get('Cache-Control') || '').includes('no-store');
-    const sensitiveApi = ['/api/auth/', '/api/legal/', '/api/payments/', '/api/ai/'].some(
-      (p) => pathname.startsWith(p)
-    );
+    // Default-deny: no API response is cached (authenticated data could be
+    // replayed after logout). Allowlist explicitly public APIs here if
+    // offline caching is ever needed.
+    const sensitiveApi = pathname.startsWith('/api/');
     const skipCache = isProtectedPath(pathname) || sensitiveApi || noStore;
     if (response.ok && !skipCache) {
       const cache = await caches.open(CACHE_NAME);

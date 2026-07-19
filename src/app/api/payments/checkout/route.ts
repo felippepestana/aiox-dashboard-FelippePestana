@@ -23,19 +23,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
     }
 
+    const supabase = createServerClient();
+
+    // Ensure the profiles row exists (legacy accounts may predate
+    // profile-at-signup) without clobbering existing email/name.
+    const { error: ensureError } = await supabase.from('profiles').upsert(
+      { id: user.id, email: user.email, name: user.name },
+      { onConflict: 'id', ignoreDuplicates: true },
+    );
+    if (ensureError) {
+      Sentry.captureException(ensureError);
+      return NextResponse.json({ error: 'Failed to create checkout' }, { status: 500 });
+    }
+
     // A subscriber with an active/trialing preapproval must not start a second
     // recurring subscription (double billing) — MP would happily create one.
-    const supabase = createServerClient();
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('subscription_status, subscription_preapproval_id')
       .eq('id', user.id)
       .single();
+    if (profileError) {
+      Sentry.captureException(profileError);
+      return NextResponse.json({ error: 'Failed to create checkout' }, { status: 500 });
+    }
 
     const existingPreapproval = profile?.subscription_preapproval_id;
-    const status = profile?.subscription_status ?? '';
+    const priorStatus = profile?.subscription_status ?? 'free';
 
-    if (existingPreapproval && ['active', 'trialing'].includes(status)) {
+    if (existingPreapproval && ['active', 'trialing'].includes(priorStatus)) {
       return NextResponse.json(
         { error: 'Você já possui uma assinatura ativa.' },
         { status: 409 },
@@ -45,36 +61,63 @@ export async function POST(request: NextRequest) {
     // Recovery path: an abandoned checkout ('incomplete') or a failing renewal
     // ('past_due') already has a preapproval — send the user back to it
     // instead of creating a second recurring subscription (double billing).
-    if (existingPreapproval && ['incomplete', 'past_due'].includes(status)) {
+    if (existingPreapproval && ['incomplete', 'past_due'].includes(priorStatus)) {
       return NextResponse.json({
         subscriptionId: existingPreapproval,
         initPoint: `https://www.mercadopago.com.br/subscriptions/checkout?preapproval_id=${existingPreapproval}`,
       });
     }
 
-    const subscription = await createSubscription({
-      planId: plan,
-      userEmail: user.email,
-      userId: user.id,
-    });
+    // Atomic claim BEFORE calling Mercado Pago: the conditional update only
+    // succeeds while no preapproval is stored, so of N concurrent requests
+    // exactly one proceeds — the rest get 409 instead of minting duplicate
+    // recurring subscriptions.
+    const { data: claimed, error: claimError } = await supabase
+      .from('profiles')
+      .update({ subscription_status: 'incomplete', subscription_plan: plan })
+      .eq('id', user.id)
+      .is('subscription_preapproval_id', null)
+      .select('id');
+    if (claimError) {
+      Sentry.captureException(claimError);
+      return NextResponse.json({ error: 'Failed to create checkout' }, { status: 500 });
+    }
+    if (!claimed || claimed.length === 0) {
+      return NextResponse.json(
+        { error: 'Um checkout já está em andamento. Tente novamente em instantes.' },
+        { status: 409 },
+      );
+    }
 
-    // Persist the pending preapproval NOW, not only when the webhook lands —
-    // otherwise a retry (or concurrent request) before webhook delivery sees
-    // no preapproval and creates a second subscription. Best-effort: the
-    // webhook remains the source of truth for the final status.
-    const { error: persistError } = await supabase.from('profiles').upsert({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      subscription_status: 'incomplete',
-      subscription_plan: plan,
-      subscription_preapproval_id: subscription.id,
-    });
+    let subscription;
+    try {
+      subscription = await createSubscription({
+        planId: plan,
+        userEmail: user.email,
+        userId: user.id,
+      });
+    } catch (mpError) {
+      // Release the claim so a retry is possible
+      await supabase
+        .from('profiles')
+        .update({ subscription_status: priorStatus })
+        .eq('id', user.id)
+        .is('subscription_preapproval_id', null);
+      throw mpError;
+    }
+
+    // Persisting the preapproval is NOT best-effort: without it the
+    // deduplication above cannot see this subscription on the next request.
+    const { error: persistError } = await supabase
+      .from('profiles')
+      .update({ subscription_preapproval_id: subscription.id })
+      .eq('id', user.id);
     if (persistError) {
       Sentry.captureMessage(
-        `[payments/checkout] failed to persist pending preapproval: ${persistError.message}`,
+        `[payments/checkout] failed to persist pending preapproval ${subscription.id}: ${persistError.message}`,
         'error',
       );
+      return NextResponse.json({ error: 'Failed to create checkout' }, { status: 500 });
     }
 
     return NextResponse.json({

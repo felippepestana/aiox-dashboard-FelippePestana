@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { validateSession } from '@/lib/auth';
 
 const SESSION_COOKIE = 'aiox_session';
@@ -11,11 +11,9 @@ const SESSION_COOKIE = 'aiox_session';
  * authenticated owner of the cookie can obtain it, which is equivalent to
  * Supabase's default localStorage session model.
  */
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const cookieHeader = request.headers.get('cookie') || '';
-    const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${SESSION_COOKIE}=([^;]+)`));
-    const token = match?.[1];
+    const token = request.cookies.get(SESSION_COOKIE)?.value;
 
     if (!token) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });

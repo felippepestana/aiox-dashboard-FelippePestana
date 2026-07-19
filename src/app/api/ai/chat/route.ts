@@ -40,9 +40,14 @@ export async function POST(request: NextRequest) {
         ['user', 'assistant', 'system'].includes((m as AIMessage).role) &&
         typeof (m as AIMessage).content === 'string'
     );
-    if (!validMessages) {
+    // System/assistant-only histories become [] after sanitization and would
+    // only fail after the quota unit was already consumed.
+    const hasUserMessage = messages.some(
+      (m) => (m as AIMessage)?.role === 'user' && typeof (m as AIMessage).content === 'string'
+    );
+    if (!validMessages || !hasUserMessage) {
       return NextResponse.json(
-        { error: 'each message requires a valid role and string content' },
+        { error: 'each message requires a valid role and string content, including at least one user message' },
         { status: 400 }
       );
     }

@@ -26,7 +26,20 @@ export async function POST(request: NextRequest) {
       chatHistory?: { role: string; content: string }[];
     };
 
-    if (!chatHistory && (!content || !fileName || !polo)) {
+    if (chatHistory !== undefined) {
+      const validHistory =
+        Array.isArray(chatHistory) &&
+        chatHistory.length > 0 &&
+        chatHistory.every(
+          (message) =>
+            message &&
+            ['user', 'assistant'].includes(message.role) &&
+            typeof message.content === 'string',
+        );
+      if (!validHistory) {
+        return NextResponse.json({ error: 'Invalid chatHistory' }, { status: 400 });
+      }
+    } else if (!content || !fileName || !polo) {
       return NextResponse.json(
         { error: 'content, fileName, and polo are required' },
         { status: 400 }

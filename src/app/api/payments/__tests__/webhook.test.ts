@@ -20,12 +20,16 @@ const mockUpdate = vi.fn();
 const mockEq = vi.fn();
 const mockSelect = vi.fn();
 const mockInsert = vi.fn();
+// Profile read chain: from().select().eq().single()
+const mockProfileSingle = vi.fn();
+const mockProfileSelect = vi.fn(() => ({ eq: () => ({ single: mockProfileSingle }) }));
 
 vi.mock('@/lib/supabase', () => ({
   createServerClient: () => ({
     from: vi.fn(() => ({
       update: mockUpdate,
       insert: mockInsert,
+      select: mockProfileSelect,
     })),
   }),
 }));
@@ -53,6 +57,7 @@ describe('POST /api/payments/webhook — payment events', () => {
     mockEq.mockReturnValue({ select: mockSelect });
     mockSelect.mockResolvedValue({ data: [{ id: 'user-1' }], error: null });
     mockInsert.mockResolvedValue({ error: null });
+    mockProfileSingle.mockResolvedValue({ data: { subscription_preapproval_id: null }, error: null });
   });
 
   it('returns { received: true } with status 200 for an approved payment', async () => {
@@ -69,7 +74,7 @@ describe('POST /api/payments/webhook — payment events', () => {
     expect(await parseJson(res)).toEqual({ received: true });
   });
 
-  it('calls supabase update with subscription_status=active for approved payment', async () => {
+  it('persists mp_customer_id metadata WITHOUT touching subscription_status', async () => {
     mockGetPaymentInfo.mockResolvedValueOnce({
       status: 'approved',
       external_reference: 'user-1',
@@ -79,13 +84,41 @@ describe('POST /api/payments/webhook — payment events', () => {
     const req = makeRequest({ type: 'payment', data: { id: '12345' } });
     await POST(req);
 
+    // Payment events are metadata-only — a replayed approved payment must not
+    // overwrite canceled/past_due with active.
     expect(mockUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        subscription_status: 'active',
-        mp_customer_id: 'mp-payer-1',
-      }),
+      expect.objectContaining({ mp_customer_id: 'mp-payer-1' }),
+    );
+    expect(mockUpdate).not.toHaveBeenCalledWith(
+      expect.objectContaining({ subscription_status: expect.anything() }),
     );
     expect(mockEq).toHaveBeenCalledWith('id', 'user-1');
+  });
+
+  it('re-syncs the stored preapproval when an approved payment arrives', async () => {
+    mockGetPaymentInfo.mockResolvedValueOnce({
+      status: 'approved',
+      external_reference: 'user-1',
+      payer: { id: 'mp-payer-1' },
+    });
+    mockProfileSingle.mockResolvedValueOnce({
+      data: { subscription_preapproval_id: 'sub-9' },
+      error: null,
+    });
+    mockGetSubscriptionInfo.mockResolvedValueOnce({
+      id: 'sub-9',
+      status: 'authorized',
+      external_reference: 'user-1',
+      next_payment_date: '2025-03-01',
+    });
+
+    const req = makeRequest({ type: 'payment', data: { id: '12345' } });
+    await POST(req);
+
+    expect(mockGetSubscriptionInfo).toHaveBeenCalledWith('sub-9');
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ subscription_status: 'active' }),
+    );
   });
 
   it('returns { received: true } without calling update when payment status is not approved', async () => {
@@ -142,7 +175,7 @@ describe('POST /api/payments/webhook — payment events', () => {
       expect.objectContaining({
         id: 'user-1',
         email: 'novo@firm.com',
-        subscription_status: 'active',
+        mp_customer_id: 'mp-payer-1',
       }),
     );
   });
@@ -172,6 +205,7 @@ describe('POST /api/payments/webhook — subscription_authorized_payment events'
     mockEq.mockReturnValue({ select: mockSelect });
     mockSelect.mockResolvedValue({ data: [{ id: 'user-1' }], error: null });
     mockInsert.mockResolvedValue({ error: null });
+    mockProfileSingle.mockResolvedValue({ data: { subscription_preapproval_id: null }, error: null });
   });
 
   it('re-syncs the parent preapproval on a successful renewal charge', async () => {
@@ -240,6 +274,7 @@ describe('POST /api/payments/webhook — subscription_preapproval events', () =>
     mockEq.mockReturnValue({ select: mockSelect });
     mockSelect.mockResolvedValue({ data: [{ id: 'user-1' }], error: null });
     mockInsert.mockResolvedValue({ error: null });
+    mockProfileSingle.mockResolvedValue({ data: { subscription_preapproval_id: null }, error: null });
   });
 
   const statusMappings: Array<[string, string]> = [

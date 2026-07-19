@@ -18,11 +18,15 @@ export async function hasActiveFeature(
   feature: PlanFeature,
 ): Promise<boolean> {
   const supabase = createServerClient();
-  const { data: profile } = await supabase
+  const { data: profile, error } = await supabase
     .from('profiles')
     .select('subscription_plan, subscription_status')
     .eq('id', userId)
     .single();
+
+  // A DB failure must not read as "free plan" — paid users would get a
+  // misleading 402. Let the route surface a 500 instead.
+  if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
 
   const plan = (profile?.subscription_plan ?? 'starter') as SubscriptionPlan;
   const status = (profile?.subscription_status ?? 'free') as SubscriptionStatus;
