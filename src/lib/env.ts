@@ -57,8 +57,11 @@ const ENV_VARS: EnvVar[] = [
   {
     key: 'ANTHROPIC_API_KEY',
     required: false,
-    validate: (v) => v.startsWith('sk-ant-'),
-    hint: 'Must start with "sk-ant-"',
+    // The .env.example sample starts with the right prefix — accepting it
+    // would make AI routes look configured, burn users' quota, then fail on
+    // every Anthropic call with an invalid key.
+    validate: (v) => v.startsWith('sk-ant-') && !v.includes('your-key'),
+    hint: 'Must be a real key starting with "sk-ant-", not the .env.example placeholder',
   },
 
   // Mercado Pago — optional

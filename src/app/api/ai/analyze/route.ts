@@ -39,7 +39,13 @@ export async function POST(request: NextRequest) {
       if (!validHistory) {
         return NextResponse.json({ error: 'Invalid chatHistory' }, { status: 400 });
       }
-    } else if (!content || !fileName || !polo) {
+    } else if (
+      // Type checks matter: a truthy non-string content passes a bare
+      // falsiness check, burns a quota unit, then crashes at content.slice()
+      typeof content !== 'string' || !content ||
+      typeof fileName !== 'string' || !fileName ||
+      !['autor', 'reu', 'terceiro'].includes(polo)
+    ) {
       return NextResponse.json(
         { error: 'content, fileName, and polo are required' },
         { status: 400 }
