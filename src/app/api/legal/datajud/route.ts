@@ -205,6 +205,30 @@ export async function POST(request: NextRequest) {
 
   const since = typeof body.since === 'string' ? body.since : undefined;
 
+  // ─── Ownership check ─────────────────────────────────────────────────────
+  // The service-role client bypasses RLS, and processId is caller-controlled:
+  // without this filter any authenticated user who learns another tenant's
+  // process UUID could read/inject movements into that case.
+  const { data: ownedRows, error: ownedError } = await supabase
+    .from('processes')
+    .select('id')
+    .eq('user_id', user.id)
+    .in('id', targets.map((t) => t.processId));
+  if (ownedError) {
+    return NextResponse.json(
+      { error: 'Falha ao validar a titularidade dos processos' },
+      { status: 500 },
+    );
+  }
+  const ownedIds = new Set((ownedRows ?? []).map((r) => r.id));
+  targets = targets.filter((t) => ownedIds.has(t.processId));
+  if (targets.length === 0) {
+    return NextResponse.json(
+      { error: 'Nenhum dos processos informados pertence ao usuário' },
+      { status: 403 },
+    );
+  }
+
   // ─── Process each target ─────────────────────────────────────────────────
 
   interface SyncResult {
