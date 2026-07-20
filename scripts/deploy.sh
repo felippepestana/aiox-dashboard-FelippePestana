@@ -145,12 +145,19 @@ if [ ! -f "$APP_DIR/.env" ]; then
     log_info "Creating .env from .env.example..."
     cp "$APP_DIR/.env.example" "$APP_DIR/.env"
 
-    # Generate a random AUTH_SECRET
+    # Generate a random AUTH_SECRET (anchor to the whole line — the literal
+    # placeholder text in .env.example has drifted before and a missed sed
+    # would silently keep the public sample value)
     AUTH_SECRET=$(openssl rand -base64 32)
-    sed -i "s|AUTH_SECRET=change-this-to-random-string|AUTH_SECRET=$AUTH_SECRET|g" "$APP_DIR/.env"
+    sed -i "s|^AUTH_SECRET=.*|AUTH_SECRET=$AUTH_SECRET|" "$APP_DIR/.env"
+
+    # Generate a random CRON_SECRET (never keep the public placeholder from
+    # .env.example — it would become the bearer token for /api/cron/*)
+    CRON_SECRET_GEN=$(openssl rand -hex 32)
+    sed -i "s|^CRON_SECRET=.*|CRON_SECRET=$CRON_SECRET_GEN|" "$APP_DIR/.env"
 
     # Set the domain
-    sed -i "s|NEXT_PUBLIC_APP_URL=https://yourdomain.com|NEXT_PUBLIC_APP_URL=https://$DOMAIN|g" "$APP_DIR/.env"
+    sed -i "s|^NEXT_PUBLIC_APP_URL=.*|NEXT_PUBLIC_APP_URL=https://$DOMAIN|" "$APP_DIR/.env"
 
     log_ok ".env created. Review and update: $APP_DIR/.env"
 else
@@ -168,6 +175,20 @@ log_ok "Data directories created."
 # ============================================================
 # Step 9: Build Docker images
 # ============================================================
+
+# NEXT_PUBLIC_* values are inlined into the browser bundle at build time —
+# building with the .env.example placeholders would ship a client hardwired
+# to https://your-project.supabase.co until someone remembers to rebuild.
+for required_var in NEXT_PUBLIC_APP_URL NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY; do
+    required_value=$(grep -E "^${required_var}=" "$APP_DIR/.env" | cut -d= -f2-)
+    case "$required_value" in
+        ""|*your-project*|*your-anon-key*|*your-service-role-key*)
+            log_error "$required_var is missing, empty, or still an .env.example placeholder."
+            log_error "Edit $APP_DIR/.env with the real value and re-run this script."
+            exit 1
+            ;;
+    esac
+done
 
 log_info "Building Docker images (this may take a few minutes)..."
 docker compose build --no-cache
@@ -240,6 +261,28 @@ if ! crontab -l 2>/dev/null | grep -q "certbot renew"; then
     log_ok "SSL auto-renewal cron job added."
 else
     log_ok "SSL auto-renewal already configured."
+fi
+
+# ============================================================
+# Step 12.5: Setup daily deadline-alerts cron
+# ============================================================
+# Replaces the former Vercel Cron (vercel.json "crons"): calls the
+# authenticated endpoint every day at 08:00 UTC.
+
+log_info "Setting up daily alerts cron job..."
+CRON_SECRET_VALUE=$(grep -E '^CRON_SECRET=' "$APP_DIR/.env" 2>/dev/null | cut -d= -f2-)
+if [ -z "$CRON_SECRET_VALUE" ] || [ "$CRON_SECRET_VALUE" = "generate-a-random-32-char-string" ]; then
+    log_warn "CRON_SECRET missing or still the public placeholder — skipping daily-alerts cron. Set a random value in .env and re-run."
+else
+    # Always replace the existing entry: a rotated CRON_SECRET or a new domain
+    # would otherwise keep a stale token/URL in the crontab (401s / wrong host).
+    CRON_LINE="0 8 * * * curl -fsS -H \"Authorization: Bearer $CRON_SECRET_VALUE\" https://$DOMAIN/api/cron/daily-alerts > /dev/null 2>&1"
+    if crontab -l 2>/dev/null | grep -qF "$CRON_LINE"; then
+        log_ok "Daily alerts cron already up to date."
+    else
+        (crontab -l 2>/dev/null | grep -v "api/cron/daily-alerts"; echo "$CRON_LINE") | crontab -
+        log_ok "Daily alerts cron job installed/refreshed (08:00 UTC)."
+    fi
 fi
 
 # ============================================================

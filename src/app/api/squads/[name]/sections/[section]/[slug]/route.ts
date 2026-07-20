@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { NextResponse } from 'next/server';
@@ -11,6 +12,7 @@ import {
   resolveSquadSectionDir,
 } from '@/lib/squad-api-utils';
 
+/** Derives a display title from a markdown file's first H1, falling back to the formatted filename. */
 function extractTitle(content: string, filename: string, isStructured: boolean): string {
   if (!isStructured) {
     const match = content.match(/^#\s+(.+)/m);
@@ -21,6 +23,10 @@ function extractTitle(content: string, filename: string, isStructured: boolean):
   return formatName(filename);
 }
 
+/**
+ * GET /api/squads/[name]/sections/[section]/[slug] — returns the raw content
+ * and title of a single file within a squad section, with path validation.
+ */
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ name: string; section: string; slug: string }> }
@@ -78,6 +84,7 @@ export async function GET(
       isYaml: isStructured,
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Error in /api/squads/[name]/sections/[section]/[slug]:', error);
     return NextResponse.json({ error: 'Failed to load item content' }, { status: 500 });
   }

@@ -1,4 +1,6 @@
-import { NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
+import { NextRequest, NextResponse } from 'next/server';
+import { getAuthUser, unauthorized } from '@/lib/api-utils';
 import { promises as fs } from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
@@ -12,7 +14,7 @@ import type {
   AgentId,
 } from '@/types';
 
-// Get the project root path
+/** Resolves the project root path from AIOS_PROJECT_ROOT or relative to cwd. */
 function getProjectRoot(): string {
   if (process.env.AIOS_PROJECT_ROOT) {
     return process.env.AIOS_PROJECT_ROOT;
@@ -64,8 +66,7 @@ const STATUS_MAP: Record<string, StoryStatus> = {
   blocked: 'error',
 };
 
-// Parse blockquote metadata format used in epic/story files
-// Format: > **Field:** Value
+/** Parses blockquote metadata lines (`> **Field:** Value`) used in epic/story files into a field map. */
 function parseBlockquoteMetadata(content: string): Record<string, string> {
   const metadata: Record<string, string> = {};
 
@@ -84,7 +85,7 @@ function parseBlockquoteMetadata(content: string): Record<string, string> {
   return metadata;
 }
 
-// Extract priority from blockquote format (e.g., "P0 - Foundation" -> "critical")
+/** Extracts a StoryPriority from blockquote values like "P0 - Foundation" or direct priority names. */
 function extractPriorityFromBlockquote(value: string): StoryPriority | undefined {
   if (!value) return undefined;
 
@@ -103,7 +104,7 @@ function extractPriorityFromBlockquote(value: string): StoryPriority | undefined
   return undefined;
 }
 
-// Extract status from blockquote format
+/** Extracts a StoryStatus from a blockquote metadata value using the status mapping. */
 function extractStatusFromBlockquote(value: string): StoryStatus | undefined {
   if (!value) return undefined;
 
@@ -122,8 +123,7 @@ function extractStatusFromBlockquote(value: string): StoryStatus | undefined {
   return undefined;
 }
 
-// Parse markdown table metadata format
-// Format: | **Field** | Value |
+/** Parses markdown table metadata rows (`| **Field** | Value |`) into a field map. */
 function parseTableMetadata(content: string): Record<string, string> {
   const metadata: Record<string, string> = {};
 
@@ -142,8 +142,7 @@ function parseTableMetadata(content: string): Record<string, string> {
   return metadata;
 }
 
-// Parse inline bold metadata format (not in blockquote)
-// Format: **Field:** Value
+/** Parses inline bold metadata (`**Field:** Value` outside blockquotes) into a field map. */
 function parseInlineMetadata(content: string): Record<string, string> {
   const metadata: Record<string, string> = {};
 
@@ -162,7 +161,7 @@ function parseInlineMetadata(content: string): Record<string, string> {
   return metadata;
 }
 
-// Extract status from table format with emoji handling
+/** Extracts a StoryStatus from a table metadata value, stripping leading emojis first. */
 function extractStatusFromTable(value: string): StoryStatus | undefined {
   if (!value) return undefined;
 
@@ -185,7 +184,7 @@ function extractStatusFromTable(value: string): StoryStatus | undefined {
   return undefined;
 }
 
-// Extract priority from table format with emoji handling
+/** Extracts a StoryPriority from a table metadata value, stripping leading emojis first. */
 function extractPriorityFromTable(value: string): StoryPriority | undefined {
   if (!value) return undefined;
 
@@ -209,7 +208,10 @@ function extractPriorityFromTable(value: string): StoryPriority | undefined {
   return undefined;
 }
 
-// Parse frontmatter to Story object
+/**
+ * Parses a story/epic markdown file into a Story object, combining frontmatter
+ * with blockquote, table, and inline metadata fallbacks.
+ */
 function parseStoryFromMarkdown(
   content: string,
   filePath: string,
@@ -382,12 +384,13 @@ function parseStoryFromMarkdown(
       updatedAt: data.updatedAt || fileStats.mtime.toISOString(),
     };
   } catch (error) {
+    Sentry.captureException(error);
     console.error(`Error parsing story from ${filePath}:`, error);
     return null;
   }
 }
 
-// Recursively find all markdown files
+/** Recursively lists markdown files in a directory, skipping archives and non-story files. */
 async function findMarkdownFiles(dir: string): Promise<string[]> {
   const files: string[] = [];
 
@@ -417,7 +420,7 @@ async function findMarkdownFiles(dir: string): Promise<string[]> {
   return files;
 }
 
-// Mock stories for development
+/** Returns a set of mock stories used in development when no story files exist. */
 function getMockStories(): Story[] {
   const now = new Date().toISOString();
   return [
@@ -493,7 +496,7 @@ function getMockStories(): Story[] {
   ];
 }
 
-// Generate story filename from title
+/** Generates a slugified, timestamped markdown filename from a story title. */
 function generateStoryFilename(title: string): string {
   const slug = title
     .toLowerCase()
@@ -504,7 +507,7 @@ function generateStoryFilename(title: string): string {
   return `${slug}-${timestamp}.md`;
 }
 
-// Generate frontmatter from story data
+/** Builds the markdown content (frontmatter, title, criteria, notes) for a new story file. */
 function generateStoryContent(data: CreateStoryRequest): string {
   const frontmatter = [
     '---',
@@ -563,7 +566,14 @@ interface CreateStoryRequest {
   technicalNotes?: string;
 }
 
-export async function GET() {
+/**
+ * GET /api/stories — scans docs/stories for markdown files and returns them as
+ * parsed Story objects, with mock data fallback in development.
+ */
+export async function GET(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
   try {
     const projectRoot = getProjectRoot();
     const storiesDir = path.join(projectRoot, 'docs', 'stories');
@@ -605,6 +615,7 @@ export async function GET() {
           stories.push(story);
         }
       } catch (error) {
+        Sentry.captureException(error);
         console.error(`Error reading ${filePath}:`, error);
       }
     }
@@ -615,6 +626,7 @@ export async function GET() {
       count: stories.length,
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Error in /api/stories:', error);
 
     // Return mock data on error in development
@@ -637,7 +649,11 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+/** POST /api/stories — creates a new story markdown file in docs/stories and returns the parsed story. */
+export async function POST(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
   try {
     const body = (await request.json()) as CreateStoryRequest;
 
@@ -687,6 +703,7 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Error creating story:', error);
     return NextResponse.json({ error: 'Failed to create story' }, { status: 500 });
   }

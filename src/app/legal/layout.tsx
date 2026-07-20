@@ -11,6 +11,7 @@ import { useDeadlineAlerts } from '@/hooks/useDeadlineAlerts';
 import { useHydration } from '@/hooks/useHydration';
 import { DeadlineAlerts } from '@/components/legal/DeadlineAlerts';
 import { DeadlineToast } from '@/components/legal/DeadlineToast';
+import { NotificationToast } from '@/components/legal/NotificationToast';
 import { MobileBottomNav } from '@/components/legal/MobileBottomNav';
 import { PWAInstallPrompt } from '@/components/legal/PWAInstallPrompt';
 import { OfflineIndicator } from '@/components/legal/OfflineIndicator';
@@ -19,6 +20,7 @@ import OnboardingWizard from '@/components/legal/OnboardingWizard';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { getNavForRole, FOOTER_NAV } from '@/lib/navigation-config';
 import { useUserRole } from '@/lib/roles';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import {
   Scale,
   Briefcase,
@@ -86,6 +88,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Search,
 };
 
+/** Renders the lucide icon mapped to the given name, falling back to the Scale icon. */
 function NavIcon({ name, className }: { name: string; className?: string }) {
   const Icon = ICON_MAP[name] ?? Scale;
   return <Icon className={className} />;
@@ -93,12 +96,14 @@ function NavIcon({ name, className }: { name: string; className?: string }) {
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
 
+/** Layout for the legal dashboard: collapsible sidebar navigation, mobile menu, alerts and onboarding wrapper around page content. */
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [footerOpen, setFooterOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const pathname = usePathname();
   const otherHydrated = useRef(false);
 
@@ -130,6 +135,14 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       hydrateMarketingFromApi();
       hydrateStrategyFromApi();
     }
+
+    // Fetch the authenticated user's ID for realtime notifications.
+    // The session lives in an httpOnly cookie, so the Supabase browser client
+    // can't read it — resolve the user via the app's own session endpoint.
+    fetch('/api/auth/me')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setUserId(data?.user?.id ?? null))
+      .catch(() => setUserId(null));
   }, [hydrateFinancialFromApi, hydrateMarketingFromApi, hydrateStrategyFromApi, shouldShow]);
 
   useEffect(() => {
@@ -331,20 +344,23 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
                 <span className="flex-1 text-left">⌘K para busca rápida</span>
               </button>
 
-              <button
-                onClick={async () => {
-                  await fetch('/api/auth/logout', { method: 'POST' });
-                  window.location.href = '/login';
-                }}
-                className="flex items-center gap-2 text-[11px] text-[#4A5568] hover:text-red-400 transition-colors w-full"
-              >
-                <LogOut className="h-3 w-3" />
-                <span>Sair</span>
-              </button>
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={async () => {
+                    await fetch('/api/auth/logout', { method: 'POST' });
+                    window.location.href = '/login';
+                  }}
+                  className="flex items-center gap-2 text-[11px] text-[#4A5568] hover:text-red-400 transition-colors"
+                >
+                  <LogOut className="h-3 w-3" />
+                  <span>Sair</span>
+                </button>
+                <ThemeToggle />
+              </div>
             </div>
           </>
         ) : (
-          /* Collapsed state: show gear icon only */
+          /* Collapsed state: show gear icon + theme toggle */
           <div className="flex flex-col items-center py-2 gap-1">
             <button
               onClick={() => setCollapsed(false)}
@@ -354,6 +370,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
             >
               <Settings className="h-3.5 w-3.5" />
             </button>
+            <ThemeToggle />
           </div>
         )}
 
@@ -373,7 +390,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
     <div className="flex h-screen bg-[#060d1a] text-white overflow-hidden">
       {/* Mobile Header */}
       <div className="fixed top-0 left-0 right-0 z-40 flex h-14 items-center justify-between border-b border-[#1a2d52]/60 bg-[#0a1628] px-4 lg:hidden">
-        <button onClick={() => setMobileOpen(true)} className="text-[#4A5568] hover:text-white">
+        <button onClick={() => setMobileOpen(true)} className="text-[#4A5568] hover:text-white" aria-label="Abrir menu">
           <Menu className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-2">
@@ -386,6 +403,8 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
           <span className="text-sm font-semibold text-white">APEX</span>
         </div>
         <div className="flex items-center gap-2">
+          {/* Theme toggle */}
+          <ThemeToggle />
           {/* Alert bell button */}
           <button
             onClick={() => setAlertsOpen((v) => !v)}
@@ -447,6 +466,9 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
 
       {/* Session toast for critical deadlines */}
       <DeadlineToast />
+
+      {/* Supabase realtime notifications */}
+      <NotificationToast userId={userId} />
 
       {/* Mobile bottom navigation */}
       <MobileBottomNav onOpenSidebar={() => setMobileOpen(true)} />

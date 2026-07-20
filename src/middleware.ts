@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const PROTECTED_PREFIXES = ['/legal', '/dental', '/kanban'];
 
-const PUBLIC_PATHS = ['/login', '/api/auth'];
+const PUBLIC_PATHS = ['/login', '/privacy', '/api/auth', '/api/payments/webhook'];
 
 // ─── Security headers ─────────────────────────────────────────────────────────
 
@@ -28,6 +28,7 @@ const SECURITY_HEADERS: Record<string, string> = {
   ].join('; '),
 };
 
+/** Attach the standard security headers (CSP, X-Frame-Options, etc.) to a response. */
 function applySecurityHeaders(response: NextResponse): NextResponse {
   for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
     response.headers.set(key, value);
@@ -80,12 +81,12 @@ function pruneRateLimitStore(): void {
 // ─── Session validation ───────────────────────────────────────────────────────
 
 /**
- * Validates a session token — tries Supabase JWT first, then falls back to the
- * legacy Base64-encoded session format so that existing sessions keep working
- * until they naturally expire.
+ * Validates a session token against Supabase.
+ * Unsigned legacy Base64 sessions are NOT accepted — they were forgeable
+ * (any client could craft an unexpired payload), so only Supabase-verified
+ * JWTs pass the route guard. Mirrors validateSession in src/lib/auth.ts.
  */
 async function isValidSession(token: string): Promise<boolean> {
-  // 1. Try Supabase JWT validation
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const serviceKey =
@@ -94,24 +95,18 @@ async function isValidSession(token: string): Promise<boolean> {
 
     const supabase = createClient(supabaseUrl, serviceKey);
     const { data: { user } } = await supabase.auth.getUser(token);
-    if (user) return true;
+    return Boolean(user);
   } catch {
-    /* network error or invalid JWT — fall through */
+    return false; // network error or invalid JWT
   }
-
-  // 2. Fallback: legacy Base64 session (migration period)
-  try {
-    const payload = JSON.parse(Buffer.from(token, 'base64url').toString('utf-8'));
-    if (payload.exp && payload.exp > Date.now()) return true;
-  } catch {
-    /* not a legacy token */
-  }
-
-  return false;
 }
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 
+/**
+ * Global Next.js middleware: rate-limits API routes, guards protected routes
+ * behind a valid session (redirecting to /login), and applies security headers.
+ */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -126,8 +121,9 @@ export async function middleware(request: NextRequest) {
 
   // Rate limit API routes
   if (pathname.startsWith('/api/')) {
+    // Last entry is appended by our own Nginx proxy; earlier ones are spoofable
     const forwarded = request.headers.get('x-forwarded-for');
-    const ip = forwarded?.split(',')[0]?.trim() ?? '127.0.0.1';
+    const ip = forwarded?.split(',').pop()?.trim() ?? '127.0.0.1';
 
     // Prune stale entries every request (cheap operation on typical store size)
     pruneRateLimitStore();

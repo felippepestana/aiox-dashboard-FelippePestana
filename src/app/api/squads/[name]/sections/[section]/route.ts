@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import path from 'path';
 import { NextResponse } from 'next/server';
 import {
@@ -9,6 +10,10 @@ import {
   resolveSquadSectionDir,
 } from '@/lib/squad-api-utils';
 
+/**
+ * GET /api/squads/[name]/sections/[section] — lists the files in a squad
+ * section (tasks, workflows, etc.) as slug/name/path items.
+ */
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ name: string; section: string }> }
@@ -38,6 +43,7 @@ export async function GET(
 
     return NextResponse.json({ items });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Error in /api/squads/[name]/sections/[section]:', error);
     return NextResponse.json({ error: 'Failed to list section items' }, { status: 500 });
   }

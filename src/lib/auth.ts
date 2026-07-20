@@ -1,4 +1,4 @@
-// Auth Library — Supabase Auth with backward-compatible Base64 session fallback
+// Auth Library — Supabase Auth
 
 import { createServerClient, createBrowserClient } from './supabase';
 
@@ -9,7 +9,10 @@ export interface User {
   role: string;
 }
 
-// Server-side: get user from Supabase session token
+/**
+ * Server-side: get the authenticated user from the Supabase session,
+ * enriched with name/role from the profiles table.
+ */
 export async function getServerUser(): Promise<User | null> {
   const supabase = createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -30,7 +33,7 @@ export async function getServerUser(): Promise<User | null> {
   };
 }
 
-// Browser-side: sign in
+/** Browser-side: sign in with email and password via Supabase Auth. */
 export async function signIn(email: string, password: string) {
   const supabase = createBrowserClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -38,7 +41,7 @@ export async function signIn(email: string, password: string) {
   return data;
 }
 
-// Browser-side: sign up
+/** Browser-side: create a new account, storing the display name in user metadata. */
 export async function signUp(email: string, password: string, name: string) {
   const supabase = createBrowserClient();
   const { data, error } = await supabase.auth.signUp({
@@ -50,54 +53,40 @@ export async function signUp(email: string, password: string, name: string) {
   return data;
 }
 
-// Browser-side: sign out
+/** Browser-side: sign the current user out. */
 export async function signOut() {
   const supabase = createBrowserClient();
   await supabase.auth.signOut();
 }
 
-// Browser-side: get current session
+/** Browser-side: return the current Supabase session, or null if signed out. */
 export async function getSession() {
   const supabase = createBrowserClient();
   const { data: { session } } = await supabase.auth.getSession();
   return session;
 }
 
-// Validate a raw session token — tries Supabase first, falls back to legacy Base64 format
+/**
+ * Validate a raw session token against Supabase and return the user, or null.
+ * Note: unsigned legacy Base64 tokens are NOT accepted — they were forgeable
+ * (any client could craft an admin session), so only Supabase-verified
+ * tokens are valid.
+ */
 export async function validateSession(token: string): Promise<User | null> {
-  // Try Supabase token validation
   const supabase = createServerClient();
   const { data: { user } } = await supabase.auth.getUser(token);
+  if (!user) return null;
 
-  if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('name, role')
-      .eq('id', user.id)
-      .single();
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('name, role')
+    .eq('id', user.id)
+    .single();
 
-    return {
-      id: user.id,
-      email: user.email || '',
-      name: profile?.name || 'Usuário',
-      role: profile?.role || 'advogado',
-    };
-  }
-
-  // Fallback: try old Base64 session format for migration period
-  try {
-    const payload = JSON.parse(Buffer.from(token, 'base64url').toString('utf-8'));
-    if (payload.exp && payload.exp > Date.now()) {
-      return {
-        id: payload.id,
-        email: payload.email,
-        name: payload.name,
-        role: payload.role || 'admin',
-      };
-    }
-  } catch {
-    /* invalid token */
-  }
-
-  return null;
+  return {
+    id: user.id,
+    email: user.email || '',
+    name: profile?.name || 'Usuário',
+    role: profile?.role || 'advogado',
+  };
 }

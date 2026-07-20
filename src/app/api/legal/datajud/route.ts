@@ -8,14 +8,17 @@
 // POST { processIds: [...] } → bulk sync movements for multiple processes
 // =============================================================================
 
-import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { NextRequest, NextResponse } from 'next/server';
+import { getAuthUser, unauthorized } from '@/lib/api-utils';
+import { createServerClient } from '@/lib/supabase';
 import { searchByCNJ, getMovements, DataJudError } from '@/lib/court/datajud';
 import { isValidCNJ } from '@/lib/court/cnj-utils';
 import type { ProcessMovement } from '@/types/legal';
+import { hasActiveFeature, PLAN_FEATURE_REQUIRED_MESSAGE } from '@/lib/plan-access';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+/** Returns the DataJud API key from the environment, or null when not configured. */
 function requireApiKey(): string | null {
   return process.env.DATAJUD_API_KEY || null;
 }
@@ -34,7 +37,16 @@ function requireApiKey(): string | null {
  * Response 200:
  *   { success: true, data: DataJudProcessInfo, movements: ProcessMovement[] }
  */
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const supabase = createServerClient();
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
+  // Paid-module gate: datajud_integration requires an active Professional+ subscription
+  if (!(await hasActiveFeature(user.id, 'datajud_integration'))) {
+    return NextResponse.json({ error: PLAN_FEATURE_REQUIRED_MESSAGE }, { status: 402 });
+  }
+
   const { searchParams } = new URL(request.url);
   const cnj = searchParams.get('cnj');
 
@@ -128,7 +140,16 @@ export async function GET(request: Request) {
  *     results: SyncResult[]        // per-process breakdown
  *   }
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const supabase = createServerClient();
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
+  // Paid-module gate: datajud_integration requires an active Professional+ subscription
+  if (!(await hasActiveFeature(user.id, 'datajud_integration'))) {
+    return NextResponse.json({ error: PLAN_FEATURE_REQUIRED_MESSAGE }, { status: 402 });
+  }
+
   const apiKey = requireApiKey();
   if (!apiKey) {
     return NextResponse.json(
@@ -183,6 +204,30 @@ export async function POST(request: Request) {
   }
 
   const since = typeof body.since === 'string' ? body.since : undefined;
+
+  // ─── Ownership check ─────────────────────────────────────────────────────
+  // The service-role client bypasses RLS, and processId is caller-controlled:
+  // without this filter any authenticated user who learns another tenant's
+  // process UUID could read/inject movements into that case.
+  const { data: ownedRows, error: ownedError } = await supabase
+    .from('processes')
+    .select('id')
+    .eq('user_id', user.id)
+    .in('id', targets.map((t) => t.processId));
+  if (ownedError) {
+    return NextResponse.json(
+      { error: 'Falha ao validar a titularidade dos processos' },
+      { status: 500 },
+    );
+  }
+  const ownedIds = new Set((ownedRows ?? []).map((r) => r.id));
+  targets = targets.filter((t) => ownedIds.has(t.processId));
+  if (targets.length === 0) {
+    return NextResponse.json(
+      { error: 'Nenhum dos processos informados pertence ao usuário' },
+      { status: 403 },
+    );
+  }
 
   // ─── Process each target ─────────────────────────────────────────────────
 

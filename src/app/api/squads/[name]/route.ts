@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -20,6 +21,7 @@ import {
   type SquadSectionName,
 } from '@/lib/squad-api-utils';
 
+/** Counts listable files in a squad section directory (tasks, workflows, etc.). */
 async function countSectionFiles(
   projectRoot: string,
   squadName: string,
@@ -34,6 +36,7 @@ async function countSectionFiles(
   );
 }
 
+/** Lists sorted agent IDs found in a squad's agents directory. */
 async function listAgentNames(projectRoot: string, squadName: string): Promise<string[]> {
   const agentsDir = resolveSquadSectionDir(projectRoot, squadName, 'agents');
   if (!agentsDir) {
@@ -50,6 +53,7 @@ async function listAgentNames(projectRoot: string, squadName: string): Promise<s
     .sort((a, b) => a.localeCompare(b));
 }
 
+/** Checks whether a file exists on disk. */
 async function fileExists(filePath: string): Promise<boolean> {
   try {
     await fs.access(filePath);
@@ -59,6 +63,7 @@ async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
+/** Narrows an unknown value to a plain object record, or returns undefined. */
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return undefined;
@@ -66,6 +71,7 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value as Record<string, unknown>;
 }
 
+/** Collects possible quality-score values from the various places a squad config may declare them. */
 function extractConfigScoreCandidates(
   config: Record<string, unknown> | null
 ): unknown[] {
@@ -115,6 +121,7 @@ interface RegistryFileData {
   squads?: Record<string, RegistrySquadEntry>;
 }
 
+/** Reads a squad's entry from the squad-registry.yaml file, or null if unavailable. */
 async function readRegistrySquad(
   projectRoot: string,
   squadName: string
@@ -136,6 +143,7 @@ async function readRegistrySquad(
   }
 }
 
+/** Maps a tier key (e.g. orchestrator, tier_1_x) to a numeric display level. */
 function parseTierLevel(key: string): number {
   if (key === 'orchestrator') return 0;
   if (key.match(/tier_0|tier_1_/)) return 1;
@@ -158,6 +166,7 @@ interface AgentEntry {
   specialty?: string;
 }
 
+/** Builds the squad tier list from a squad config, supporting both tier_system and legacy agent-tier formats. */
 function parseTiersFromConfig(config: Record<string, unknown>): SquadTier[] {
   const tiers: SquadTier[] = [];
   const tierSystem = config.tier_system as Record<string, TierSystemEntry> | undefined;
@@ -244,6 +253,7 @@ function parseTiersFromConfig(config: Record<string, unknown>): SquadTier[] {
   return tiers;
 }
 
+/** Extracts squad-to-squad dependency connections from a squad config's dependencies field. */
 function extractDependencies(
   squadName: string,
   config: Record<string, unknown>
@@ -297,6 +307,10 @@ function extractDependencies(
   return connections;
 }
 
+/**
+ * GET /api/squads/[name] — returns a squad's full detail (metadata, counts,
+ * tiers, agents, dependencies) from its squad.yaml manifest and the registry.
+ */
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ name: string }> }
@@ -444,6 +458,7 @@ export async function GET(
 
     return NextResponse.json({ squad });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Error in /api/squads/[name]:', error);
     return NextResponse.json(
       { error: 'Failed to load squad detail' },

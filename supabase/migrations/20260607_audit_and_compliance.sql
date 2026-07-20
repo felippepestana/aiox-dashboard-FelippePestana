@@ -28,6 +28,7 @@ create table if not exists audit_logs (
 alter table audit_logs enable row level security;
 
 -- Admins can read all audit logs; regular users can only read their own
+drop policy if exists "Admins read all audit logs" on audit_logs;
 create policy "Admins read all audit logs"
   on audit_logs
   for select
@@ -39,12 +40,14 @@ create policy "Admins read all audit logs"
     )
   );
 
+drop policy if exists "Users read own audit logs" on audit_logs;
 create policy "Users read own audit logs"
   on audit_logs
   for select
   using (user_id = auth.uid()::text);
 
 -- Inserts are allowed for any authenticated user (via service role in practice)
+drop policy if exists "Authenticated users insert audit logs" on audit_logs;
 create policy "Authenticated users insert audit logs"
   on audit_logs
   for insert
@@ -96,6 +99,7 @@ create table if not exists consent_records (
 alter table consent_records enable row level security;
 
 -- Lawyers and admins can manage consent records
+drop policy if exists "Users manage consent records" on consent_records;
 create policy "Users manage consent records"
   on consent_records
   for all
@@ -119,6 +123,7 @@ create index if not exists idx_consent_records_purpose
   on consent_records (purpose);
 
 -- Keep updated_at in sync (reuses the function created in earlier migrations)
+drop trigger if exists tr_consent_records_updated on consent_records;
 create trigger tr_consent_records_updated
   before update on consent_records
   for each row execute function update_updated_at();

@@ -3,13 +3,26 @@
 // Cache-first for static assets; network-first for API calls.
 // =============================================================================
 
-const CACHE_NAME = 'aiox-legal-v1';
+const CACHE_NAME = 'apex-legal-v1';
 const OFFLINE_URL = '/offline';
 
 // Static assets to cache on install (app shell)
+// Note: authenticated routes (e.g. /legal) must NOT be pre-cached — cached
+// dashboard HTML could be served to logged-out/other users, or a cached
+// login redirect could poison offline navigation. They fall back to /offline.
+const PROTECTED_PREFIXES = [
+  '/legal', '/dental', '/kanban', '/agents', '/monitor',
+  '/github', '/squads', '/terminals', '/settings',
+];
+
+/** Whether the path belongs to an authenticated area that must never be cached. */
+function isProtectedPath(pathname) {
+  return PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
+}
+
 const APP_SHELL = [
   '/',
-  '/legal',
+  '/login',
   '/offline',
   '/manifest.json',
   '/icon-192.png',
@@ -102,7 +115,17 @@ async function cacheFirst(request) {
 async function networkFirst(request) {
   try {
     const response = await fetch(request);
-    if (response.ok) {
+    // Never cache protected-page payloads (RSC data for /legal), authenticated
+    // API data (auth tokens, client/process/billing records — replayable
+    // offline or after logout on a shared browser), or anything no-store.
+    const pathname = new URL(request.url).pathname;
+    const noStore = (response.headers.get('Cache-Control') || '').includes('no-store');
+    // Default-deny: no API response is cached (authenticated data could be
+    // replayed after logout). Allowlist explicitly public APIs here if
+    // offline caching is ever needed.
+    const sensitiveApi = pathname.startsWith('/api/');
+    const skipCache = isProtectedPath(pathname) || sensitiveApi || noStore;
+    if (response.ok && !skipCache) {
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, response.clone());
     }
@@ -120,7 +143,10 @@ async function networkFirst(request) {
 async function networkFirstWithFallback(request) {
   try {
     const response = await fetch(request);
-    if (response.ok) {
+    // Never cache authenticated pages: their HTML (or a login redirect served
+    // for them) must not be replayable from Cache Storage offline/after logout.
+    const isProtected = isProtectedPath(new URL(request.url).pathname);
+    if (response.ok && !isProtected) {
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, response.clone());
     }

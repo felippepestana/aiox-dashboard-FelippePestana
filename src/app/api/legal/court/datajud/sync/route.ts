@@ -13,16 +13,27 @@
 //   503  DATAJUD_API_KEY not configured
 // =============================================================================
 
+import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser, unauthorized, badRequest, serverError } from '@/lib/api-utils';
 import { getMovements, DataJudError } from '@/lib/court/datajud';
 import { isValidCNJ } from '@/lib/court/cnj-utils';
 import { createServerClient } from '@/lib/supabase';
+import { hasActiveFeature, PLAN_FEATURE_REQUIRED_MESSAGE } from '@/lib/plan-access';
 
+/**
+ * POST /api/legal/court/datajud/sync — fetches DataJud movements for a process,
+ * inserts only the new ones into the movements table, and updates last_sync_at.
+ */
 export async function POST(request: NextRequest) {
   // Auth check
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
+
+  // Paid-module gate: datajud_integration requires an active Professional+ subscription
+  if (!(await hasActiveFeature(user.id, 'datajud_integration'))) {
+    return NextResponse.json({ error: PLAN_FEATURE_REQUIRED_MESSAGE }, { status: 402 });
+  }
 
   // Parse body
   let body: Record<string, unknown>;
@@ -122,6 +133,7 @@ export async function POST(request: NextRequest) {
 
     const { error: insertError } = await supabase.from('movements').insert(rows);
     if (insertError) {
+      Sentry.captureMessage(`Failed to insert DataJud movements: ${insertError.message}`, 'error');
       console.error('Failed to insert DataJud movements:', insertError);
       return serverError('Failed to save movements to database');
     }
@@ -152,6 +164,7 @@ export async function POST(request: NextRequest) {
         { status: status >= 400 && status < 600 ? status : 500 },
       );
     }
+    Sentry.captureException(error);
     console.error('DataJud sync error:', error);
     return serverError();
   }

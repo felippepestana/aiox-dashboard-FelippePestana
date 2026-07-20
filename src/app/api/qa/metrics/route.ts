@@ -1,4 +1,5 @@
-/* eslint-disable no-undef */
+ 
+import * as Sentry from '@sentry/nextjs';
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -55,6 +56,7 @@ interface QAMetrics {
 //                              HELPERS
 // ═══════════════════════════════════════════════════════════════════════════════════
 
+/** Resolves the project root path from AIOS_PROJECT_ROOT or relative to cwd. */
 function getProjectRoot(): string {
   if (process.env.AIOS_PROJECT_ROOT) {
     return process.env.AIOS_PROJECT_ROOT;
@@ -62,6 +64,7 @@ function getProjectRoot(): string {
   return path.resolve(process.cwd(), '..', '..');
 }
 
+/** Reads and parses a JSON file, returning the default value if it is missing or invalid. */
 async function loadJsonFile<T>(filePath: string, defaultValue: T): Promise<T> {
   try {
     const content = await fs.readFile(filePath, 'utf-8');
@@ -75,6 +78,10 @@ async function loadJsonFile<T>(filePath: string, defaultValue: T): Promise<T> {
 //                              METRICS COLLECTION
 // ═══════════════════════════════════════════════════════════════════════════════════
 
+/**
+ * Aggregates QA metrics (pass rates, pattern stats, gotchas, daily trend) from
+ * the .aios gotchas and qa-feedback JSON files.
+ */
 async function collectQAMetrics(): Promise<QAMetrics> {
   const projectRoot = getProjectRoot();
   const aiosDir = path.join(projectRoot, '.aios');
@@ -221,11 +228,13 @@ async function collectQAMetrics(): Promise<QAMetrics> {
 //                              ROUTE HANDLERS
 // ═══════════════════════════════════════════════════════════════════════════════════
 
+/** GET /api/qa/metrics — returns aggregated QA metrics collected from the .aios data files. */
 export async function GET() {
   try {
     const metrics = await collectQAMetrics();
     return NextResponse.json(metrics);
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Failed to collect QA metrics:', error);
     return NextResponse.json({ error: 'Failed to collect QA metrics' }, { status: 500 });
   }

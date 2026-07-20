@@ -8,10 +8,22 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      # NEXT_PUBLIC_* must exist at build time (inlined into the browser
+      # bundle); compose interpolates these from the .env file in this dir.
+      args:
+        # Required (:?) — an empty value would be permanently inlined into the
+        # browser bundle and ship a client that cannot reach Supabase
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:?NEXT_PUBLIC_APP_URL is required for the build}
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?NEXT_PUBLIC_SUPABASE_URL is required for the build}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?NEXT_PUBLIC_SUPABASE_ANON_KEY is required for the build}
+        NEXT_PUBLIC_MP_PUBLIC_KEY: ${NEXT_PUBLIC_MP_PUBLIC_KEY:-}
+        NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
     container_name: aiox-web
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      # Localhost only — exposing 0.0.0.0 would let clients skip Nginx and
+      # spoof X-Forwarded-For, bypassing the login/signup rate limits
+      - "127.0.0.1:3000:3000"
     env_file:
       - .env
     environment:
@@ -33,7 +45,7 @@ services:
     working_dir: /app/server
     command: bun run server.ts
     ports:
-      - "4001:4001"
+      - "127.0.0.1:4001:4001"
     env_file:
       - .env
     environment:

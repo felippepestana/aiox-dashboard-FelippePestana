@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   getAuthUser,
@@ -10,6 +11,7 @@ import { getClientById, updateClient, deleteClient } from '@/lib/db/clients';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
+/** GET /api/legal/clients/[id] — fetches a single client owned by the authenticated user. */
 export async function GET(request: NextRequest, { params }: RouteContext) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
@@ -21,11 +23,13 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     if (!client) return notFound('Client not found');
     return NextResponse.json({ client });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Failed to fetch client:', error);
-    return notFound('Client not found');
+    return serverError();
   }
 }
 
+/** PATCH /api/legal/clients/[id] — partially updates a client owned by the authenticated user. */
 export async function PATCH(request: NextRequest, { params }: RouteContext) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
@@ -44,16 +48,19 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     if (!client) return notFound('Client not found');
     return NextResponse.json({ client });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Failed to update client:', error);
     return serverError();
   }
 }
 
 // Keep PUT as an alias for PATCH for backward compatibility
+/** PUT /api/legal/clients/[id] — backward-compatible alias that delegates to PATCH. */
 export async function PUT(request: NextRequest, context: RouteContext) {
   return PATCH(request, context);
 }
 
+/** DELETE /api/legal/clients/[id] — deletes a client owned by the authenticated user. */
 export async function DELETE(request: NextRequest, { params }: RouteContext) {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
@@ -64,6 +71,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
     await deleteClient(user.id, id);
     return NextResponse.json({ success: true });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('Failed to delete client:', error);
     return serverError();
   }

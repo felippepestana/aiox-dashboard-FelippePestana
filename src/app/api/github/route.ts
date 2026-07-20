@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { NextResponse } from 'next/server';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
@@ -25,6 +26,10 @@ interface GitHubPR {
   isDraft: boolean;
 }
 
+/**
+ * GET /api/github — lists open issues, pull requests, and repo info for the
+ * current repository via the authenticated `gh` CLI.
+ */
 export async function GET() {
   try {
     // Check if gh CLI is authenticated
@@ -87,7 +92,8 @@ export async function GET() {
       updatedAt: new Date().toISOString(),
     });
   } catch (error) {
-    // eslint-disable-next-line no-undef
+     
+    Sentry.captureException(error);
     console.error('GitHub API error:', error);
     return NextResponse.json(
       {

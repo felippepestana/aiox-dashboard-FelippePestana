@@ -55,10 +55,14 @@ export interface SaveCredentialInput {
  */
 let _cachedKey: CryptoKey | null = null;
 
+/** Derive (and cache) the AES-256-GCM key from AUTH_SECRET via PBKDF2. */
 async function getDerivedKey(): Promise<CryptoKey> {
   if (_cachedKey) return _cachedKey;
 
-  const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || 'fallback-dev-secret';
+  const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+  if (!secret) {
+    throw new Error('AUTH_SECRET (or NEXTAUTH_SECRET) is required for credential encryption');
+  }
   const encoder = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(
     'raw',
@@ -141,6 +145,10 @@ interface CredentialRow {
   created_at: string;
 }
 
+/**
+ * Map a court_credentials DB row to a CourtCredential, optionally
+ * attaching the decrypted password.
+ */
 function rowToCredential(row: CredentialRow, includePassword?: false): CourtCredential;
 function rowToCredential(row: CredentialRow, password: string): CourtCredential & { password: string };
 function rowToCredential(row: CredentialRow, password?: string | false): CourtCredential {

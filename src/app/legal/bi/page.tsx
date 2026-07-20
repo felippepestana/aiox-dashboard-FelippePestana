@@ -1,5 +1,6 @@
 'use client';
 
+import { PlanGate } from '@/components/legal/PlanGate';
 import { useState, useMemo } from 'react';
 import { LineChart as LineChartIcon, TrendingUp, Briefcase, Users, Clock, DollarSign, CheckCircle, BarChart2 } from 'lucide-react';
 import { useLegalStore } from '@/stores/legal-store';
@@ -31,7 +32,7 @@ const PERIOD_LABELS: Record<Period, string> = {
   year: 'Anual',
 };
 
-export default function BIPage() {
+function BIPageContent() {
   const [period, setPeriod] = useState<Period>('month');
   const { processes, clients, deadlines } = useLegalStore();
   const { transactions, honorarios, getTotalRevenue, getTotalExpenses } = useLegalFinancialStore();
@@ -345,5 +346,14 @@ export default function BIPage() {
         </div>
       )}
     </div>
+  );
+}
+
+/** Entry point gated by subscription plan — the module is Professional+. */
+export default function BIPage() {
+  return (
+    <PlanGate feature="financial_module" fallbackMessage="Os relatórios de BI estão disponíveis a partir do plano Professional.">
+      <BIPageContent />
+    </PlanGate>
   );
 }

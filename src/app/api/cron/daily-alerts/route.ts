@@ -1,9 +1,11 @@
 // =============================================================================
-// Vercel Cron Job — Daily Deadline Alerts
-// Schedule: 0 8 * * * (08:00 UTC every day)
-// Protected by CRON_SECRET environment variable
+// Cron Job — Daily Deadline Alerts
+// Schedule: 0 8 * * * (08:00 UTC every day) — triggered by the VPS crontab
+// (see scripts/deploy.sh), or any scheduler sending the same request.
+// Protected by CRON_SECRET: requires "Authorization: Bearer <CRON_SECRET>".
 // =============================================================================
 
+import * as Sentry from '@sentry/nextjs';
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import {
@@ -12,6 +14,7 @@ import {
   type DeadlineEmailItem,
 } from '@/lib/email-notifications';
 
+/** Returns the whole number of days from today until the given due date (negative if overdue). */
 function daysUntilDue(dueDateIso: string): number {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
@@ -20,19 +23,21 @@ function daysUntilDue(dueDateIso: string): number {
   return Math.round((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 }
 
+/**
+ * GET /api/cron/daily-alerts — Vercel cron endpoint (CRON_SECRET protected) that
+ * finds pending deadlines due within 7 days or overdue and emails an alert digest.
+ */
 export async function GET(request: Request) {
-  // ── Auth: validate CRON_SECRET ───────────────────────────────────────────
+  // ── Auth: Vercel Cron sends `Authorization: Bearer <CRON_SECRET>` ─────────
+  const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const authHeader = request.headers.get('authorization');
-    const providedSecret = authHeader?.replace(/^Bearer\s+/i, '');
-    if (providedSecret !== cronSecret) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const recipientEmail = process.env.NOTIFICATION_EMAIL;
   if (!recipientEmail) {
+    Sentry.captureMessage('[cron/daily-alerts] NOTIFICATION_EMAIL not set. Skipping email.', 'warning');
     console.warn('[cron/daily-alerts] NOTIFICATION_EMAIL not set. Skipping email.');
     return NextResponse.json({
       skipped: true,
@@ -55,12 +60,13 @@ export async function GET(request: Request) {
       .order('due_date', { ascending: true });
 
     if (error) {
+      Sentry.captureMessage(`[cron/daily-alerts] Supabase error: ${error.message}`, 'error');
       console.error('[cron/daily-alerts] Supabase error:', error.message);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     if (!rawDeadlines || rawDeadlines.length === 0) {
-      console.log('[cron/daily-alerts] No upcoming/overdue deadlines. No email sent.');
+      if (process.env.NODE_ENV === 'development') console.log('[cron/daily-alerts] No upcoming/overdue deadlines. No email sent.');
       return NextResponse.json({ sent: false, reason: 'No deadlines require alerts today.' });
     }
 
@@ -77,10 +83,11 @@ export async function GET(request: Request) {
     const result = await sendEmail(template);
 
     if (result.success) {
-      console.log(
+      if (process.env.NODE_ENV === 'development') console.log(
         `[cron/daily-alerts] Alert email sent via ${result.provider} for ${deadlines.length} deadlines.`
       );
     } else {
+      Sentry.captureMessage(`[cron/daily-alerts] Failed to send email: ${result.error}`, 'error');
       console.error('[cron/daily-alerts] Failed to send email:', result.error);
     }
 
@@ -93,6 +100,7 @@ export async function GET(request: Request) {
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    Sentry.captureException(err);
     console.error('[cron/daily-alerts] Unexpected error:', message);
     return NextResponse.json({ error: message }, { status: 500 });
   }

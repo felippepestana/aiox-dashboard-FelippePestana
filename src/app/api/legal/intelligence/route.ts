@@ -9,6 +9,7 @@ import type {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+/** Extracts and parses a JSON block from an AI response, returning the fallback on failure. */
 function parseJSON<T>(text: string, fallback: T): T {
   // Try to extract a JSON block from the AI response
   const jsonMatch = text.match(/```json\s*([\s\S]*?)```/) || text.match(/({[\s\S]*})/);
@@ -28,6 +29,7 @@ function parseJSON<T>(text: string, fallback: T): T {
 
 // ─── Action Handlers ─────────────────────────────────────────────────────────
 
+/** Asks the AI for relevant Brazilian court precedents matching the query and optional filters. */
 async function handleSearchPrecedents(
   query: string,
   filters?: {
@@ -93,6 +95,7 @@ Gere 5 a 8 precedentes realistas e relevantes para a consulta. Use casos e minis
   };
 }
 
+/** Asks the AI for cases similar to the described process, with similarity scores and a recommendation. */
 async function handleSimilarity(
   description: string,
   cases?: string[],
@@ -156,6 +159,7 @@ Retorne 4 a 6 casos similares realistas. O "similarityScore" é de 0 a 100. Iden
   };
 }
 
+/** Builds an AI-generated decision profile for a magistrate (tendencies, notable decisions, strategy tips). */
 async function handleProfileMagistrate(
   judge: string,
   tribunal?: string,
@@ -224,6 +228,7 @@ Use dados realistas baseados no perfil público do magistrado. O "sentimentScore
   return parseJSON<MagistrateProfile>(aiResult.content, fallback);
 }
 
+/** Generates an AI legal-intelligence report (risk score, precedents, similar cases) for a process. */
 async function handleReport(processId: string): Promise<IntelligenceReport> {
   const prompt = `Você é um especialista em inteligência jurídica estratégica.
 
@@ -290,6 +295,10 @@ O "overallRiskScore" é de 0 a 100 (0 = baixo risco/alta chance de êxito, 100 =
 
 // ─── Route Handler ────────────────────────────────────────────────────────────
 
+/**
+ * POST /api/legal/intelligence — dispatches legal-intelligence actions
+ * (search-precedents, similarity, profile-magistrate, report) to their AI handlers.
+ */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -358,9 +367,9 @@ export async function POST(request: Request) {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
 
-    if (message.includes('OPENROUTER_API_KEY')) {
+    if (message.includes('ANTHROPIC_API_KEY')) {
       return NextResponse.json(
-        { error: 'AI not configured', message: 'OpenRouter API key missing from .env' },
+        { error: 'AI not configured', message: 'Anthropic API key missing from .env' },
         { status: 503 },
       );
     }

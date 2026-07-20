@@ -83,3 +83,5 @@ export { ClientSelector } from './ClientSelector';
 export type { ClientSelectorProps, ClientOption } from './ClientSelector';
 export { LegalMessageComposer } from './LegalMessageComposer';
 export type { LegalMessageComposerProps, ComposerMessage, MessageTemplate } from './LegalMessageComposer';
+export { PlanGate } from './PlanGate';
+export { NotificationToast } from './NotificationToast';

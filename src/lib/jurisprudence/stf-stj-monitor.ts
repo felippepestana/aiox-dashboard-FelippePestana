@@ -329,6 +329,9 @@ export class STFSTJMonitor {
   private lastCheckTime: number = 0;
   private useMockData: boolean;
 
+  /**
+   * Create a monitor; uses mock data in development or when STF_API_URL is unset.
+   */
   constructor(config?: Partial<MonitorConfig>) {
     this.config = { ...DEFAULT_MONITOR_CONFIG, ...config };
     this.useMockData = process.env.NODE_ENV === 'development' || !process.env.STF_API_URL;
@@ -694,6 +697,7 @@ export class STFSTJMonitor {
 
   // ─── Mock Implementations ─────────────────────────────────────────────────
 
+  /** Mock STF voting sessions used in development, optionally filtered by type. */
   private mockVotingSessions(type?: STFVotingSession['type']): STFVotingSession[] {
     const sessions: STFVotingSession[] = [
       {
@@ -745,6 +749,7 @@ export class STFSTJMonitor {
     return type ? sessions.filter((s) => s.type === type) : sessions;
   }
 
+  /** Mock informativos used in development, filtered by court and capped at limit. */
   private mockInformativos(court?: 'STF' | 'STJ', limit: number = 5): Informativo[] {
     const informativos: Informativo[] = [
       {
@@ -793,7 +798,7 @@ export class STFSTJMonitor {
       },
     ];
 
-    let filtered = court ? informativos.filter((i) => i.court === court) : informativos;
+    const filtered = court ? informativos.filter((i) => i.court === court) : informativos;
     return filtered.slice(0, limit);
   }
 }

@@ -56,6 +56,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 // ─── File Splitter ──────────────────────────────────────────────────────────
 
+/** Splits an oversized file into chunk descriptors (name, part number, size) for chunked processing. */
 function splitLargeFile(file: File, chunkSizeMB: number = 5): { name: string; partNumber: number; totalParts: number; size: number }[] {
   const chunkSize = chunkSizeMB * 1024 * 1024;
   const totalParts = Math.ceil(file.size / chunkSize);
@@ -71,6 +72,7 @@ function splitLargeFile(file: File, chunkSizeMB: number = 5): { name: string; pa
   return parts;
 }
 
+/** Reads a file as text, or as a truncated base64 data URL with a descriptive header for PDFs. */
 async function readFileAsText(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -94,6 +96,7 @@ async function readFileAsText(file: File): Promise<string> {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
+/** Document analysis page: upload legal files, pick the user's role in the case, run AI analysis and chat about the results. */
 export default function AnalyzePage() {
   const [phase, setPhase] = useState<AnalysisPhase>('upload');
   const [files, setFiles] = useState<File[]>([]);
@@ -244,17 +247,17 @@ export default function AnalyzePage() {
     const fileName = files[0]?.name || 'documento.pdf';
     const poloLabel = selectedPolo === 'autor' ? 'Autor' : selectedPolo === 'reu' ? 'Réu' : 'Terceiro';
     const result: AnalysisResult = {
-      summary: `Documento "${fileName}" recebido para análise sob a perspectiva do ${poloLabel}. A IA está indisponível no momento — configure a OPENROUTER_API_KEY para análise completa com inteligência artificial.`,
+      summary: `Documento "${fileName}" recebido para análise sob a perspectiva do ${poloLabel}. A IA está indisponível no momento — configure a ANTHROPIC_API_KEY para análise completa com inteligência artificial.`,
       docType: 'Documento Jurídico',
       legalArea: 'A determinar',
       complexity: 5,
       entities: [],
       clauses: [],
       strategy: {
-        recommendation: `Configure a chave da API OpenRouter para obter análise estratégica real com IA para o ${poloLabel}.`,
+        recommendation: `Configure a chave da API Anthropic para obter análise estratégica real com IA para o ${poloLabel}.`,
         strengths: [],
         weaknesses: [],
-        nextSteps: ['1. Configure OPENROUTER_API_KEY no arquivo .env', '2. Reenvie o documento para análise com IA'],
+        nextSteps: ['1. Configure ANTHROPIC_API_KEY no arquivo .env', '2. Reenvie o documento para análise com IA'],
         riskLevel: 'medium',
         estimatedSuccessRate: 50,
       },
@@ -326,7 +329,7 @@ export default function AnalyzePage() {
     const assistantMsg: ChatMessage = {
       id: `assistant-${Date.now()}`,
       role: 'assistant',
-      content: `Recebi sua pergunta sobre "${input.slice(0, 50)}...". A IA está indisponível no momento. Configure a OPENROUTER_API_KEY para respostas inteligentes.`,
+      content: `Recebi sua pergunta sobre "${input.slice(0, 50)}...". A IA está indisponível no momento. Configure a ANTHROPIC_API_KEY para respostas inteligentes.`,
       timestamp: new Date().toISOString(),
     };
     setMessages(prev => [...prev, assistantMsg]);
@@ -390,7 +393,7 @@ export default function AnalyzePage() {
     setMessages(prev => [...prev, {
       id: `assistant-file-${Date.now()}`,
       role: 'assistant',
-      content: `Recebi o documento **"${file.name}"** (${(file.size / 1024).toFixed(0)} KB). Configure a OPENROUTER_API_KEY para análise conjunta com IA.`,
+      content: `Recebi o documento **"${file.name}"** (${(file.size / 1024).toFixed(0)} KB). Configure a ANTHROPIC_API_KEY para análise conjunta com IA.`,
       timestamp: new Date().toISOString(),
     }]);
     setIsTyping(false);

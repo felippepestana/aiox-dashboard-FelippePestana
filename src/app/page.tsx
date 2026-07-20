@@ -19,6 +19,7 @@ import {
 
 /* ─────────────────────────────────────── helpers ─────────────────────────── */
 
+/** Hook that reports when the referenced element first enters the viewport, using an IntersectionObserver. */
 function useInView(threshold = 0.15) {
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
@@ -37,6 +38,7 @@ function useInView(threshold = 0.15) {
 
 /* ─────────────────────────────────────── logo mark ──────────────────────── */
 
+/** Renders the APEX gold triangle logo mark as an inline SVG. */
 function ApexLogo({ size = 40 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none" aria-label="APEX Logo">
@@ -55,6 +57,7 @@ function ApexLogo({ size = 40 }: { size?: number }) {
 
 /* ─────────────────────────────────────── nav ─────────────────────────────── */
 
+/** Fixed top navigation bar with anchor links, login CTAs and a mobile menu. */
 function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -159,6 +162,7 @@ function Navbar() {
 
 /* ─────────────────────────────────────── hero ────────────────────────────── */
 
+/** Landing hero section with animated background, headline, tagline and primary CTAs. */
 function Hero() {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
@@ -290,6 +294,7 @@ function Hero() {
 
 /* ─────────────────────────────────────── stats bar ──────────────────────── */
 
+/** Horizontal bar of key product stats that fades in when scrolled into view. */
 function StatsBar() {
   const { ref, inView } = useInView();
   const stats = [
@@ -367,6 +372,7 @@ const FEATURES = [
   },
 ];
 
+/** Grid of product feature cards with scroll-triggered entrance animation. */
 function FeaturesGrid() {
   const { ref, inView } = useInView();
 
@@ -422,6 +428,7 @@ const AI_FEATURES = [
   'Precedentes e análise de tendências',
 ];
 
+/** Section showcasing the legal AI features alongside a mock chat UI frame. */
 function AIShowcase() {
   const { ref, inView } = useInView();
 
@@ -584,6 +591,7 @@ const PLANS = [
     ],
     cta: 'Assinar Agora',
     href: '/login',
+    checkoutPlan: 'professional',
     popular: true,
   },
   {
@@ -599,11 +607,69 @@ const PLANS = [
       'Onboarding personalizado',
     ],
     cta: 'Falar com Vendas',
+    // Consultation-only plan: no checkoutPlan on purpose — the CTA must lead
+    // to a sales conversation, never to a self-serve R$997 checkout.
     href: '/login',
     popular: false,
   },
 ];
 
+/** Call-to-action button for a pricing plan; starts a checkout flow for paid plans or links to login. */
+function PricingCTA({ plan }: { plan: (typeof PLANS)[number] }) {
+  const [loading, setLoading] = useState(false);
+
+  const baseClass = plan.popular
+    ? 'bg-[#D4AF37] text-[#060d1a] hover:bg-[#e0c040] hover:shadow-[0_0_20px_rgba(212,175,55,0.3)]'
+    : 'border border-[rgba(192,192,192,0.2)] text-[#C0C0C0] hover:border-[rgba(212,175,55,0.4)] hover:text-[#D4AF37]';
+
+  if (!plan.checkoutPlan) {
+    return (
+      <Link
+        href={plan.href}
+        className={`block text-center font-semibold py-3 px-6 rounded-xl text-sm transition-all duration-200 ${baseClass}`}
+      >
+        {plan.cta}
+      </Link>
+    );
+  }
+
+  async function handleCheckout() {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/payments/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: plan.checkoutPlan }),
+      });
+      if (res.status === 401) {
+        window.location.href = '/login';
+        return;
+      }
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.initPoint) {
+        window.location.href = '/login';
+        return;
+      }
+      window.location.href = data.initPoint;
+    } catch {
+      window.location.href = '/login';
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <button
+      onClick={handleCheckout}
+      disabled={loading}
+      className={`w-full text-center font-semibold py-3 px-6 rounded-xl text-sm transition-all duration-200 disabled:opacity-50 ${baseClass}`}
+    >
+      {loading ? 'Redirecionando…' : plan.cta}
+    </button>
+  );
+}
+
+/** Pricing section rendering the three subscription plan cards. */
 function Pricing() {
   const { ref, inView } = useInView();
 
@@ -664,16 +730,7 @@ function Pricing() {
                 ))}
               </ul>
 
-              <Link
-                href={plan.href}
-                className={`text-center font-semibold py-3 px-6 rounded-xl text-sm transition-all duration-200 ${
-                  plan.popular
-                    ? 'bg-[#D4AF37] text-[#060d1a] hover:bg-[#e0c040] hover:shadow-[0_0_20px_rgba(212,175,55,0.3)]'
-                    : 'border border-[rgba(192,192,192,0.2)] text-[#C0C0C0] hover:border-[rgba(212,175,55,0.4)] hover:text-[#D4AF37]'
-                }`}
-              >
-                {plan.cta}
-              </Link>
+              <PricingCTA plan={plan} />
             </div>
           ))}
         </div>
@@ -711,6 +768,7 @@ const TESTIMONIALS = [
   },
 ];
 
+/** Testimonials section with customer quote cards. */
 function Testimonials() {
   const { ref, inView } = useInView();
 
@@ -775,6 +833,7 @@ function Testimonials() {
 
 /* ─────────────────────────────────────── CTA section ─────────────────────── */
 
+/** Final call-to-action section prompting visitors to create a free account. */
 function CTASection() {
   const { ref, inView } = useInView();
 
@@ -813,6 +872,7 @@ function CTASection() {
 
 /* ─────────────────────────────────────── footer ─────────────────────────── */
 
+/** Site footer with brand info, link columns and social icons. */
 function Footer() {
   const cols = [
     {
@@ -846,9 +906,9 @@ function Footer() {
       title: 'Legal',
       links: [
         { label: 'Termos de Uso', href: '#' },
-        { label: 'Privacidade', href: '#' },
-        { label: 'LGPD', href: '#' },
-        { label: 'Cookies', href: '#' },
+        { label: 'Política de Privacidade', href: '/privacy' },
+        { label: 'LGPD', href: '/privacy#base-legal' },
+        { label: 'Cookies', href: '/privacy#cookies' },
       ],
     },
   ];
@@ -928,17 +988,41 @@ function Footer() {
 
 /* ─────────────────────────────────────── page ────────────────────────────── */
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "APEX Legal Performance",
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  url: process.env.NEXT_PUBLIC_APP_URL || "https://apex.legal",
+  description:
+    "Plataforma jurídica com inteligência artificial para gestão de processos, prazos, honorários e estratégia para escritórios de advocacia brasileiros.",
+  inLanguage: "pt-BR",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "BRL",
+  },
+};
+
+/** Public marketing landing page composing the hero, features, pricing, testimonials and footer sections. */
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#060d1a] text-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Navbar />
-      <Hero />
-      <StatsBar />
-      <FeaturesGrid />
-      <AIShowcase />
-      <Pricing />
-      <Testimonials />
-      <CTASection />
+      <main>
+        <Hero />
+        <StatsBar />
+        <FeaturesGrid />
+        <AIShowcase />
+        <Pricing />
+        <Testimonials />
+        <CTASection />
+      </main>
       <Footer />
     </div>
   );

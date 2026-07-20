@@ -1,7 +1,22 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { callAI, type TaskType } from '@/lib/ai-router';
+import { getAuthUser, unauthorized } from '@/lib/api-utils';
+import { withRateLimit } from '@/lib/api-rate-limit';
+import { checkAIQuota, AI_QUOTA_EXCEEDED_MESSAGE } from '@/lib/ai-quota';
 
-export async function POST(request: Request) {
+/**
+ * POST /api/ai/analyze — analyzes a legal document with AI from a given party's
+ * perspective and returns a structured analysis (entities, clauses, strategy),
+ * or continues a follow-up chat when chatHistory is provided.
+ */
+export async function POST(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
+  const rateLimitResponse = withRateLimit(request, 'ai');
+  if (rateLimitResponse) return rateLimitResponse;
+
+
   try {
     const body = await request.json();
     const { content, fileName, polo, chatHistory } = body as {
@@ -11,13 +26,50 @@ export async function POST(request: Request) {
       chatHistory?: { role: string; content: string }[];
     };
 
+    if (chatHistory !== undefined) {
+      const validHistory =
+        Array.isArray(chatHistory) &&
+        chatHistory.length > 0 &&
+        chatHistory.every(
+          (message) =>
+            message &&
+            ['user', 'assistant'].includes(message.role) &&
+            typeof message.content === 'string',
+        ) &&
+        // Assistant-only histories become [] after the router drops leading
+        // assistant turns — Anthropic rejects that, after quota was spent
+        chatHistory.some((message) => message?.role === 'user');
+      if (!validHistory) {
+        return NextResponse.json({ error: 'Invalid chatHistory' }, { status: 400 });
+      }
+    } else if (
+      // Type checks matter: a truthy non-string content passes a bare
+      // falsiness check, burns a quota unit, then crashes at content.slice()
+      typeof content !== 'string' || !content ||
+      typeof fileName !== 'string' || !fileName ||
+      !['autor', 'reu', 'terceiro'].includes(polo)
+    ) {
+      return NextResponse.json(
+        { error: 'content, fileName, and polo are required' },
+        { status: 400 }
+      );
+    }
+
+    // Quota is reserved only after input validation — the atomic counter
+    // consumes a unit, and malformed 400 requests must not burn it.
+    const quota = await checkAIQuota(user.id);
+    if (!quota.allowed) {
+      return NextResponse.json({ error: AI_QUOTA_EXCEEDED_MESSAGE }, { status: 402 });
+    }
+
     if (chatHistory) {
       const result = await callAI(
         chatHistory.map((m) => ({
           role: m.role as 'user' | 'assistant',
           content: m.content,
         })),
-        'document_analysis'
+        'document_analysis',
+        { userId: user.id }
       );
 
       return NextResponse.json({
@@ -27,13 +79,6 @@ export async function POST(request: Request) {
         estimatedCost: result.estimatedCost,
         durationMs: result.durationMs,
       });
-    }
-
-    if (!content || !fileName || !polo) {
-      return NextResponse.json(
-        { error: 'content, fileName, and polo are required' },
-        { status: 400 }
-      );
     }
 
     const poloLabel =
@@ -83,7 +128,7 @@ ${content.slice(0, 50000)}`,
         },
       ],
       taskType,
-      { maxTokens: 4096, temperature: 0.2 }
+      { maxTokens: 4096, temperature: 0.2, userId: user.id }
     );
 
     let analysis;
@@ -124,9 +169,9 @@ ${content.slice(0, 50000)}`,
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
 
-    if (message.includes('OPENROUTER_API_KEY')) {
+    if (message.includes('ANTHROPIC_API_KEY')) {
       return NextResponse.json(
-        { error: 'AI not configured', message: 'OpenRouter API key missing' },
+        { error: 'AI not configured', message: 'Anthropic API key missing' },
         { status: 503 }
       );
     }
