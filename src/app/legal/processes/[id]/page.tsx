@@ -35,6 +35,7 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ id: st
   const {
     getProcessById, getClientById, getDeadlinesByProcess,
     getPetitionsByProcess, getMovementsByProcess, updateProcess,
+    hydrateFromApi,
   } = useLegalStore();
 
   const [showStatusMenu, setShowStatusMenu] = useState(false);
@@ -129,14 +130,29 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ id: st
               onClick={async () => {
                 setSyncing(true);
                 try {
-                  const res = await fetch(`/api/legal/court/datajud?cnj=${encodeURIComponent(process.cnj)}`);
-                  if (res.ok) {
-                    const data = await res.json();
-                    if (data.success && data.data?.movements) {
-                      alert(`Sincronizado! ${data.data.movements.length} movimentações encontradas.`);
-                    }
+                  const res = await fetch('/api/legal/court/datajud/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ processId: process.id, cnj: process.cnj }),
+                  });
+                  const data = await res.json().catch(() => ({}));
+                  if (res.ok && data.success) {
+                    alert(
+                      data.synced > 0
+                        ? `Sincronizado! ${data.synced} nova(s) movimentação(ões) importada(s).`
+                        : 'Processo já está atualizado — nenhuma movimentação nova.',
+                    );
+                    hydrateFromApi();
+                  } else if (res.status === 402) {
+                    alert('A integração DataJud requer o plano Professional.');
+                  } else if (res.status === 404) {
+                    alert('Processo não encontrado no DataJud.');
+                  } else {
+                    alert(data.error || 'Falha ao sincronizar com o DataJud.');
                   }
-                } catch { /* ignore */ }
+                } catch {
+                  alert('Falha de rede ao sincronizar com o DataJud.');
+                }
                 setSyncing(false);
               }}
               disabled={syncing}

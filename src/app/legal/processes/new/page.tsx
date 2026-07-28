@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useLegalStore } from '@/stores/legal-store';
 import type { LegalArea, CourtSystem, UrgencyLevel, FeeType } from '@/types/legal';
 import { PageHeader } from '@/components/legal/shared';
+import { hasValidCNJCheckDigit } from '@/lib/court/cnj-utils';
 import { ClientSelector } from '@/components/legal/ClientSelector';
 import type { ClientOption } from '@/components/legal/ClientSelector';
 
@@ -33,7 +34,7 @@ const COURTS: { value: CourtSystem; label: string }[] = [
   { value: 'manual', label: 'Manual' },
 ];
 
-type CnjSearchStatus = 'idle' | 'searching' | 'found' | 'not_found' | 'error';
+type CnjSearchStatus = 'idle' | 'searching' | 'found' | 'not_found' | 'error' | 'invalid_digit';
 
 interface DataJudResult {
   cnj: string;
@@ -147,6 +148,10 @@ export default function NewProcessPage() {
     const cnj = cnjInput.replace(/\D/g, '');
     if (cnj.length < 20) {
       setSearchStatus('error');
+      return;
+    }
+    if (!hasValidCNJCheckDigit(cnjInput)) {
+      setSearchStatus('invalid_digit');
       return;
     }
 
@@ -313,6 +318,12 @@ export default function NewProcessPage() {
           <div className="mt-3 flex items-center gap-2 text-sm text-red-400">
             <AlertCircle className="h-4 w-4" />
             Formato do CNJ incompleto. Use: NNNNNNN-DD.YYYY.J.TR.OOOO
+          </div>
+        )}
+        {searchStatus === 'invalid_digit' && (
+          <div className="mt-3 flex items-center gap-2 text-sm text-red-400">
+            <AlertCircle className="h-4 w-4" />
+            Dígito verificador do CNJ inválido — confira o número digitado.
           </div>
         )}
       </div>
