@@ -278,9 +278,11 @@ export async function POST(request: NextRequest) {
       }
 
       // 4. Insert new movements into Supabase
+      // `title` is NOT NULL in the movements schema — mirror description
       const rows = newMovements.map((m) => ({
         process_id:  target.processId,
         date:        m.date,
+        title:       m.description,
         description: m.description,
         type:        m.type,
         source:      'datajud',
@@ -289,7 +291,9 @@ export async function POST(request: NextRequest) {
 
       const { error: insertError } = await supabase.from('movements').insert(rows);
 
-      if (insertError) {
+      // 23505 = unique violation on the dedup index: a concurrent sync got
+      // there first — treat as already synced rather than as a failure.
+      if (insertError && insertError.code !== '23505') {
         results.push({
           processId: target.processId,
           cnj: target.cnj,
@@ -299,11 +303,19 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      totalSynced += newMovements.length;
+      // 5. Mark the process as linked and record the sync timestamp
+      await supabase
+        .from('processes')
+        .update({ last_sync_at: new Date().toISOString(), datajud_linked: true })
+        .eq('id', target.processId)
+        .eq('user_id', user.id);
+
+      const syncedCount = insertError ? 0 : newMovements.length;
+      totalSynced += syncedCount;
       results.push({
         processId: target.processId,
         cnj: target.cnj,
-        newMovements: newMovements.length,
+        newMovements: syncedCount,
       });
     } catch (error) {
       const msg =

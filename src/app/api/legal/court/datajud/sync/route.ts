@@ -76,6 +76,27 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Ownership check BEFORE any external call or write: the service-role
+  // client bypasses RLS and processId is caller-controlled — without this,
+  // any subscriber could inject movements into another tenant's process.
+  const supabase = createServerClient();
+  const { data: ownedProcess, error: ownedError } = await supabase
+    .from('processes')
+    .select('id')
+    .eq('id', processId)
+    .eq('user_id', user.id)
+    .maybeSingle();
+  if (ownedError) {
+    Sentry.captureException(ownedError);
+    return serverError('Failed to verify process ownership');
+  }
+  if (!ownedProcess) {
+    return NextResponse.json(
+      { error: 'Processo não encontrado ou não pertence ao usuário' },
+      { status: 403 },
+    );
+  }
+
   try {
     // 1. Fetch latest movements from DataJud
     const datajudMovements = await getMovements(
@@ -95,7 +116,6 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Fetch existing movements for deduplication
-    const supabase = createServerClient();
     const { data: existing } = await supabase
       .from('movements')
       .select('type, date')
@@ -132,22 +152,24 @@ export async function POST(request: NextRequest) {
     }));
 
     const { error: insertError } = await supabase.from('movements').insert(rows);
-    if (insertError) {
+    // 23505 = unique violation on the dedup index: a concurrent sync already
+    // inserted these rows — treat as up to date, not as a failure.
+    if (insertError && insertError.code !== '23505') {
       Sentry.captureMessage(`Failed to insert DataJud movements: ${insertError.message}`, 'error');
       console.error('Failed to insert DataJud movements:', insertError);
       return serverError('Failed to save movements to database');
     }
 
-    // 5. Update the process last_sync_at timestamp
+    // 5. Mark the process as linked and record the sync timestamp
     await supabase
       .from('processes')
-      .update({ last_sync_at: new Date().toISOString() })
+      .update({ last_sync_at: new Date().toISOString(), datajud_linked: true })
       .eq('id', processId)
       .eq('user_id', user.id);
 
     return NextResponse.json({
       success: true,
-      synced: newMovements.length,
+      synced: insertError ? 0 : newMovements.length,
       movements: datajudMovements,
     });
   } catch (error) {
