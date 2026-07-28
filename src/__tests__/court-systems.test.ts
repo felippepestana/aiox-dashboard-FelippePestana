@@ -228,17 +228,17 @@ describe('court-systems — getCourtSystemForTribunal', () => {
 
 describe('court-systems — getCourtSystemForCNJ', () => {
   it('TJSP CNJ (8.26) → esaj', () => {
-    expect(getCourtSystemForCNJ('0001234-56.2024.8.26.0100')).toBe('esaj');
+    expect(getCourtSystemForCNJ('0001234-71.2024.8.26.0100')).toBe('esaj');
   });
 
   it('TJRJ CNJ (8.19) → datajud (TJRJ not in esaj/eproc/projudi/pje special lists)', () => {
     // TJRJ is not in any specific list, falls through to datajud
-    const result = getCourtSystemForCNJ('0001234-56.2024.8.19.0100');
+    const result = getCourtSystemForCNJ('0001234-66.2024.8.19.0100');
     expect(['pje', 'datajud']).toContain(result);
   });
 
   it('TRT2 CNJ (5.02) → pje', () => {
-    expect(getCourtSystemForCNJ('0001234-56.2024.5.02.0000')).toBe('pje');
+    expect(getCourtSystemForCNJ('0001234-98.2024.5.02.0000')).toBe('pje');
   });
 
   it('invalid CNJ → datajud (fallback)', () => {
@@ -246,7 +246,7 @@ describe('court-systems — getCourtSystemForCNJ', () => {
   });
 
   it('STF CNJ (1.00) → datajud', () => {
-    expect(getCourtSystemForCNJ('0000001-00.2023.1.00.0000')).toBe('datajud');
+    expect(getCourtSystemForCNJ('0000001-90.2023.1.00.0000')).toBe('datajud');
   });
 });
 
@@ -254,14 +254,14 @@ describe('court-systems — getCourtSystemForCNJ', () => {
 
 describe('court-systems — buildConsultationUrl', () => {
   it('TJSP CNJ builds an esaj URL', () => {
-    const url = buildConsultationUrl('0001234-56.2024.8.26.0100');
+    const url = buildConsultationUrl('0001234-71.2024.8.26.0100');
     expect(url).not.toBeNull();
     expect(url).toContain('esaj');
     expect(url).toContain('tjsp');
   });
 
   it('TRT2 CNJ builds a pje URL', () => {
-    const url = buildConsultationUrl('0001234-56.2024.5.02.0000');
+    const url = buildConsultationUrl('0001234-98.2024.5.02.0000');
     expect(url).not.toBeNull();
     expect(url).toContain('pje');
     expect(url).toContain('trt2');
@@ -274,34 +274,34 @@ describe('court-systems — buildConsultationUrl', () => {
   });
 
   it('manual system returns null', () => {
-    const url = buildConsultationUrl('0001234-56.2024.8.26.0100', 'manual');
+    const url = buildConsultationUrl('0001234-71.2024.8.26.0100', 'manual');
     expect(url).toBeNull();
   });
 
   it('explicit system override is respected — forces esaj for any CNJ', () => {
-    const url = buildConsultationUrl('0001234-56.2024.8.26.0100', 'esaj');
+    const url = buildConsultationUrl('0001234-71.2024.8.26.0100', 'esaj');
     expect(url).toContain('esaj');
   });
 
   it('esaj URL contains the correct path /cpopg/open.do', () => {
-    const url = buildConsultationUrl('0001234-56.2024.8.26.0100', 'esaj');
+    const url = buildConsultationUrl('0001234-71.2024.8.26.0100', 'esaj');
     expect(url).toContain('/cpopg/open.do');
   });
 
   it('pje URL contains /pje/ConsultaPublica/listView.seam', () => {
-    const url = buildConsultationUrl('0001234-56.2024.5.02.0000', 'pje');
+    const url = buildConsultationUrl('0001234-98.2024.5.02.0000', 'pje');
     expect(url).toContain('/pje/ConsultaPublica/listView.seam');
   });
 
   it('datajud URL points to the correct domain', () => {
-    const url = buildConsultationUrl('0001234-56.2024.5.02.0000', 'datajud');
+    const url = buildConsultationUrl('0001234-98.2024.5.02.0000', 'datajud');
     expect(url).toContain('datajud-wiki.cnj.jus.br');
   });
 
   it('eproc URL contains eproc.trf4 for TRF4', () => {
     // Need a CNJ that maps to TRF4 — segment 4 = Justiça Federal segment
     // TRF4 is accessed via eproc — use explicit system override
-    const url = buildConsultationUrl('0001234-56.2024.8.26.0100', 'eproc');
+    const url = buildConsultationUrl('0001234-71.2024.8.26.0100', 'eproc');
     // TJSP doesn't map to TRF4, but we override with eproc
     // URL would still use the tribunal from CNJ (tjsp)
     expect(url).toContain('eproc');
@@ -309,13 +309,13 @@ describe('court-systems — buildConsultationUrl', () => {
 
   it('projudi URL contains the correct path /projudi_consulta/login.do', () => {
     // Use TJPR CNJ — segment 8, code 16 = TJPR
-    const url = buildConsultationUrl('0001234-56.2024.8.16.0100', 'projudi');
+    const url = buildConsultationUrl('0001234-50.2024.8.16.0100', 'projudi');
     expect(url).toContain('projudi');
     expect(url).toContain('/projudi_consulta/login.do');
   });
 
   it('returns a string starting with https for valid systems', () => {
-    const tjspUrl = buildConsultationUrl('0001234-56.2024.8.26.0100');
+    const tjspUrl = buildConsultationUrl('0001234-71.2024.8.26.0100');
     expect(tjspUrl).toMatch(/^https:\/\//);
   });
 });
