@@ -130,6 +130,9 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ id: st
           {process.cnj && (
             <button
               onClick={async () => {
+                // Re-entrancy guard: the disabled prop only lands after the
+                // re-render commits, so a fast double-click could POST twice
+                if (syncing) return;
                 setSyncing(true);
                 setSyncFeedback(null);
                 try {

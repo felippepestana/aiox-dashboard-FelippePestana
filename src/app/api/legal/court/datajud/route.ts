@@ -156,6 +156,15 @@ export async function GET(request: NextRequest) {
     const classeCodigoParam = searchParams.get('classeCodigo');
     const orgaoCodigoParam = searchParams.get('orgaoCodigo');
 
+    // Half-specified pair must not silently fall through to the text-query
+    // mode (with no text filters that would run an unrelated match_all page)
+    if (Boolean(classeCodigoParam) !== Boolean(orgaoCodigoParam)) {
+      return NextResponse.json(
+        { error: 'Forneça classeCodigo e orgaoCodigo juntos para a busca por classe/órgão' },
+        { status: 400 },
+      );
+    }
+
     if (classeCodigoParam && orgaoCodigoParam) {
       const classeCodigo = parseInt(classeCodigoParam, 10);
       const orgaoJulgadorCodigo = parseInt(orgaoCodigoParam, 10);

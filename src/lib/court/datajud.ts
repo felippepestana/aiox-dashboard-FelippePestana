@@ -199,7 +199,11 @@ async function datajudSearchOnce(
  */
 function requireIndexForCNJ(cnj: string): string {
   if (!isValidCNJ(cnj)) {
-    throw new Error(`CNJ inválido: "${cnj}". Formato esperado: NNNNNNN-DD.AAAA.J.TR.OOOO`);
+    // Typed 400 so routes that skip pre-validation still answer client error
+    throw new DataJudError(
+      `CNJ inválido: "${cnj}". Formato esperado: NNNNNNN-DD.AAAA.J.TR.OOOO`,
+      400,
+    );
   }
   const parsed = parseCNJ(cnj)!;
   if (!parsed.datajudIndex) {
@@ -367,7 +371,13 @@ export async function searchByClassAndOrgao(
         ],
       },
     },
-    sort: [{ '@timestamp': { order: 'asc' } }],
+    // numeroProcesso is a unique tiebreaker: sorting by @timestamp alone is
+    // not stable per document, and search_after can skip or repeat hits when
+    // timestamps tie at a page boundary. (_id sorting is disallowed in ES.)
+    sort: [
+      { '@timestamp': { order: 'asc' } },
+      { numeroProcesso: { order: 'asc' } },
+    ],
   };
   if (params.searchAfter && params.searchAfter.length > 0) {
     query.search_after = params.searchAfter;

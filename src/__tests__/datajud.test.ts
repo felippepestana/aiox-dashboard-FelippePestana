@@ -237,7 +237,10 @@ describe('datajud client', () => {
         { match: { 'classe.codigo': 7 } },
         { match: { 'orgaoJulgador.codigo': 100 } },
       ]);
-      expect(body.sort).toEqual([{ '@timestamp': { order: 'asc' } }]);
+      expect(body.sort).toEqual([
+        { '@timestamp': { order: 'asc' } },
+        { numeroProcesso: { order: 'asc' } },
+      ]);
       expect(body.search_after).toBeUndefined();
 
       expect(result.total).toBe(10);

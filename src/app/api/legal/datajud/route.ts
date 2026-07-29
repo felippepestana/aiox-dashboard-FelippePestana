@@ -278,9 +278,29 @@ export async function POST(request: NextRequest) {
 
       const { error: insertError } = await supabase.from('movements').insert(rows);
 
-      // 23505 = unique violation on the dedup index: a concurrent sync got
-      // there first — treat as already synced rather than as a failure.
-      if (insertError && insertError.code !== '23505') {
+      let syncedCount = insertError ? 0 : newMovements.length;
+
+      // 23505 = unique violation on the dedup index: a concurrent sync won
+      // the race for at least one row. The batch insert is atomic, so rows
+      // that were genuinely new rolled back too — re-read what now exists
+      // and retry only the remainder instead of dropping them.
+      if (insertError && insertError.code === '23505') {
+        const { data: nowExisting } = await supabase
+          .from('movements')
+          .select('type, date')
+          .eq('process_id', target.processId)
+          .eq('source', 'datajud');
+        const nowKeys = new Set(
+          (nowExisting || []).map((m) => `${m.type}-${m.date}`),
+        );
+        const remainder = rows.filter((r) => !nowKeys.has(`${r.type}-${r.date}`));
+        if (remainder.length > 0) {
+          const { error: retryError } = await supabase
+            .from('movements')
+            .insert(remainder);
+          syncedCount = retryError ? 0 : remainder.length;
+        }
+      } else if (insertError) {
         results.push({
           processId: target.processId,
           cnj: target.cnj,
@@ -297,7 +317,6 @@ export async function POST(request: NextRequest) {
         .eq('id', target.processId)
         .eq('user_id', user.id);
 
-      const syncedCount = insertError ? 0 : newMovements.length;
       totalSynced += syncedCount;
       results.push({
         processId: target.processId,

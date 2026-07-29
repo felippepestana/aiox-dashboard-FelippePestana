@@ -243,6 +243,9 @@ export class DataJudAdapter implements CourtAdapter {
         );
       }
     } catch (error) {
+      // The key was never validated — do not leave the adapter authenticated
+      this.authenticated = false;
+      this.apiKey = null;
       if (error instanceof CourtAdapterError) throw error;
 
       throw new CourtAdapterError(
@@ -342,8 +345,8 @@ export class DataJudAdapter implements CourtAdapter {
   ): Promise<{ results: CourtSearchResult[]; total: number }> {
     this.ensureAuthenticated();
 
-    await this.enforceRateLimit();
-
+    // Validate the tribunal before the rate-limit wait — an unsupported
+    // alias should fail fast instead of sleeping first.
     const alias = getDatajudAlias(tribunal);
     if (!alias) {
       throw new CourtAdapterError(
@@ -354,6 +357,8 @@ export class DataJudAdapter implements CourtAdapter {
       );
     }
     const index = `api_publica_${alias}`;
+
+    await this.enforceRateLimit();
 
     const response = await this.elasticSearch(index, {
       ...query,

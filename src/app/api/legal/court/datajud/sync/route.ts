@@ -9,6 +9,8 @@
 //   200  { success: true, synced: number, movements: ProcessMovement[] }
 //   400  Missing or invalid parameters
 //   401  Unauthenticated
+//   402  Plan does not include the DataJud integration
+//   403  Process does not belong to the authenticated user
 //   404  Process not found in DataJud
 //   503  DATAJUD_API_KEY not configured
 // =============================================================================
@@ -103,7 +105,17 @@ export async function POST(request: NextRequest) {
       typeof since === 'string' ? since : undefined,
     );
 
+    // Marks the process linked and stamps the sync time — also on successful
+    // no-op syncs (found in DataJud, nothing new to insert).
+    const markLinked = () =>
+      supabase
+        .from('processes')
+        .update({ last_sync_at: new Date().toISOString(), datajud_linked: true })
+        .eq('id', processId)
+        .eq('user_id', user.id);
+
     if (datajudMovements.length === 0) {
+      await markLinked();
       return NextResponse.json({
         success: true,
         synced: 0,
@@ -129,6 +141,7 @@ export async function POST(request: NextRequest) {
     );
 
     if (newMovements.length === 0) {
+      await markLinked();
       return NextResponse.json({
         success: true,
         synced: 0,
@@ -149,24 +162,38 @@ export async function POST(request: NextRequest) {
     }));
 
     const { error: insertError } = await supabase.from('movements').insert(rows);
-    // 23505 = unique violation on the dedup index: a concurrent sync already
-    // inserted these rows — treat as up to date, not as a failure.
-    if (insertError && insertError.code !== '23505') {
+
+    let syncedCount = insertError ? 0 : newMovements.length;
+
+    // 23505 = unique violation on the dedup index: a concurrent sync won the
+    // race for at least one row. The batch insert is atomic, so genuinely new
+    // rows rolled back too — re-read what now exists and retry the remainder.
+    if (insertError && insertError.code === '23505') {
+      const { data: nowExisting } = await supabase
+        .from('movements')
+        .select('type, date')
+        .eq('process_id', processId)
+        .eq('source', 'datajud');
+      const nowKeys = new Set(
+        (nowExisting || []).map((m: { type: string; date: string }) => `${m.type}-${m.date}`),
+      );
+      const remainder = rows.filter((r) => !nowKeys.has(`${r.type}-${r.date}`));
+      if (remainder.length > 0) {
+        const { error: retryError } = await supabase.from('movements').insert(remainder);
+        syncedCount = retryError ? 0 : remainder.length;
+      }
+    } else if (insertError) {
       Sentry.captureMessage(`Failed to insert DataJud movements: ${insertError.message}`, 'error');
       console.error('Failed to insert DataJud movements:', insertError);
       return serverError('Failed to save movements to database');
     }
 
     // 5. Mark the process as linked and record the sync timestamp
-    await supabase
-      .from('processes')
-      .update({ last_sync_at: new Date().toISOString(), datajud_linked: true })
-      .eq('id', processId)
-      .eq('user_id', user.id);
+    await markLinked();
 
     return NextResponse.json({
       success: true,
-      synced: insertError ? 0 : newMovements.length,
+      synced: syncedCount,
       movements: datajudMovements,
     });
   } catch (error) {
