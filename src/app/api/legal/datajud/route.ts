@@ -228,6 +228,15 @@ export async function POST(request: NextRequest) {
   const results: SyncResult[] = [];
   let totalSynced = 0;
 
+  // Marks a process linked and stamps the sync time — also used by
+  // successful no-op syncs (found in DataJud, nothing new to insert).
+  const markLinked = (processId: string) =>
+    supabase
+      .from('processes')
+      .update({ last_sync_at: new Date().toISOString(), datajud_linked: true })
+      .eq('id', processId)
+      .eq('user_id', user.id);
+
   for (const target of targets) {
     try {
       // 1. Fetch movements from DataJud
@@ -239,6 +248,7 @@ export async function POST(request: NextRequest) {
       );
 
       if (datajudMovements.length === 0) {
+        await markLinked(target.processId);
         results.push({ processId: target.processId, cnj: target.cnj, newMovements: 0 });
         continue;
       }
@@ -260,6 +270,7 @@ export async function POST(request: NextRequest) {
       );
 
       if (newMovements.length === 0) {
+        await markLinked(target.processId);
         results.push({ processId: target.processId, cnj: target.cnj, newMovements: 0 });
         continue;
       }
@@ -311,11 +322,7 @@ export async function POST(request: NextRequest) {
       }
 
       // 5. Mark the process as linked and record the sync timestamp
-      await supabase
-        .from('processes')
-        .update({ last_sync_at: new Date().toISOString(), datajud_linked: true })
-        .eq('id', target.processId)
-        .eq('user_id', user.id);
+      await markLinked(target.processId);
 
       totalSynced += syncedCount;
       results.push({
