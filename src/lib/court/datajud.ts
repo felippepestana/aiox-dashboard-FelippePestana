@@ -363,6 +363,9 @@ export async function searchByClassAndOrgao(
 
   const query: Record<string, unknown> = {
     size,
+    // Without this, ES caps hits.total at 10k with relation 'gte' and the
+    // returned `total` would silently under-report large result sets.
+    track_total_hits: true,
     query: {
       bool: {
         must: [

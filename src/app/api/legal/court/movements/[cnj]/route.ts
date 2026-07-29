@@ -1,4 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getAuthUser, unauthorized } from '@/lib/api-utils';
+import { hasActiveFeature, PLAN_FEATURE_REQUIRED_MESSAGE } from '@/lib/plan-access';
 import { createCourtAdapter, inferSystemFromTribunal } from '@/lib/court/court-factory';
 import { CourtAdapterError, isValidCNJ, parseCNJ } from '@/lib/court/court-adapter';
 import type { CourtSystem } from '@/types/legal';
@@ -22,13 +24,22 @@ import type { CourtSystem } from '@/types/legal';
  * - 500: Internal server error
  */
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ cnj: string }> },
 ) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
   const { cnj } = await params;
   const { searchParams } = new URL(request.url);
   const since = searchParams.get('since') || undefined;
   const system = searchParams.get('system') as CourtSystem | null;
+
+  // DataJud is the default backend when no system is given — gate both cases
+  if ((!system || system === 'datajud') &&
+      !(await hasActiveFeature(user.id, 'datajud_integration'))) {
+    return NextResponse.json({ error: PLAN_FEATURE_REQUIRED_MESSAGE }, { status: 402 });
+  }
 
   // Validate CNJ
   if (!cnj) {

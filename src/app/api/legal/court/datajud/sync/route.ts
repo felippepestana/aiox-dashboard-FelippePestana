@@ -180,7 +180,15 @@ export async function POST(request: NextRequest) {
       const remainder = rows.filter((r) => !nowKeys.has(`${r.type}-${r.date}`));
       if (remainder.length > 0) {
         const { error: retryError } = await supabase.from('movements').insert(remainder);
-        syncedCount = retryError ? 0 : remainder.length;
+        if (retryError) {
+          // Rows genuinely new are still missing — this is a failed sync, not
+          // an up-to-date process; do not mark it linked.
+          Sentry.captureMessage(
+            `DataJud dedup retry failed: ${retryError.message}`, 'error',
+          );
+          return serverError('Failed to save movements to database');
+        }
+        syncedCount = remainder.length;
       }
     } else if (insertError) {
       Sentry.captureMessage(`Failed to insert DataJud movements: ${insertError.message}`, 'error');

@@ -309,7 +309,18 @@ export async function POST(request: NextRequest) {
           const { error: retryError } = await supabase
             .from('movements')
             .insert(remainder);
-          syncedCount = retryError ? 0 : remainder.length;
+          if (retryError) {
+            // Genuinely new rows are still missing — report this target as a
+            // failed sync instead of stamping it linked/up to date.
+            results.push({
+              processId: target.processId,
+              cnj: target.cnj,
+              newMovements: 0,
+              error: retryError.message,
+            });
+            continue;
+          }
+          syncedCount = remainder.length;
         }
       } else if (insertError) {
         results.push({
