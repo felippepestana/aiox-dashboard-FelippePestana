@@ -16,7 +16,7 @@
 // =============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase, createServerClient } from '@/lib/supabase';
 import { getAuthUser, unauthorized } from '@/lib/api-utils';
 import { hasActiveFeature, PLAN_FEATURE_REQUIRED_MESSAGE } from '@/lib/plan-access';
 import { isValidCNJ, getTribunalFromCNJ } from '@/lib/court/cnj-utils';
@@ -268,10 +268,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: PLAN_FEATURE_REQUIRED_MESSAGE }, { status: 402 });
     }
 
-    // Ownership check: processId is caller-controlled and the client below
-    // bypasses RLS — without this any signed-in user could inject movements
-    // into another tenant's process by UUID.
-    const { data: ownedProcess, error: ownedError } = await supabase
+    // Ownership check: processId is caller-controlled and the service-role
+    // client bypasses RLS — without this any signed-in user could inject
+    // movements into another tenant's process by UUID. The default anon-key
+    // client carries no user JWT, so RLS would blind it even to the caller's
+    // own rows — the sync path must use the service-role client throughout.
+    const db = createServerClient();
+    const { data: ownedProcess, error: ownedError } = await db
       .from('processes')
       .select('id')
       .eq('id', processId)
@@ -313,7 +316,7 @@ export async function POST(request: NextRequest) {
       let newMovementsCount = 0;
       if (movements.length > 0) {
         // Load existing movement keys for this process
-        const { data: existing } = await supabase
+        const { data: existing } = await db
           .from('movements')
           .select('type, date')
           .eq('process_id', processId);
@@ -338,7 +341,7 @@ export async function POST(request: NextRequest) {
             is_read: false,
           }));
 
-          const { error: insertError } = await supabase.from('movements').insert(rows);
+          const { error: insertError } = await db.from('movements').insert(rows);
           // 23505 = concurrent sync already inserted these rows
           if (insertError && insertError.code !== '23505') {
             return jsonError(`Falha ao salvar movimentações: ${insertError.message}`, 500);

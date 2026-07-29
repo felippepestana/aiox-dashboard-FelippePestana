@@ -8,6 +8,7 @@
 // POST { processIds: [...] } → bulk sync movements for multiple processes
 // =============================================================================
 
+import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser, unauthorized } from '@/lib/api-utils';
 import { createServerClient } from '@/lib/supabase';
@@ -229,13 +230,22 @@ export async function POST(request: NextRequest) {
   let totalSynced = 0;
 
   // Marks a process linked and stamps the sync time — also used by
-  // successful no-op syncs (found in DataJud, nothing new to insert).
-  const markLinked = (processId: string) =>
-    supabase
+  // successful no-op syncs (found in DataJud, nothing new to insert). A
+  // failure is reported to Sentry but does not fail the target: movements
+  // are already persisted and the stamp self-heals on the next sync.
+  const markLinked = async (processId: string) => {
+    const { error: linkError } = await supabase
       .from('processes')
       .update({ last_sync_at: new Date().toISOString(), datajud_linked: true })
       .eq('id', processId)
       .eq('user_id', user.id);
+    if (linkError) {
+      Sentry.captureMessage(
+        `Failed to stamp datajud_linked for process ${processId}: ${linkError.message}`,
+        'warning',
+      );
+    }
+  };
 
   for (const target of targets) {
     try {

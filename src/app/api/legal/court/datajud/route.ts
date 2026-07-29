@@ -166,14 +166,16 @@ export async function GET(request: NextRequest) {
     }
 
     if (classeCodigoParam && orgaoCodigoParam) {
-      const classeCodigo = parseInt(classeCodigoParam, 10);
-      const orgaoJulgadorCodigo = parseInt(orgaoCodigoParam, 10);
-      if (!Number.isInteger(classeCodigo) || !Number.isInteger(orgaoJulgadorCodigo)) {
+      // Strict digits-only check: parseInt would truncate '123abc'/'45.6'
+      // into a valid-looking (but unintended) code instead of a 400.
+      if (!/^\d+$/.test(classeCodigoParam) || !/^\d+$/.test(orgaoCodigoParam)) {
         return NextResponse.json(
           { error: 'classeCodigo e orgaoCodigo devem ser números inteiros' },
           { status: 400 },
         );
       }
+      const classeCodigo = parseInt(classeCodigoParam, 10);
+      const orgaoJulgadorCodigo = parseInt(orgaoCodigoParam, 10);
 
       let searchAfter: Array<number | string> | undefined;
       const searchAfterParam = searchParams.get('searchAfter');

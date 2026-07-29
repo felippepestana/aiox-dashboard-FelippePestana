@@ -106,13 +106,22 @@ export async function POST(request: NextRequest) {
     );
 
     // Marks the process linked and stamps the sync time — also on successful
-    // no-op syncs (found in DataJud, nothing new to insert).
-    const markLinked = () =>
-      supabase
+    // no-op syncs (found in DataJud, nothing new to insert). A failure here is
+    // reported to Sentry but does not fail the request: the movements are
+    // already persisted, and the stamp self-heals on the next sync.
+    const markLinked = async () => {
+      const { error: linkError } = await supabase
         .from('processes')
         .update({ last_sync_at: new Date().toISOString(), datajud_linked: true })
         .eq('id', processId)
         .eq('user_id', user.id);
+      if (linkError) {
+        Sentry.captureMessage(
+          `Failed to stamp datajud_linked for process ${processId}: ${linkError.message}`,
+          'warning',
+        );
+      }
+    };
 
     if (datajudMovements.length === 0) {
       await markLinked();
