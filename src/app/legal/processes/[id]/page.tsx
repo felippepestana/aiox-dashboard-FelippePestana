@@ -40,6 +40,8 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ id: st
 
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [syncFeedback, setSyncFeedback] =
+    useState<{ kind: 'success' | 'error'; text: string } | null>(null);
   const [showAddDeadline, setShowAddDeadline] = useState(false);
   const [showAddMovement, setShowAddMovement] = useState(false);
   const [dlForm, setDlForm] = useState({ title: '', type: 'judicial' as DeadlineType, dueDate: '' });
@@ -129,6 +131,7 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ id: st
             <button
               onClick={async () => {
                 setSyncing(true);
+                setSyncFeedback(null);
                 try {
                   const res = await fetch('/api/legal/court/datajud/sync', {
                     method: 'POST',
@@ -137,21 +140,22 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ id: st
                   });
                   const data = await res.json().catch(() => ({}));
                   if (res.ok && data.success) {
-                    alert(
-                      data.synced > 0
+                    setSyncFeedback({
+                      kind: 'success',
+                      text: data.synced > 0
                         ? `Sincronizado! ${data.synced} nova(s) movimentação(ões) importada(s).`
                         : 'Processo já está atualizado — nenhuma movimentação nova.',
-                    );
+                    });
                     hydrateFromApi();
                   } else if (res.status === 402) {
-                    alert('A integração DataJud requer o plano Professional.');
+                    setSyncFeedback({ kind: 'error', text: 'A integração DataJud requer o plano Professional.' });
                   } else if (res.status === 404) {
-                    alert('Processo não encontrado no DataJud.');
+                    setSyncFeedback({ kind: 'error', text: 'Processo não encontrado no DataJud.' });
                   } else {
-                    alert(data.error || 'Falha ao sincronizar com o DataJud.');
+                    setSyncFeedback({ kind: 'error', text: data.error || 'Falha ao sincronizar com o DataJud.' });
                   }
                 } catch {
-                  alert('Falha de rede ao sincronizar com o DataJud.');
+                  setSyncFeedback({ kind: 'error', text: 'Falha de rede ao sincronizar com o DataJud.' });
                 }
                 setSyncing(false);
               }}
@@ -166,6 +170,25 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ id: st
         </div>
         }
       />
+
+      {syncFeedback && (
+        <div
+          className={`flex items-center justify-between gap-3 rounded-lg border p-3 text-sm ${
+            syncFeedback.kind === 'success'
+              ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+              : 'border-red-500/20 bg-red-500/10 text-red-400'
+          }`}
+        >
+          <span>{syncFeedback.text}</span>
+          <button
+            onClick={() => setSyncFeedback(null)}
+            className="text-xs text-[#6b7a8d] hover:text-white transition-colors"
+            aria-label="Fechar aviso de sincronização"
+          >
+            Fechar
+          </button>
+        </div>
+      )}
 
       {/* Info Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

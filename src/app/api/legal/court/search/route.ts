@@ -83,7 +83,7 @@ export async function GET(request: Request) {
         await datajud.authenticate({
           system: 'datajud',
           username: 'api-user',
-          apiKey: process.env.DATAJUD_API_KEY || 'public-key',
+          apiKey: process.env.DATAJUD_API_KEY,
         });
         result = await datajud.searchProcess(cnj);
       } catch {

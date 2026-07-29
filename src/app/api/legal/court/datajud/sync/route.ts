@@ -16,7 +16,7 @@
 import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser, unauthorized, badRequest, serverError } from '@/lib/api-utils';
-import { getMovements, DataJudError } from '@/lib/court/datajud';
+import { getMovements, getDatajudApiKey, DATAJUD_NOT_CONFIGURED_MESSAGE, DataJudError } from '@/lib/court/datajud';
 import { isValidCNJ } from '@/lib/court/cnj-utils';
 import { createServerClient } from '@/lib/supabase';
 import { hasActiveFeature, PLAN_FEATURE_REQUIRED_MESSAGE } from '@/lib/plan-access';
@@ -65,13 +65,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const apiKey = process.env.DATAJUD_API_KEY;
+  const apiKey = getDatajudApiKey();
   if (!apiKey) {
     return NextResponse.json(
-      {
-        error: 'DATAJUD_API_KEY not configured',
-        message: 'The DataJud API key is not set on the server.',
-      },
+      { error: 'DATAJUD_API_KEY not configured', message: DATAJUD_NOT_CONFIGURED_MESSAGE },
       { status: 503 },
     );
   }

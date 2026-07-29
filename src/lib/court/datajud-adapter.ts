@@ -40,6 +40,7 @@ import {
 } from './court-adapter';
 
 import { isValidCNJ, parseCNJ } from './cnj-utils';
+import { DATAJUD_NOT_CONFIGURED_MESSAGE } from './datajud';
 import { getDatajudAlias } from './tribunal-map';
 
 // ─── DataJud Configuration ──────────────────────────────────────────────────
@@ -206,7 +207,7 @@ export class DataJudAdapter implements CourtAdapter {
 
     if (!credentials.apiKey) {
       throw new CourtAdapterError(
-        'DATAJUD_API_KEY não configurada — obtenha uma chave em https://datajud-wiki.cnj.jus.br/',
+        DATAJUD_NOT_CONFIGURED_MESSAGE,
         'datajud',
         'NOT_CONFIGURED',
         503,

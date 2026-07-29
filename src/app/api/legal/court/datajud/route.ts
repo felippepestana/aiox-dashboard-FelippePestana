@@ -35,6 +35,8 @@ import {
   searchByCNJ,
   getMovements,
   searchByClassAndOrgao,
+  getDatajudApiKey,
+  DATAJUD_NOT_CONFIGURED_MESSAGE,
   DataJudError,
 } from '@/lib/court/datajud';
 import { isValidCNJ } from '@/lib/court/cnj-utils';
@@ -87,13 +89,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const apiKey = process.env.DATAJUD_API_KEY;
+    const apiKey = getDatajudApiKey();
     if (!apiKey) {
       return NextResponse.json(
-        {
-          error: 'DATAJUD_API_KEY not configured',
-          message: 'The DataJud API key is not set on the server. Configure DATAJUD_API_KEY in your environment.',
-        },
+        { error: 'DATAJUD_API_KEY not configured', message: DATAJUD_NOT_CONFIGURED_MESSAGE },
         { status: 503 },
       );
     }
@@ -145,13 +144,10 @@ export async function GET(request: NextRequest) {
   // ─── Mode 2: Advanced tribunal query ─────────────────────────────────────
 
   if (tribunal) {
-    const apiKey = process.env.DATAJUD_API_KEY;
+    const apiKey = getDatajudApiKey();
     if (!apiKey) {
       return NextResponse.json(
-        {
-          error: 'DATAJUD_API_KEY not configured',
-          message: 'The DataJud API key is not set on the server. Configure DATAJUD_API_KEY in your environment.',
-        },
+        { error: 'DATAJUD_API_KEY not configured', message: DATAJUD_NOT_CONFIGURED_MESSAGE },
         { status: 503 },
       );
     }

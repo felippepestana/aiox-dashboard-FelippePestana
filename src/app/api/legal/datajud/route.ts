@@ -11,17 +11,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser, unauthorized } from '@/lib/api-utils';
 import { createServerClient } from '@/lib/supabase';
-import { searchByCNJ, getMovements, DataJudError } from '@/lib/court/datajud';
+import { searchByCNJ, getMovements, getDatajudApiKey, DATAJUD_NOT_CONFIGURED_MESSAGE, DataJudError } from '@/lib/court/datajud';
 import { isValidCNJ } from '@/lib/court/cnj-utils';
 import type { ProcessMovement } from '@/types/legal';
 import { hasActiveFeature, PLAN_FEATURE_REQUIRED_MESSAGE } from '@/lib/plan-access';
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/** Returns the DataJud API key from the environment, or null when not configured. */
-function requireApiKey(): string | null {
-  return process.env.DATAJUD_API_KEY || null;
-}
 
 // ─── GET — search for a process by CNJ ───────────────────────────────────────
 
@@ -67,12 +60,9 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const apiKey = requireApiKey();
+  const apiKey = getDatajudApiKey();
   if (!apiKey) {
-    return NextResponse.json(
-      { error: 'DATAJUD_API_KEY não configurada no servidor' },
-      { status: 503 },
-    );
+    return NextResponse.json({ error: DATAJUD_NOT_CONFIGURED_MESSAGE }, { status: 503 });
   }
 
   try {
@@ -150,12 +140,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: PLAN_FEATURE_REQUIRED_MESSAGE }, { status: 402 });
   }
 
-  const apiKey = requireApiKey();
+  const apiKey = getDatajudApiKey();
   if (!apiKey) {
-    return NextResponse.json(
-      { error: 'DATAJUD_API_KEY não configurada no servidor' },
-      { status: 503 },
-    );
+    return NextResponse.json({ error: DATAJUD_NOT_CONFIGURED_MESSAGE }, { status: 503 });
   }
 
   let body: Record<string, unknown>;

@@ -211,6 +211,17 @@ function requireIndexForCNJ(cnj: string): string {
   return parsed.datajudIndex;
 }
 
+// ─── API key helpers ──────────────────────────────────────────────────────────
+
+/** Shared user-facing message for a missing DataJud API key (503 responses). */
+export const DATAJUD_NOT_CONFIGURED_MESSAGE =
+  'DATAJUD_API_KEY não configurada no servidor — obtenha uma chave em https://datajud-wiki.cnj.jus.br/';
+
+/** Returns the DataJud API key from the environment, or null when not set. */
+export function getDatajudApiKey(): string | null {
+  return process.env.DATAJUD_API_KEY || null;
+}
+
 // ─── Custom error ─────────────────────────────────────────────────────────────
 
 export class DataJudError extends Error {
