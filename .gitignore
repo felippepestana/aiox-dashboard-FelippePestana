@@ -48,3 +48,9 @@ uploads/
 .open-next
 cloudflare-env.d.ts
 .wrangler
+
+# Claude Code local development
+.agents/
+.claude/
+skills-lock.json
+.unlazy-hook-state.json

@@ -15,8 +15,10 @@
 // GET  ?action=test-credential&credentialId=xxx → test credential
 // =============================================================================
 
-import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { NextRequest, NextResponse } from 'next/server';
+import { supabase, createServerClient } from '@/lib/supabase';
+import { getAuthUser, unauthorized } from '@/lib/api-utils';
+import { hasActiveFeature, PLAN_FEATURE_REQUIRED_MESSAGE } from '@/lib/plan-access';
 import { isValidCNJ, getTribunalFromCNJ } from '@/lib/court/cnj-utils';
 import {
   getCourtSystemForCNJ,
@@ -66,7 +68,10 @@ function jsonOk(data: unknown) {
  *    ?action=systems
  *    Returns: { success, data: CourtSystemDescriptor[] }
  */
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
 
@@ -123,6 +128,11 @@ export async function GET(request: Request) {
   const tribunal = getTribunalFromCNJ(cnj) ?? 'DESCONHECIDO';
   const system = systemParam ?? getCourtSystemForCNJ(cnj);
   const consultationUrl = buildConsultationUrl(cnj, system);
+
+  // Paid-module gate for the DataJud-backed search
+  if (system === 'datajud' && !(await hasActiveFeature(user.id, 'datajud_integration'))) {
+    return NextResponse.json({ error: PLAN_FEATURE_REQUIRED_MESSAGE }, { status: 402 });
+  }
 
   try {
     const adapter = createCourtAdapter(system);
@@ -196,7 +206,10 @@ export async function GET(request: Request) {
  *   Returns: { success, data: CourtCredential }
  *   Encrypts and saves the credential to Supabase.
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();
@@ -251,6 +264,29 @@ export async function POST(request: Request) {
     const tribunal = getTribunalFromCNJ(cnj) ?? 'DESCONHECIDO';
     const system = systemParam ?? getCourtSystemForCNJ(cnj);
 
+    if (system === 'datajud' && !(await hasActiveFeature(user.id, 'datajud_integration'))) {
+      return NextResponse.json({ error: PLAN_FEATURE_REQUIRED_MESSAGE }, { status: 402 });
+    }
+
+    // Ownership check: processId is caller-controlled and the service-role
+    // client bypasses RLS — without this any signed-in user could inject
+    // movements into another tenant's process by UUID. The default anon-key
+    // client carries no user JWT, so RLS would blind it even to the caller's
+    // own rows — the sync path must use the service-role client throughout.
+    const db = createServerClient();
+    const { data: ownedProcess, error: ownedError } = await db
+      .from('processes')
+      .select('id')
+      .eq('id', processId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (ownedError) {
+      return jsonError('Falha ao validar a titularidade do processo', 500);
+    }
+    if (!ownedProcess) {
+      return jsonError('Processo não encontrado ou não pertence ao usuário', 403);
+    }
+
     try {
       const adapter = createCourtAdapter(system);
 
@@ -280,7 +316,7 @@ export async function POST(request: Request) {
       let newMovementsCount = 0;
       if (movements.length > 0) {
         // Load existing movement keys for this process
-        const { data: existing } = await supabase
+        const { data: existing } = await db
           .from('movements')
           .select('type, date')
           .eq('process_id', processId);
@@ -294,17 +330,23 @@ export async function POST(request: Request) {
         );
 
         if (newMovements.length > 0) {
+          // `title` is NOT NULL in the movements schema — mirror description
           const rows = newMovements.map((m) => ({
             process_id: processId,
             date: m.date,
+            title: m.description,
             description: m.description,
             type: m.type,
             source: system,
             is_read: false,
           }));
 
-          await supabase.from('movements').insert(rows);
-          newMovementsCount = newMovements.length;
+          const { error: insertError } = await db.from('movements').insert(rows);
+          // 23505 = concurrent sync already inserted these rows
+          if (insertError && insertError.code !== '23505') {
+            return jsonError(`Falha ao salvar movimentações: ${insertError.message}`, 500);
+          }
+          newMovementsCount = insertError ? 0 : newMovements.length;
         }
       }
 
@@ -333,7 +375,10 @@ export async function POST(request: Request) {
  *
  * Permanently removes a saved court credential.
  */
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
   const { searchParams } = new URL(request.url);
   const credentialId = searchParams.get('credentialId');
 

@@ -8,20 +8,14 @@
 // POST { processIds: [...] } → bulk sync movements for multiple processes
 // =============================================================================
 
+import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser, unauthorized } from '@/lib/api-utils';
 import { createServerClient } from '@/lib/supabase';
-import { searchByCNJ, getMovements, DataJudError } from '@/lib/court/datajud';
+import { searchByCNJ, getMovements, getDatajudApiKey, DATAJUD_NOT_CONFIGURED_MESSAGE, DataJudError } from '@/lib/court/datajud';
 import { isValidCNJ } from '@/lib/court/cnj-utils';
 import type { ProcessMovement } from '@/types/legal';
 import { hasActiveFeature, PLAN_FEATURE_REQUIRED_MESSAGE } from '@/lib/plan-access';
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/** Returns the DataJud API key from the environment, or null when not configured. */
-function requireApiKey(): string | null {
-  return process.env.DATAJUD_API_KEY || null;
-}
 
 // ─── GET — search for a process by CNJ ───────────────────────────────────────
 
@@ -67,12 +61,9 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const apiKey = requireApiKey();
+  const apiKey = getDatajudApiKey();
   if (!apiKey) {
-    return NextResponse.json(
-      { error: 'DATAJUD_API_KEY não configurada no servidor' },
-      { status: 503 },
-    );
+    return NextResponse.json({ error: DATAJUD_NOT_CONFIGURED_MESSAGE }, { status: 503 });
   }
 
   try {
@@ -150,12 +141,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: PLAN_FEATURE_REQUIRED_MESSAGE }, { status: 402 });
   }
 
-  const apiKey = requireApiKey();
+  const apiKey = getDatajudApiKey();
   if (!apiKey) {
-    return NextResponse.json(
-      { error: 'DATAJUD_API_KEY não configurada no servidor' },
-      { status: 503 },
-    );
+    return NextResponse.json({ error: DATAJUD_NOT_CONFIGURED_MESSAGE }, { status: 503 });
   }
 
   let body: Record<string, unknown>;
@@ -241,6 +229,24 @@ export async function POST(request: NextRequest) {
   const results: SyncResult[] = [];
   let totalSynced = 0;
 
+  // Marks a process linked and stamps the sync time — also used by
+  // successful no-op syncs (found in DataJud, nothing new to insert). A
+  // failure is reported to Sentry but does not fail the target: movements
+  // are already persisted and the stamp self-heals on the next sync.
+  const markLinked = async (processId: string) => {
+    const { error: linkError } = await supabase
+      .from('processes')
+      .update({ last_sync_at: new Date().toISOString(), datajud_linked: true })
+      .eq('id', processId)
+      .eq('user_id', user.id);
+    if (linkError) {
+      Sentry.captureMessage(
+        `Failed to stamp datajud_linked for process ${processId}: ${linkError.message}`,
+        'warning',
+      );
+    }
+  };
+
   for (const target of targets) {
     try {
       // 1. Fetch movements from DataJud
@@ -252,6 +258,7 @@ export async function POST(request: NextRequest) {
       );
 
       if (datajudMovements.length === 0) {
+        await markLinked(target.processId);
         results.push({ processId: target.processId, cnj: target.cnj, newMovements: 0 });
         continue;
       }
@@ -273,14 +280,17 @@ export async function POST(request: NextRequest) {
       );
 
       if (newMovements.length === 0) {
+        await markLinked(target.processId);
         results.push({ processId: target.processId, cnj: target.cnj, newMovements: 0 });
         continue;
       }
 
       // 4. Insert new movements into Supabase
+      // `title` is NOT NULL in the movements schema — mirror description
       const rows = newMovements.map((m) => ({
         process_id:  target.processId,
         date:        m.date,
+        title:       m.description,
         description: m.description,
         type:        m.type,
         source:      'datajud',
@@ -289,7 +299,40 @@ export async function POST(request: NextRequest) {
 
       const { error: insertError } = await supabase.from('movements').insert(rows);
 
-      if (insertError) {
+      let syncedCount = insertError ? 0 : newMovements.length;
+
+      // 23505 = unique violation on the dedup index: a concurrent sync won
+      // the race for at least one row. The batch insert is atomic, so rows
+      // that were genuinely new rolled back too — re-read what now exists
+      // and retry only the remainder instead of dropping them.
+      if (insertError && insertError.code === '23505') {
+        const { data: nowExisting } = await supabase
+          .from('movements')
+          .select('type, date')
+          .eq('process_id', target.processId)
+          .eq('source', 'datajud');
+        const nowKeys = new Set(
+          (nowExisting || []).map((m) => `${m.type}-${m.date}`),
+        );
+        const remainder = rows.filter((r) => !nowKeys.has(`${r.type}-${r.date}`));
+        if (remainder.length > 0) {
+          const { error: retryError } = await supabase
+            .from('movements')
+            .insert(remainder);
+          if (retryError) {
+            // Genuinely new rows are still missing — report this target as a
+            // failed sync instead of stamping it linked/up to date.
+            results.push({
+              processId: target.processId,
+              cnj: target.cnj,
+              newMovements: 0,
+              error: retryError.message,
+            });
+            continue;
+          }
+          syncedCount = remainder.length;
+        }
+      } else if (insertError) {
         results.push({
           processId: target.processId,
           cnj: target.cnj,
@@ -299,11 +342,14 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      totalSynced += newMovements.length;
+      // 5. Mark the process as linked and record the sync timestamp
+      await markLinked(target.processId);
+
+      totalSynced += syncedCount;
       results.push({
         processId: target.processId,
         cnj: target.cnj,
-        newMovements: newMovements.length,
+        newMovements: syncedCount,
       });
     } catch (error) {
       const msg =

@@ -26,6 +26,8 @@
 //   9 = Justiça Federal (TRFs)
 // =============================================================================
 
+import { getDatajudAlias } from './tribunal-map';
+
 /** Parsed components of a CNJ process number. */
 export interface CNJParsed {
   /** Raw CNJ string as provided */
@@ -44,22 +46,51 @@ export interface CNJParsed {
   origem: string;
   /** Human-readable tribunal name (e.g., "TJSP") */
   tribunalName: string;
-  /** DataJud index name for this tribunal (e.g., "api_publica_tjsp") */
-  datajudIndex: string;
+  /**
+   * DataJud index name for this tribunal (e.g., "api_publica_tjsp"), or null
+   * when the tribunal has no public DataJud index (STF, CNJ, unknown codes).
+   */
+  datajudIndex: string | null;
 }
 
 /** CNJ regex: NNNNNNN-DD.AAAA.J.TR.OOOO */
 const CNJ_PATTERN = /^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$/;
 
 /**
- * Returns true when the string matches the CNJ unified process number format.
+ * Verify the CNJ mod-97 check digits (ISO 7064, Resolução CNJ 65/2008).
+ *
+ * The pair DD must equal 98 - ((NNNNNNN·10¹³ + AAAA·10⁹ + J·10⁸ + TR·10⁶ +
+ * OOOO) · 100 mod 97). Assumes the string already matches CNJ_PATTERN.
+ */
+export function hasValidCNJCheckDigit(cnj: string): boolean {
+  const clean = cnj.trim();
+  if (!CNJ_PATTERN.test(clean)) return false;
+
+  const digits = clean.replace(/[-./]/g, '');
+  const sequencial = digits.substring(0, 7);
+  const digito     = digits.substring(7, 9);
+  const resto      = digits.substring(9, 20); // AAAA + J + TR + OOOO
+
+  // Incremental mod-97 over the 20-digit base (sequencial + resto + '00'),
+  // avoiding BigInt for compatibility with the ES2017 build target.
+  let remainder = 0;
+  for (const ch of sequencial + resto + '00') {
+    remainder = (remainder * 10 + (ch.charCodeAt(0) - 48)) % 97;
+  }
+  return 98 - remainder === parseInt(digito, 10);
+}
+
+/**
+ * Returns true when the string is a valid CNJ unified process number:
+ * correct format AND valid mod-97 check digits (Resolução CNJ 65/2008).
  *
  * @example
- * isValidCNJ('0001234-56.2024.8.26.0100') // true
+ * isValidCNJ('0001234-71.2024.8.26.0100') // true (valid check digits)
  * isValidCNJ('123456')                     // false
  */
 export function isValidCNJ(cnj: string): boolean {
-  return CNJ_PATTERN.test(cnj.trim());
+  const clean = cnj.trim();
+  return CNJ_PATTERN.test(clean) && hasValidCNJCheckDigit(clean);
 }
 
 /**
@@ -67,7 +98,7 @@ export function isValidCNJ(cnj: string): boolean {
  * Returns null when the format is invalid.
  *
  * @example
- * const parts = parseCNJ('0001234-56.2024.8.26.0100');
+ * const parts = parseCNJ('0001234-71.2024.8.26.0100');
  * // parts.sequencial  => '0001234'
  * // parts.ano         => '2024'
  * // parts.justica     => '8'
@@ -106,16 +137,18 @@ export function parseCNJ(cnj: string): CNJParsed | null {
 }
 
 /**
- * Return the DataJud Elasticsearch index name for a given tribunal shortname.
- * Falls back to 'api_publica_tjsp' when the tribunal is unknown.
+ * Return the DataJud Elasticsearch index name for a given tribunal shortname,
+ * or null when the tribunal has no public DataJud index (STF, CNJ) or the
+ * shortname is unknown — callers must handle null instead of assuming a
+ * fallback court.
  *
  * @example
- * getDatajudIndex('TJSP') // 'api_publica_tjsp'
- * getDatajudIndex('STF')  // 'api_publica_stf'
- * getDatajudIndex('TRF3') // 'api_publica_trf3'
+ * getDatajudIndex('TJSP')   // 'api_publica_tjsp'
+ * getDatajudIndex('TRE-GO') // 'api_publica_tre-go'
+ * getDatajudIndex('STF')    // null (not covered by DataJud)
  */
-export function getDatajudIndex(tribunalName: string): string {
-  return resolveDatajudIndex(tribunalName.toUpperCase());
+export function getDatajudIndex(tribunalName: string): string | null {
+  return resolveDatajudIndex(tribunalName);
 }
 
 /**
@@ -123,8 +156,8 @@ export function getDatajudIndex(tribunalName: string): string {
  * Returns null for an invalid CNJ.
  *
  * @example
- * getTribunalFromCNJ('0001234-56.2024.8.26.0100') // 'TJSP'
- * getTribunalFromCNJ('0001234-56.2024.5.02.0000') // 'TRT2'
+ * getTribunalFromCNJ('0001234-71.2024.8.26.0100') // 'TJSP'
+ * getTribunalFromCNJ('0001234-98.2024.5.02.0000') // 'TRT2'
  */
 export function getTribunalFromCNJ(cnj: string): string | null {
   const parsed = parseCNJ(cnj);
@@ -144,7 +177,7 @@ function resolveTribunalName(justica: string, tribunal: string): string {
     case '7': return resolveJusticaMilitar(tribunal);
     case '8': return resolveTjCode(tribunal);
     case '9': return resolveTrfCode(tribunal);
-    default:  return 'TJSP'; // safe fallback
+    default:  return 'DESCONHECIDO';
   }
 }
 
@@ -199,81 +232,9 @@ function resolveTrfCode(code: string): string {
   return 'TRF1';
 }
 
-// ─── DataJud index map ───────────────────────────────────────────────────────
+// ─── DataJud index resolution ────────────────────────────────────────────────
 
-const DATAJUD_INDEX_MAP: Record<string, string> = {
-  // Supremo / Superior courts
-  STF: 'api_publica_stf',
-  STJ: 'api_publica_stj',
-  CNJ: 'api_publica_cnj',
-  TST: 'api_publica_tst',
-  TSE: 'api_publica_tse',
-  STM: 'api_publica_stm',
-
-  // Justiça do Trabalho
-  TRT1:  'api_publica_trt1',
-  TRT2:  'api_publica_trt2',
-  TRT3:  'api_publica_trt3',
-  TRT4:  'api_publica_trt4',
-  TRT5:  'api_publica_trt5',
-  TRT6:  'api_publica_trt6',
-  TRT7:  'api_publica_trt7',
-  TRT8:  'api_publica_trt8',
-  TRT9:  'api_publica_trt9',
-  TRT10: 'api_publica_trt10',
-  TRT11: 'api_publica_trt11',
-  TRT12: 'api_publica_trt12',
-  TRT13: 'api_publica_trt13',
-  TRT14: 'api_publica_trt14',
-  TRT15: 'api_publica_trt15',
-  TRT16: 'api_publica_trt16',
-  TRT17: 'api_publica_trt17',
-  TRT18: 'api_publica_trt18',
-  TRT19: 'api_publica_trt19',
-  TRT20: 'api_publica_trt20',
-  TRT21: 'api_publica_trt21',
-  TRT22: 'api_publica_trt22',
-  TRT23: 'api_publica_trt23',
-  TRT24: 'api_publica_trt24',
-
-  // Justiça Federal
-  TRF1: 'api_publica_trf1',
-  TRF2: 'api_publica_trf2',
-  TRF3: 'api_publica_trf3',
-  TRF4: 'api_publica_trf4',
-  TRF5: 'api_publica_trf5',
-  TRF6: 'api_publica_trf6',
-
-  // Justiça Estadual
-  TJAC:  'api_publica_tjac',
-  TJAL:  'api_publica_tjal',
-  TJAM:  'api_publica_tjam',
-  TJAP:  'api_publica_tjap',
-  TJBA:  'api_publica_tjba',
-  TJCE:  'api_publica_tjce',
-  TJDF:  'api_publica_tjdft',  // TJDF uses 'tjdft' suffix in DataJud
-  TJES:  'api_publica_tjes',
-  TJGO:  'api_publica_tjgo',
-  TJMA:  'api_publica_tjma',
-  TJMG:  'api_publica_tjmg',
-  TJMS:  'api_publica_tjms',
-  TJMT:  'api_publica_tjmt',
-  TJPA:  'api_publica_tjpa',
-  TJPB:  'api_publica_tjpb',
-  TJPE:  'api_publica_tjpe',
-  TJPI:  'api_publica_tjpi',
-  TJPR:  'api_publica_tjpr',
-  TJRJ:  'api_publica_tjrj',
-  TJRN:  'api_publica_tjrn',
-  TJRO:  'api_publica_tjro',
-  TJRR:  'api_publica_tjrr',
-  TJRS:  'api_publica_tjrs',
-  TJSC:  'api_publica_tjsc',
-  TJSE:  'api_publica_tjse',
-  TJSP:  'api_publica_tjsp',
-  TJTO:  'api_publica_tjto',
-};
-
-function resolveDatajudIndex(tribunalName: string): string {
-  return DATAJUD_INDEX_MAP[tribunalName.toUpperCase()] || 'api_publica_tjsp';
+function resolveDatajudIndex(tribunalName: string): string | null {
+  const alias = getDatajudAlias(tribunalName);
+  return alias ? `api_publica_${alias}` : null;
 }

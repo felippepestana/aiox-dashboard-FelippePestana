@@ -11,6 +11,8 @@ import type {
   Publication,
 } from '@/types/legal';
 
+import { isValidCNJ as isValidCNJStrict } from './cnj-utils';
+
 // ─── Authentication Credentials ─────────────────────────────────────────────
 
 /**
@@ -106,6 +108,8 @@ export type CourtErrorCode =
   | 'INVALID_CNJ'
   | 'NETWORK_ERROR'
   | 'TIMEOUT'
+  | 'NOT_CONFIGURED'
+  | 'TRIBUNAL_NOT_SUPPORTED'
   | 'UNKNOWN';
 
 // ─── Unified Court Adapter Interface ────────────────────────────────────────
@@ -196,8 +200,8 @@ export interface CourtAdapter {
  * - O: origin/vara (4 digits)
  */
 export function isValidCNJ(cnj: string): boolean {
-  const pattern = /^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$/;
-  return pattern.test(cnj);
+  // Single source of truth (format + mod-97 check digits) lives in cnj-utils
+  return isValidCNJStrict(cnj);
 }
 
 /**

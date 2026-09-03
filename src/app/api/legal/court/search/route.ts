@@ -1,4 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getAuthUser, unauthorized } from '@/lib/api-utils';
+import { hasActiveFeature, PLAN_FEATURE_REQUIRED_MESSAGE } from '@/lib/plan-access';
 import { createCourtAdapter, getSystemInfo } from '@/lib/court/court-factory';
 import { CourtAdapterError, isValidCNJ } from '@/lib/court/court-adapter';
 import type { CourtSystem, CourtSearchResult } from '@/types/legal';
@@ -19,10 +21,19 @@ import type { CourtSystem, CourtSearchResult } from '@/types/legal';
  * - 404: Process not found in the specified system
  * - 500: Internal server error
  */
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
   const { searchParams } = new URL(request.url);
   const cnj = searchParams.get('cnj');
   const system = searchParams.get('system') as CourtSystem | null;
+
+  // The default path (no system) tries DataJud first — both need the gate
+  if ((!system || system === 'datajud') &&
+      !(await hasActiveFeature(user.id, 'datajud_integration'))) {
+    return NextResponse.json({ error: PLAN_FEATURE_REQUIRED_MESSAGE }, { status: 402 });
+  }
 
   // Validate CNJ parameter
   if (!cnj) {
@@ -83,7 +94,7 @@ export async function GET(request: Request) {
         await datajud.authenticate({
           system: 'datajud',
           username: 'api-user',
-          apiKey: process.env.DATAJUD_API_KEY || 'public-key',
+          apiKey: process.env.DATAJUD_API_KEY,
         });
         result = await datajud.searchProcess(cnj);
       } catch {

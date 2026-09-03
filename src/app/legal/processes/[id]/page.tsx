@@ -35,10 +35,13 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ id: st
   const {
     getProcessById, getClientById, getDeadlinesByProcess,
     getPetitionsByProcess, getMovementsByProcess, updateProcess,
+    hydrateFromApi,
   } = useLegalStore();
 
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [syncFeedback, setSyncFeedback] =
+    useState<{ kind: 'success' | 'error'; text: string } | null>(null);
   const [showAddDeadline, setShowAddDeadline] = useState(false);
   const [showAddMovement, setShowAddMovement] = useState(false);
   const [dlForm, setDlForm] = useState({ title: '', type: 'judicial' as DeadlineType, dueDate: '' });
@@ -127,16 +130,36 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ id: st
           {process.cnj && (
             <button
               onClick={async () => {
+                // Re-entrancy guard: the disabled prop only lands after the
+                // re-render commits, so a fast double-click could POST twice
+                if (syncing) return;
                 setSyncing(true);
+                setSyncFeedback(null);
                 try {
-                  const res = await fetch(`/api/legal/court/datajud?cnj=${encodeURIComponent(process.cnj)}`);
-                  if (res.ok) {
-                    const data = await res.json();
-                    if (data.success && data.data?.movements) {
-                      alert(`Sincronizado! ${data.data.movements.length} movimentações encontradas.`);
-                    }
+                  const res = await fetch('/api/legal/court/datajud/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ processId: process.id, cnj: process.cnj }),
+                  });
+                  const data = await res.json().catch(() => ({}));
+                  if (res.ok && data.success) {
+                    setSyncFeedback({
+                      kind: 'success',
+                      text: data.synced > 0
+                        ? `Sincronizado! ${data.synced} nova(s) movimentação(ões) importada(s).`
+                        : 'Processo já está atualizado — nenhuma movimentação nova.',
+                    });
+                    hydrateFromApi();
+                  } else if (res.status === 402) {
+                    setSyncFeedback({ kind: 'error', text: 'A integração DataJud requer o plano Professional.' });
+                  } else if (res.status === 404) {
+                    setSyncFeedback({ kind: 'error', text: 'Processo não encontrado no DataJud.' });
+                  } else {
+                    setSyncFeedback({ kind: 'error', text: data.error || 'Falha ao sincronizar com o DataJud.' });
                   }
-                } catch { /* ignore */ }
+                } catch {
+                  setSyncFeedback({ kind: 'error', text: 'Falha de rede ao sincronizar com o DataJud.' });
+                }
                 setSyncing(false);
               }}
               disabled={syncing}
@@ -150,6 +173,25 @@ export default function ProcessDetailPage({ params }: { params: Promise<{ id: st
         </div>
         }
       />
+
+      {syncFeedback && (
+        <div
+          className={`flex items-center justify-between gap-3 rounded-lg border p-3 text-sm ${
+            syncFeedback.kind === 'success'
+              ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+              : 'border-red-500/20 bg-red-500/10 text-red-400'
+          }`}
+        >
+          <span>{syncFeedback.text}</span>
+          <button
+            onClick={() => setSyncFeedback(null)}
+            className="text-xs text-[#6b7a8d] hover:text-white transition-colors"
+            aria-label="Fechar aviso de sincronização"
+          >
+            Fechar
+          </button>
+        </div>
+      )}
 
       {/* Info Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

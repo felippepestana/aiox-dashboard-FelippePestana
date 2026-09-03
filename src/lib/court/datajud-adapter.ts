@@ -37,8 +37,11 @@ import {
   CourtAdapterError,
   DEFAULT_RETRY_CONFIG,
   withRetry,
-  isValidCNJ,
 } from './court-adapter';
+
+import { isValidCNJ, parseCNJ } from './cnj-utils';
+import { DATAJUD_NOT_CONFIGURED_MESSAGE } from './datajud';
+import { getDatajudAlias } from './tribunal-map';
 
 // ─── DataJud Configuration ──────────────────────────────────────────────────
 
@@ -142,119 +145,6 @@ interface DataJudMovimento {
   }>;
 }
 
-/**
- * Map of tribunal codes to DataJud API index names.
- * DataJud uses separate Elasticsearch indices per tribunal.
- */
-const TRIBUNAL_INDEX_MAP: Record<string, string> = {
-  'TJSP': 'api_publica_tjsp',
-  'TJRJ': 'api_publica_tjrj',
-  'TJMG': 'api_publica_tjmg',
-  'TJRS': 'api_publica_tjrs',
-  'TJPR': 'api_publica_tjpr',
-  'TJSC': 'api_publica_tjsc',
-  'TJBA': 'api_publica_tjba',
-  'TJPE': 'api_publica_tjpe',
-  'TJCE': 'api_publica_tjce',
-  'TJGO': 'api_publica_tjgo',
-  'TJPA': 'api_publica_tjpa',
-  'TJMA': 'api_publica_tjma',
-  'TJMT': 'api_publica_tjmt',
-  'TJMS': 'api_publica_tjms',
-  'TJDF': 'api_publica_tjdft',
-  'TJES': 'api_publica_tjes',
-  'TJAL': 'api_publica_tjal',
-  'TJRN': 'api_publica_tjrn',
-  'TJPI': 'api_publica_tjpi',
-  'TJSE': 'api_publica_tjse',
-  'TJPB': 'api_publica_tjpb',
-  'TJAM': 'api_publica_tjam',
-  'TJRO': 'api_publica_tjro',
-  'TJTO': 'api_publica_tjto',
-  'TJAC': 'api_publica_tjac',
-  'TJAP': 'api_publica_tjap',
-  'TJRR': 'api_publica_tjrr',
-  'STF': 'api_publica_stf',
-  'STJ': 'api_publica_stj',
-  'TST': 'api_publica_tst',
-  'TRF1': 'api_publica_trf1',
-  'TRF2': 'api_publica_trf2',
-  'TRF3': 'api_publica_trf3',
-  'TRF4': 'api_publica_trf4',
-  'TRF5': 'api_publica_trf5',
-  'TRF6': 'api_publica_trf6',
-};
-
-/**
- * Map justice segment digit (from CNJ number) to tribunal prefix.
- */
-function tribunalFromCNJ(cnj: string): string | null {
-  const segmento = cnj.charAt(16);
-  const tribunal = cnj.substring(18, 20);
-
-  switch (segmento) {
-    case '8': return `TJ${getStateByTribunalCode(tribunal)}`;
-    case '5': return 'TST';
-    case '4': return `TRF${tribunal}`;
-    case '1': return 'STF';
-    case '2': return 'STJ';
-    default: return null;
-  }
-}
-
-function getStateByTribunalCode(code: string): string {
-  const map: Record<string, string> = {
-    '01': 'AC', '02': 'AL', '03': 'AP', '04': 'AM', '05': 'BA',
-    '06': 'CE', '07': 'DF', '08': 'ES', '09': 'GO', '10': 'MA',
-    '11': 'MT', '12': 'MS', '13': 'MG', '14': 'PA', '15': 'PB',
-    '16': 'PR', '17': 'PE', '18': 'PI', '19': 'RJ', '20': 'RN',
-    '21': 'RS', '22': 'RO', '23': 'RR', '24': 'SC', '25': 'SE',
-    '26': 'SP', '27': 'TO',
-  };
-  return map[code] || 'SP';
-}
-
-// ─── Mock Data for Development ──────────────────────────────────────────────
-
-const MOCK_DATAJUD_PROCESS: DataJudProcess = {
-  numeroProcesso: '0001234-56.2024.8.26.0100',
-  classe: { codigo: 7, nome: 'Procedimento Comum Cível' },
-  sistema: { codigo: 1, nome: 'PJe' },
-  formato: { codigo: 1, nome: 'Eletrônico' },
-  tribunal: 'TJSP',
-  dataAjuizamento: '2024-11-01T08:00:00Z',
-  dataHoraUltimaAtualizacao: '2024-11-20T15:30:00Z',
-  grau: 'G1',
-  nivelSigilo: 0,
-  orgaoJulgador: {
-    codigo: 100,
-    nome: '1a Vara Cível do Foro Central - São Paulo',
-    codigoMunicipioIBGE: 3550308,
-  },
-  assuntos: [
-    { codigo: 6226, nome: 'Indenização por Dano Moral' },
-    { codigo: 6233, nome: 'Indenização por Dano Material' },
-  ],
-  movimentos: [
-    {
-      codigo: 11010,
-      nome: 'Despacho',
-      dataHora: '2024-11-15T14:30:00Z',
-      complementosTabelados: [
-        { codigo: 1, nome: 'tipo_decisao', valor: 1, descricao: 'Cite-se a parte ré' },
-      ],
-    },
-    {
-      codigo: 26,
-      nome: 'Distribuição',
-      dataHora: '2024-11-01T08:15:00Z',
-      complementosTabelados: [
-        { codigo: 2, nome: 'tipo_distribuicao', valor: 1, descricao: 'Distribuído por sorteio' },
-      ],
-    },
-  ],
-};
-
 // ─── DataJud Adapter Implementation ─────────────────────────────────────────
 
 /**
@@ -289,13 +179,9 @@ export class DataJudAdapter implements CourtAdapter {
   private apiKey: string | null = null;
   private authenticated: boolean = false;
   private lastRequestTime: number = 0;
-  private useMockData: boolean;
 
   constructor(config?: Partial<DataJudConfig>) {
     this.config = { ...DEFAULT_DATAJUD_CONFIG, ...config };
-    // Use mock data only when no API key is available.
-    // In development with a real key, real API calls are made.
-    this.useMockData = !process.env.DATAJUD_API_KEY;
   }
 
   // ─── Authentication ─────────────────────────────────────────────────────
@@ -319,23 +205,22 @@ export class DataJudAdapter implements CourtAdapter {
       );
     }
 
-    if (!credentials.apiKey && !this.useMockData) {
+    if (!credentials.apiKey) {
       throw new CourtAdapterError(
-        'DataJud requires an API key for authentication',
+        DATAJUD_NOT_CONFIGURED_MESSAGE,
         'datajud',
-        'AUTH_FAILED',
+        'NOT_CONFIGURED',
+        503,
       );
     }
 
-    this.apiKey = credentials.apiKey || 'mock-datajud-api-key';
+    this.apiKey = credentials.apiKey;
     this.authenticated = true;
-
-    if (this.useMockData) return;
 
     // Validate the API key with a lightweight request
     try {
       const response = await fetch(
-        `${this.config.baseUrl}/api_publica_stf/_search`,
+        `${this.config.baseUrl}/api_publica_stj/_search`,
         {
           method: 'POST',
           headers: {
@@ -358,6 +243,9 @@ export class DataJudAdapter implements CourtAdapter {
         );
       }
     } catch (error) {
+      // The key was never validated — do not leave the adapter authenticated
+      this.authenticated = false;
+      this.apiKey = null;
       if (error instanceof CourtAdapterError) throw error;
 
       throw new CourtAdapterError(
@@ -397,14 +285,11 @@ export class DataJudAdapter implements CourtAdapter {
       );
     }
 
-    if (this.useMockData) {
-      return this.mockSearchProcess(cnj);
-    }
+    const index = this.resolveIndexFromCNJ(cnj);
 
     return withRetry(async () => {
       await this.enforceRateLimit();
 
-      const index = this.resolveIndexFromCNJ(cnj);
       const response = await this.elasticSearch(index, {
         query: {
           match: {
@@ -460,23 +345,20 @@ export class DataJudAdapter implements CourtAdapter {
   ): Promise<{ results: CourtSearchResult[]; total: number }> {
     this.ensureAuthenticated();
 
-    if (this.useMockData) {
-      return {
-        results: [this.mockSearchProcess('0001234-56.2024.8.26.0100')],
-        total: 1,
-      };
-    }
-
-    await this.enforceRateLimit();
-
-    const index = TRIBUNAL_INDEX_MAP[tribunal.toUpperCase()];
-    if (!index) {
+    // Validate the tribunal before the rate-limit wait — an unsupported
+    // alias should fail fast instead of sleeping first.
+    const alias = getDatajudAlias(tribunal);
+    if (!alias) {
       throw new CourtAdapterError(
-        `Unknown tribunal code: ${tribunal}`,
+        `Tribunal ${tribunal} sem cobertura na API pública do DataJud`,
         'datajud',
-        'INVALID_CNJ',
+        'TRIBUNAL_NOT_SUPPORTED',
+        422,
       );
     }
+    const index = `api_publica_${alias}`;
+
+    await this.enforceRateLimit();
 
     const response = await this.elasticSearch(index, {
       ...query,
@@ -523,14 +405,11 @@ export class DataJudAdapter implements CourtAdapter {
       );
     }
 
-    if (this.useMockData) {
-      return this.mockGetMovements(cnj, since);
-    }
+    const index = this.resolveIndexFromCNJ(cnj);
 
     return withRetry(async () => {
       await this.enforceRateLimit();
 
-      const index = this.resolveIndexFromCNJ(cnj);
       const response = await this.elasticSearch(index, {
         query: { match: { numeroProcesso: cnj } },
         _source: ['movimentos', 'numeroProcesso'],
@@ -651,14 +530,19 @@ export class DataJudAdapter implements CourtAdapter {
 
   /**
    * Resolve the DataJud Elasticsearch index from a CNJ number.
+   * @throws CourtAdapterError when the tribunal has no public DataJud index
    */
   private resolveIndexFromCNJ(cnj: string): string {
-    const tribunal = tribunalFromCNJ(cnj);
-    if (tribunal && TRIBUNAL_INDEX_MAP[tribunal]) {
-      return TRIBUNAL_INDEX_MAP[tribunal];
+    const index = parseCNJ(cnj)?.datajudIndex;
+    if (!index) {
+      throw new CourtAdapterError(
+        `Tribunal do processo ${cnj} sem cobertura na API pública do DataJud`,
+        'datajud',
+        'TRIBUNAL_NOT_SUPPORTED',
+        422,
+      );
     }
-    // Default to TJSP if we cannot determine the tribunal
-    return 'api_publica_tjsp';
+    return index;
   }
 
   /**
@@ -700,25 +584,4 @@ export class DataJudAdapter implements CourtAdapter {
     };
   }
 
-  // ─── Mock Implementations ─────────────────────────────────────────────────
-
-  private mockSearchProcess(cnj: string): CourtSearchResult {
-    const p = { ...MOCK_DATAJUD_PROCESS, numeroProcesso: cnj };
-    return this.mapToSearchResult(p);
-  }
-
-  private mockGetMovements(cnj: string, since?: string): ProcessMovement[] {
-    let movements = MOCK_DATAJUD_PROCESS.movimentos.map((m) =>
-      this.mapMovement(m, cnj),
-    );
-
-    if (since) {
-      const sinceDate = new Date(since).getTime();
-      movements = movements.filter((m) => new Date(m.date).getTime() >= sinceDate);
-    }
-
-    return movements.sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-    );
-  }
 }

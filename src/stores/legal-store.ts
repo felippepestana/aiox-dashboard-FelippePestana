@@ -92,6 +92,73 @@ function fire(fn: () => Promise<unknown>) {
   fn().catch(() => {});
 }
 
+// ─── API row normalization ──────────────────────────────────────────────────
+// The list endpoints return raw Supabase rows (snake_case); the store types
+// are camelCase. Each normalizer accepts either shape so already-camelCase
+// payloads pass through unchanged.
+
+type Row = Record<string, unknown>;
+const pick = <T,>(row: Row, camel: string, snake: string): T =>
+  (row[camel] !== undefined ? row[camel] : row[snake]) as T;
+
+function normalizeProcess(row: Row): LegalProcess {
+  return {
+    ...(row as unknown as LegalProcess),
+    clientId:       pick(row, 'clientId', 'client_id') ?? '',
+    opposingParty:  pick(row, 'opposingParty', 'opposing_party') ?? '',
+    opposingLawyer: pick(row, 'opposingLawyer', 'opposing_lawyer') ?? '',
+    courtSystem:    pick(row, 'courtSystem', 'court_system') ?? 'manual',
+    causeValue:     pick(row, 'causeValue', 'cause_value') ?? 0,
+    feeType:        pick(row, 'feeType', 'fee_type') ?? 'fixed',
+    feeAmount:      pick(row, 'feeAmount', 'fee_amount') ?? 0,
+    contingencyPct: pick(row, 'contingencyPct', 'contingency_pct'),
+    createdAt:      pick(row, 'createdAt', 'created_at') ?? '',
+    updatedAt:      pick(row, 'updatedAt', 'updated_at') ?? '',
+  };
+}
+
+function normalizeMovement(row: Row): ProcessMovement {
+  return {
+    ...(row as unknown as ProcessMovement),
+    processId: pick(row, 'processId', 'process_id') ?? '',
+    isRead:    pick(row, 'isRead', 'is_read') ?? false,
+  };
+}
+
+function normalizeDeadline(row: Row): Deadline {
+  return {
+    ...(row as unknown as Deadline),
+    processId:    pick(row, 'processId', 'process_id') ?? '',
+    dueDate:      pick(row, 'dueDate', 'due_date') ?? '',
+    reminderDays: pick(row, 'reminderDays', 'reminder_days') ?? [],
+    assignedTo:   pick(row, 'assignedTo', 'assigned_to') ?? '',
+    createdAt:    pick(row, 'createdAt', 'created_at') ?? '',
+  };
+}
+
+function normalizePetition(row: Row): Petition {
+  return {
+    ...(row as unknown as Petition),
+    processId:      pick(row, 'processId', 'process_id') ?? '',
+    templateId:     pick(row, 'templateId', 'template_id'),
+    filedAt:        pick(row, 'filedAt', 'filed_at'),
+    protocolNumber: pick(row, 'protocolNumber', 'protocol_number'),
+    courtSystem:    pick(row, 'courtSystem', 'court_system'),
+    createdAt:      pick(row, 'createdAt', 'created_at') ?? '',
+    updatedAt:      pick(row, 'updatedAt', 'updated_at') ?? '',
+  };
+}
+
+function normalizeClient(row: Row): LegalClient {
+  return {
+    ...(row as unknown as LegalClient),
+    cpfCnpj:    pick(row, 'cpfCnpj', 'cpf_cnpj') ?? '',
+    leadSource: pick(row, 'leadSource', 'lead_source'),
+    createdAt:  pick(row, 'createdAt', 'created_at') ?? '',
+    updatedAt:  pick(row, 'updatedAt', 'updated_at') ?? '',
+  };
+}
+
 // ─── Store ──────────────────────────────────────────────────────────────────
 
 export const useLegalStore = create<LegalState>()(
@@ -123,28 +190,31 @@ export const useLegalStore = create<LegalState>()(
           const updates: Partial<LegalState> = {};
 
           if (processesRes.status === 'fulfilled') {
-            updates.processes = (processesRes.value.processes ?? processesRes.value) as LegalProcess[];
+            const raw = (processesRes.value.processes ?? processesRes.value) as Row[];
+            updates.processes = raw.map(normalizeProcess);
           }
           if (clientsRes.status === 'fulfilled') {
-            const raw = (clientsRes.value.clients ?? clientsRes.value) as LegalClient[];
+            const raw = (clientsRes.value.clients ?? clientsRes.value) as Row[];
             updates.clients = raw.map((c) => ({
-              ...c,
-              processIds: c.processIds || [],
-              contractIds: c.contractIds || [],
+              ...normalizeClient(c),
+              processIds: (c.processIds as string[]) || [],
+              contractIds: (c.contractIds as string[]) || [],
             }));
           }
           if (deadlinesRes.status === 'fulfilled') {
-            updates.deadlines = (deadlinesRes.value.deadlines ?? deadlinesRes.value) as Deadline[];
+            const raw = (deadlinesRes.value.deadlines ?? deadlinesRes.value) as Row[];
+            updates.deadlines = raw.map(normalizeDeadline);
           }
           if (petitionsRes.status === 'fulfilled') {
-            const raw = (petitionsRes.value.petitions ?? petitionsRes.value) as Petition[];
+            const raw = (petitionsRes.value.petitions ?? petitionsRes.value) as Row[];
             updates.petitions = raw.map((p) => ({
-              ...p,
-              documentIds: p.documentIds || [],
+              ...normalizePetition(p),
+              documentIds: (p.documentIds as string[]) || [],
             }));
           }
           if (movementsRes.status === 'fulfilled') {
-            updates.movements = (movementsRes.value.movements ?? movementsRes.value) as ProcessMovement[];
+            const raw = (movementsRes.value.movements ?? movementsRes.value) as Row[];
+            updates.movements = raw.map(normalizeMovement);
           }
 
           set({ ...updates, syncing: false, lastSyncAt: nowISO() });

@@ -4,33 +4,58 @@
 // or run an advanced tribunal query.
 //
 // This route is used by the new-process form for auto-fill.
+// Requires an authenticated session with the datajud_integration feature.
 //
 // Query Parameters:
-//   cnj       (string)  — CNJ number for direct lookup (NNNNNNN-DD.AAAA.J.TR.OOOO)
-//   tribunal  (string)  — Tribunal code for advanced query (e.g., 'TJSP', 'STJ')
-//   classe    (string)  — Classe processual filter
-//   assunto   (string)  — Subject matter filter
-//   dataInicio (string) — Start date filter (ISO 8601)
-//   dataFim   (string)  — End date filter (ISO 8601)
-//   page      (number)  — Page number for pagination (default: 0)
+//   cnj          (string) — CNJ number for direct lookup (NNNNNNN-DD.AAAA.J.TR.OOOO)
+//   tribunal     (string) — Tribunal sigla for advanced query (e.g., 'TJSP', 'TRE-GO')
+//   classe       (string) — Classe processual filter (nome, text match)
+//   assunto      (string) — Subject matter filter
+//   dataInicio   (string) — Start date filter (ISO 8601)
+//   dataFim      (string) — End date filter (ISO 8601)
+//   page         (number) — Page number for pagination (default: 0)
+//   classeCodigo (number) — TPU class code (with orgaoCodigo: cursor-paginated search)
+//   orgaoCodigo  (number) — Judging-body code
+//   size         (number) — Page size for the class/órgão search (1–100)
+//   searchAfter  (string) — JSON array cursor from the previous page
 //
 // Responses:
 //   200  { success: true, mode: 'cnj_search', data: DataJudProcessInfo, movements: ProcessMovement[] }
 //   200  { success: true, mode: 'advanced_query', results, total, page, tribunal, filters }
+//   200  { success: true, mode: 'class_orgao_search', processes, total, nextSearchAfter }
 //   400  Missing or invalid parameters
+//   401  Not authenticated
+//   402  Plan does not include the DataJud integration
 //   404  Process not found
-//   503  DATAJUD_API_KEY not configured (when cnj search is requested)
+//   503  DATAJUD_API_KEY not configured
 // =============================================================================
 
-import { NextResponse } from 'next/server';
-import { searchByCNJ, getMovements, DataJudError } from '@/lib/court/datajud';
+import { NextRequest, NextResponse } from 'next/server';
+import {
+  searchByCNJ,
+  getMovements,
+  searchByClassAndOrgao,
+  getDatajudApiKey,
+  DATAJUD_NOT_CONFIGURED_MESSAGE,
+  DataJudError,
+} from '@/lib/court/datajud';
 import { isValidCNJ } from '@/lib/court/cnj-utils';
 import { DataJudAdapter } from '@/lib/court/datajud-adapter';
 import { CourtAdapterError } from '@/lib/court/court-adapter';
+import { getAuthUser, unauthorized } from '@/lib/api-utils';
+import { hasActiveFeature, PLAN_FEATURE_REQUIRED_MESSAGE } from '@/lib/plan-access';
 
 // ─── GET handler ──────────────────────────────────────────────────────────────
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) return unauthorized();
+
+  // Paid-module gate: datajud_integration requires an active Professional+ plan
+  if (!(await hasActiveFeature(user.id, 'datajud_integration'))) {
+    return NextResponse.json({ error: PLAN_FEATURE_REQUIRED_MESSAGE }, { status: 402 });
+  }
+
   const { searchParams } = new URL(request.url);
   const cnj      = searchParams.get('cnj');
   const tribunal = searchParams.get('tribunal');
@@ -64,13 +89,10 @@ export async function GET(request: Request) {
       );
     }
 
-    const apiKey = process.env.DATAJUD_API_KEY;
+    const apiKey = getDatajudApiKey();
     if (!apiKey) {
       return NextResponse.json(
-        {
-          error: 'DATAJUD_API_KEY not configured',
-          message: 'The DataJud API key is not set on the server. Configure DATAJUD_API_KEY in your environment.',
-        },
+        { error: 'DATAJUD_API_KEY not configured', message: DATAJUD_NOT_CONFIGURED_MESSAGE },
         { status: 503 },
       );
     }
@@ -119,15 +141,104 @@ export async function GET(request: Request) {
     }
   }
 
-  // ─── Mode 2: Advanced tribunal query (uses class-based adapter) ───────────
+  // ─── Mode 2: Advanced tribunal query ─────────────────────────────────────
 
   if (tribunal) {
+    const apiKey = getDatajudApiKey();
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'DATAJUD_API_KEY not configured', message: DATAJUD_NOT_CONFIGURED_MESSAGE },
+        { status: 503 },
+      );
+    }
+
+    // ── Mode 2a: class + judging-body search with cursor pagination ──
+    const classeCodigoParam = searchParams.get('classeCodigo');
+    const orgaoCodigoParam = searchParams.get('orgaoCodigo');
+
+    // Half-specified pair must not silently fall through to the text-query
+    // mode (with no text filters that would run an unrelated match_all page)
+    if (Boolean(classeCodigoParam) !== Boolean(orgaoCodigoParam)) {
+      return NextResponse.json(
+        { error: 'Forneça classeCodigo e orgaoCodigo juntos para a busca por classe/órgão' },
+        { status: 400 },
+      );
+    }
+
+    if (classeCodigoParam && orgaoCodigoParam) {
+      // Strict digits-only check: parseInt would truncate '123abc'/'45.6'
+      // into a valid-looking (but unintended) code instead of a 400.
+      if (!/^\d+$/.test(classeCodigoParam) || !/^\d+$/.test(orgaoCodigoParam)) {
+        return NextResponse.json(
+          { error: 'classeCodigo e orgaoCodigo devem ser números inteiros' },
+          { status: 400 },
+        );
+      }
+      const classeCodigo = parseInt(classeCodigoParam, 10);
+      const orgaoJulgadorCodigo = parseInt(orgaoCodigoParam, 10);
+
+      let searchAfter: Array<number | string> | undefined;
+      const searchAfterParam = searchParams.get('searchAfter');
+      if (searchAfterParam) {
+        try {
+          const parsedCursor: unknown = JSON.parse(searchAfterParam);
+          if (
+            !Array.isArray(parsedCursor) ||
+            !parsedCursor.every((v) => typeof v === 'number' || typeof v === 'string')
+          ) {
+            throw new Error('not a cursor');
+          }
+          searchAfter = parsedCursor;
+        } catch {
+          return NextResponse.json(
+            { error: 'searchAfter deve ser um array JSON de números/strings' },
+            { status: 400 },
+          );
+        }
+      }
+
+      try {
+        const result = await searchByClassAndOrgao(
+          {
+            tribunal,
+            classeCodigo,
+            orgaoJulgadorCodigo,
+            size: parseInt(searchParams.get('size') || '20', 10) || 20,
+            searchAfter,
+          },
+          apiKey,
+        );
+
+        return NextResponse.json({
+          success: true,
+          mode: 'class_orgao_search',
+          tribunal,
+          processes: result.processes,
+          total: result.total,
+          nextSearchAfter: result.nextSearchAfter,
+        });
+      } catch (error) {
+        if (error instanceof DataJudError) {
+          const status = error.status ?? 500;
+          return NextResponse.json(
+            { error: error.message },
+            { status: status >= 400 && status < 600 ? status : 500 },
+          );
+        }
+        return NextResponse.json(
+          { error: error instanceof Error ? error.message : 'Internal server error' },
+          { status: 500 },
+        );
+      }
+    }
+
+    // ── Mode 2b: text filters via the adapter (from/size pagination) ──
     try {
       const datajud = new DataJudAdapter();
       await datajud.authenticate({
         system: 'datajud',
         username: 'api-user',
-        apiKey: process.env.DATAJUD_API_KEY || 'public-key',
+        apiKey,
       });
 
       // Build Elasticsearch query

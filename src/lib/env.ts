@@ -69,7 +69,7 @@ const ENV_VARS: EnvVar[] = [
   { key: 'MP_WEBHOOK_SECRET', required: false },
   { key: 'NEXT_PUBLIC_MP_PUBLIC_KEY', required: false },
 
-  // DataJud — optional (falls back to mock data in development)
+  // DataJud — optional; when unset, DataJud routes return 503 (no mock data)
   { key: 'DATAJUD_API_KEY', required: false },
 
   // Sentry — optional

@@ -17,7 +17,8 @@
 // =============================================================================
 
 import type { ProcessMovement } from '@/types/legal';
-import { isValidCNJ, parseCNJ, getDatajudIndex } from './cnj-utils';
+import { isValidCNJ, parseCNJ } from './cnj-utils';
+import { getDatajudAlias } from './tribunal-map';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -25,6 +26,12 @@ const DATAJUD_BASE_URL =
   process.env.DATAJUD_API_URL || 'https://api-publica.datajud.cnj.jus.br';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
+
+// Retry only transient failures: CNJ throttling (429), server errors (5xx)
+// and network/abort errors. Client errors (400/401/404) never retry.
+const RETRY_MAX_ATTEMPTS = 3;
+const RETRY_BASE_DELAY_MS = 1_000;
+const RETRY_MAX_DELAY_MS = 8_000;
 
 // ─── Response shape types ─────────────────────────────────────────────────────
 
@@ -67,6 +74,8 @@ interface DataJudSearchResponse {
       _id: string;
       _score: number;
       _source: DataJudProcessSource;
+      /** Sort values — present when the query sorts (search_after cursor) */
+      sort?: Array<number | string>;
     }>;
   };
 }
@@ -77,17 +86,77 @@ export interface DataJudProcessInfo {
   cnj: string;
   tribunal: string;
   classe: string;
+  /** TPU code of the procedural class (classe.codigo) */
+  classeCodigo: number;
   assuntos: string[];
   orgaoJulgador: string;
+  /** DataJud code of the judging body, when present (orgaoJulgador.codigo) */
+  orgaoJulgadorCodigo?: number;
   dataAjuizamento: string;
   ultimaAtualizacao: string;
   grau: string;
   nivelSigilo: number;
 }
 
+/** Parameters for a class + judging-body search (paginated via search_after). */
+export interface ClassOrgaoSearchParams {
+  /** Tribunal sigla, e.g. 'TJSP', 'TRT2', 'TRE-GO' */
+  tribunal: string;
+  /** TPU procedural-class code (classe.codigo) */
+  classeCodigo: number;
+  /** Judging-body code (orgaoJulgador.codigo) */
+  orgaoJulgadorCodigo: number;
+  /** Page size (1–100, default 20) */
+  size?: number;
+  /** Sort cursor returned by the previous page (nextSearchAfter) */
+  searchAfter?: Array<number | string>;
+}
+
+/** One page of a class + judging-body search. */
+export interface ClassOrgaoSearchResult {
+  processes: DataJudProcessInfo[];
+  /** Total matching processes reported by the index */
+  total: number;
+  /** Cursor for the next page, or null when this was the last page */
+  nextSearchAfter: Array<number | string> | null;
+}
+
 // ─── Core fetch helper ────────────────────────────────────────────────────────
 
 async function datajudSearch(
+  index: string,
+  query: Record<string, unknown>,
+  apiKey: string,
+): Promise<DataJudSearchResponse> {
+  let lastError: unknown;
+  let delay = RETRY_BASE_DELAY_MS;
+
+  for (let attempt = 0; attempt < RETRY_MAX_ATTEMPTS; attempt++) {
+    try {
+      return await datajudSearchOnce(index, query, apiKey);
+    } catch (error) {
+      lastError = error;
+      if (!isRetryableError(error) || attempt === RETRY_MAX_ATTEMPTS - 1) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      delay = Math.min(delay * 2, RETRY_MAX_DELAY_MS);
+    }
+  }
+
+  throw lastError;
+}
+
+function isRetryableError(error: unknown): boolean {
+  if (error instanceof DataJudError) {
+    return error.status === 429 || (error.status !== undefined && error.status >= 500);
+  }
+  // Network failures and aborted (timed-out) requests are worth retrying
+  return error instanceof TypeError ||
+    (error instanceof Error && error.name === 'AbortError');
+}
+
+async function datajudSearchOnce(
   index: string,
   query: Record<string, unknown>,
   apiKey: string,
@@ -108,6 +177,9 @@ async function datajudSearch(
     });
 
     if (!res.ok) {
+      if (res.status === 429) {
+        throw new DataJudError('Limite de requisições do DataJud atingido', 429);
+      }
       const body = await res.json().catch(() => ({}));
       throw new DataJudError(
         body.error?.reason || `DataJud HTTP ${res.status}`,
@@ -119,6 +191,39 @@ async function datajudSearch(
   } finally {
     clearTimeout(timer);
   }
+}
+
+/**
+ * Resolve the DataJud index for a CNJ or throw a DataJudError that routes
+ * can surface directly (422 = tribunal exists but has no public index).
+ */
+function requireIndexForCNJ(cnj: string): string {
+  if (!isValidCNJ(cnj)) {
+    // Typed 400 so routes that skip pre-validation still answer client error
+    throw new DataJudError(
+      `CNJ inválido: "${cnj}". Formato esperado: NNNNNNN-DD.AAAA.J.TR.OOOO`,
+      400,
+    );
+  }
+  const parsed = parseCNJ(cnj)!;
+  if (!parsed.datajudIndex) {
+    throw new DataJudError(
+      `Tribunal ${parsed.tribunalName} sem cobertura na API pública do DataJud`,
+      422,
+    );
+  }
+  return parsed.datajudIndex;
+}
+
+// ─── API key helpers ──────────────────────────────────────────────────────────
+
+/** Shared user-facing message for a missing DataJud API key (503 responses). */
+export const DATAJUD_NOT_CONFIGURED_MESSAGE =
+  'DATAJUD_API_KEY não configurada no servidor — obtenha uma chave em https://datajud-wiki.cnj.jus.br/';
+
+/** Returns the DataJud API key from the environment, or null when not set. */
+export function getDatajudApiKey(): string | null {
+  return process.env.DATAJUD_API_KEY || null;
 }
 
 // ─── Custom error ─────────────────────────────────────────────────────────────
@@ -149,12 +254,7 @@ export async function searchByCNJ(
   cnj: string,
   apiKey: string,
 ): Promise<DataJudProcessInfo | null> {
-  if (!isValidCNJ(cnj)) {
-    throw new Error(`CNJ inválido: "${cnj}". Formato esperado: NNNNNNN-DD.AAAA.J.TR.OOOO`);
-  }
-
-  const parsed = parseCNJ(cnj)!;
-  const index  = parsed.datajudIndex;
+  const index = requireIndexForCNJ(cnj);
 
   const data = await datajudSearch(
     index,
@@ -191,12 +291,7 @@ export async function getMovements(
   processId: string,
   since?: string,
 ): Promise<ProcessMovement[]> {
-  if (!isValidCNJ(cnj)) {
-    throw new Error(`CNJ inválido: "${cnj}". Formato esperado: NNNNNNN-DD.AAAA.J.TR.OOOO`);
-  }
-
-  const parsed = parseCNJ(cnj)!;
-  const index  = parsed.datajudIndex;
+  const index = requireIndexForCNJ(cnj);
 
   const data = await datajudSearch(
     index,
@@ -241,6 +336,69 @@ export async function getProcessMeta(
   return searchByCNJ(cnj, apiKey);
 }
 
+/**
+ * Search DataJud by procedural class + judging body, paginated with
+ * Elasticsearch `search_after` (query pattern adapted from
+ * busca-processos-judiciais, MIT — João Textor).
+ *
+ * Pass the returned `nextSearchAfter` back as `params.searchAfter` to fetch
+ * the next page; a null cursor means the last page was reached.
+ *
+ * @throws DataJudError 422 when the tribunal has no public DataJud index
+ * @throws DataJudError on HTTP errors (429 rate limit is retried first)
+ */
+export async function searchByClassAndOrgao(
+  params: ClassOrgaoSearchParams,
+  apiKey: string,
+): Promise<ClassOrgaoSearchResult> {
+  const alias = getDatajudAlias(params.tribunal);
+  if (!alias) {
+    throw new DataJudError(
+      `Tribunal ${params.tribunal} sem cobertura na API pública do DataJud`,
+      422,
+    );
+  }
+
+  const size = Math.min(Math.max(params.size ?? 20, 1), 100);
+
+  const query: Record<string, unknown> = {
+    size,
+    // Without this, ES caps hits.total at 10k with relation 'gte' and the
+    // returned `total` would silently under-report large result sets.
+    track_total_hits: true,
+    query: {
+      bool: {
+        must: [
+          { match: { 'classe.codigo': params.classeCodigo } },
+          { match: { 'orgaoJulgador.codigo': params.orgaoJulgadorCodigo } },
+        ],
+      },
+    },
+    // numeroProcesso is a unique tiebreaker: sorting by @timestamp alone is
+    // not stable per document, and search_after can skip or repeat hits when
+    // timestamps tie at a page boundary. (_id sorting is disallowed in ES.)
+    sort: [
+      { '@timestamp': { order: 'asc' } },
+      { numeroProcesso: { order: 'asc' } },
+    ],
+  };
+  if (params.searchAfter && params.searchAfter.length > 0) {
+    query.search_after = params.searchAfter;
+  }
+
+  const data = await datajudSearch(`api_publica_${alias}`, query, apiKey);
+
+  const hits = data.hits.hits;
+  const lastSort = hits.length > 0 ? hits[hits.length - 1].sort : undefined;
+
+  return {
+    processes: hits.map((h) => mapProcessInfo(h._source)),
+    total: data.hits.total.value,
+    // A short page means the result set is exhausted — no next cursor
+    nextSearchAfter: hits.length === size && lastSort ? lastSort : null,
+  };
+}
+
 // ─── Mapping helpers ──────────────────────────────────────────────────────────
 
 function mapProcessInfo(source: DataJudProcessSource): DataJudProcessInfo {
@@ -248,7 +406,9 @@ function mapProcessInfo(source: DataJudProcessSource): DataJudProcessInfo {
     cnj:             source.numeroProcesso,
     tribunal:        source.tribunal,
     classe:          source.classe.nome,
+    classeCodigo:    source.classe.codigo,
     assuntos:        (source.assuntos || []).map((a) => a.nome),
+    orgaoJulgadorCodigo: source.orgaoJulgador?.codigo,
     orgaoJulgador:   source.orgaoJulgador?.nome || '',
     dataAjuizamento: source.dataAjuizamento,
     ultimaAtualizacao: source.dataHoraUltimaAtualizacao || source.dataAjuizamento,
@@ -257,6 +417,9 @@ function mapProcessInfo(source: DataJudProcessSource): DataJudProcessInfo {
   };
 }
 
+// INVARIANT: `type` (String(codigo)) and `date` (raw dataHora) form the
+// `${type}-${date}` dedup key persisted in the movements table. Changing
+// either format re-inserts every historical movement on the next sync.
 function mapMovement(
   mov: DataJudMovimento,
   processId: string,

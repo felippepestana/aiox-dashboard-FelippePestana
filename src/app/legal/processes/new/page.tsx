@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useLegalStore } from '@/stores/legal-store';
 import type { LegalArea, CourtSystem, UrgencyLevel, FeeType } from '@/types/legal';
 import { PageHeader } from '@/components/legal/shared';
+import { hasValidCNJCheckDigit } from '@/lib/court/cnj-utils';
 import { ClientSelector } from '@/components/legal/ClientSelector';
 import type { ClientOption } from '@/components/legal/ClientSelector';
 
@@ -33,7 +34,8 @@ const COURTS: { value: CourtSystem; label: string }[] = [
   { value: 'manual', label: 'Manual' },
 ];
 
-type CnjSearchStatus = 'idle' | 'searching' | 'found' | 'not_found' | 'error';
+type CnjSearchStatus =
+  'idle' | 'searching' | 'found' | 'not_found' | 'error' | 'invalid_digit' | 'plan_required';
 
 interface DataJudResult {
   cnj: string;
@@ -149,10 +151,20 @@ export default function NewProcessPage() {
       setSearchStatus('error');
       return;
     }
+    if (!hasValidCNJCheckDigit(cnjInput)) {
+      setSearchStatus('invalid_digit');
+      return;
+    }
 
     setSearchStatus('searching');
     try {
       const response = await fetch(`/api/legal/court/datajud?cnj=${encodeURIComponent(cnjInput)}`);
+      // An entitlement failure is not a "process not found" — surface it
+      if (response.status === 402) {
+        setSearchStatus('plan_required');
+        setForm(prev => ({ ...prev, cnj: cnjInput }));
+        return;
+      }
       const data = await response.json();
 
       // New response shape: { success, mode: 'cnj_search', data: DataJudProcessInfo, movements: ProcessMovement[] }
@@ -313,6 +325,18 @@ export default function NewProcessPage() {
           <div className="mt-3 flex items-center gap-2 text-sm text-red-400">
             <AlertCircle className="h-4 w-4" />
             Formato do CNJ incompleto. Use: NNNNNNN-DD.YYYY.J.TR.OOOO
+          </div>
+        )}
+        {searchStatus === 'invalid_digit' && (
+          <div className="mt-3 flex items-center gap-2 text-sm text-red-400">
+            <AlertCircle className="h-4 w-4" />
+            Dígito verificador do CNJ inválido — confira o número digitado.
+          </div>
+        )}
+        {searchStatus === 'plan_required' && (
+          <div className="mt-3 flex items-center gap-2 text-sm text-amber-400">
+            <AlertCircle className="h-4 w-4" />
+            A busca no DataJud requer o plano Professional. Você pode preencher os dados manualmente abaixo.
           </div>
         )}
       </div>
