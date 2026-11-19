@@ -1,0 +1,30 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "description": "Build the application with Next.js",
+      "tags": ["ci"],
+      "inputs": ["src/**/*.{ts,tsx}", "public/**/*", "next.config.ts", ".env.local"],
+      "outputs": [".next/**"],
+      "cache": true
+    },
+    "typecheck": {
+      "description": "Type-check the application with TypeScript",
+      "tags": ["ci"],
+      "inputs": ["src/**/*.{ts,tsx}", "tsconfig.json"],
+      "cache": true
+    },
+    "test": {
+      "description": "Run unit tests with Vitest",
+      "tags": ["ci"],
+      "inputs": ["src/**/*.{ts,tsx}", "vitest.config.ts"],
+      "cache": false
+    },
+    "lint": {
+      "description": "Lint code with ESLint",
+      "tags": ["ci"],
+      "inputs": ["src/**/*.{ts,tsx}", ".eslintrc.json", ".eslintignore"],
+      "cache": true
+    }
+  }
+}
